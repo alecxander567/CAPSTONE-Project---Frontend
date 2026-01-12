@@ -1,0 +1,597 @@
+import { useState } from "react";
+import {
+  Container,
+  Row,
+  Col,
+  Button,
+  Navbar,
+  Nav,
+  Card,
+} from "react-bootstrap";
+import "./Landingpage/Landingpage.css";
+import logo from "../assets/logo.jpg";
+import RegisterModal from "../components/RegisterModal";
+import LoginModal from "../components/LoginModal";
+
+function Landingpage() {
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+
+  const handleClose = () => setShowRegisterModal(false);
+  const handleShow = () => setShowRegisterModal(true);
+
+  return (
+    <div className="bg-light min-vh-100 d-flex flex-column">
+      {/* ------------------- NAVBAR ------------------- */}
+      <Navbar expand="lg" className="custom-navbar px-4">
+        <Navbar.Brand href="/" className="d-flex align-items-center">
+          <img
+            src={logo}
+            alt="Logo"
+            width="40"
+            height="40"
+            className="d-inline-block align-top rounded-circle me-2"
+          />
+          <span className="d-none d-md-inline">
+            IoT Biometric ARA Attendance System
+          </span>
+          <span className="d-inline d-md-none">ARA System</span>
+        </Navbar.Brand>
+        <Navbar.Toggle aria-controls="basic-navbar-nav" />
+        <Navbar.Collapse id="basic-navbar-nav">
+          <Nav className="ms-auto">
+            <Nav.Link href="#about">About</Nav.Link>
+            <Nav.Link href="#documentation">Documentation</Nav.Link>
+            <Nav.Link href="#features">Features</Nav.Link>
+            <Nav.Link href="#contact">Contact</Nav.Link>
+          </Nav>
+        </Navbar.Collapse>
+      </Navbar>
+
+      {/* ------------------- HERO SECTION ------------------- */}
+      <div className="hero-section">
+        <Container>
+          <Row className="justify-content-center align-items-center text-center">
+            <Col xs={12} lg={10} xl={8}>
+              <h1 className="hero-title fw-bold mb-4">
+                Activity Record Attendance (ARA){" "}
+                <span className="hero-primary">IoT Biometric</span> System
+              </h1>
+              <p className="lead mb-4 px-3">
+                A simple and secure way to manage student attendance
+                efficiently.
+              </p>
+              <div className="d-flex flex-column flex-sm-row justify-content-center gap-3 mb-4">
+                <Button
+                  className="btn-login"
+                  size="lg"
+                  onClick={() => setShowLogin(true)}>
+                  <i className="bi bi-mortarboard-fill me-2"></i>
+                  Login
+                </Button>
+                <Button className="btn-register" size="lg" onClick={handleShow}>
+                  <i className="bi bi-person-plus-fill me-2"></i> Register
+                </Button>
+              </div>
+            </Col>
+          </Row>
+        </Container>
+      </div>
+
+      {/* ------------------- ABOUT SECTION ------------------- */}
+      <section id="about" className="py-5 bg-white">
+        <Container>
+          <Row className="justify-content-center text-center mb-5">
+            <Col lg={8}>
+              <div className="mb-4">
+                <i className="bi bi-info-circle-fill text-primary fs-1"></i>
+              </div>
+              <h2 className="fw-bold mb-3">About ARA System</h2>
+              <p className="lead text-muted">
+                Revolutionizing attendance management through cutting-edge
+                biometric technology
+              </p>
+            </Col>
+          </Row>
+          <Row className="g-4">
+            <Col md={6} lg={3}>
+              <Card className="h-100 border-0 shadow-sm hover-lift">
+                <Card.Body className="text-center p-4">
+                  <div className="bg-primary bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
+                    <i className="bi bi-fingerprint text-primary fs-1"></i>
+                  </div>
+                  <h5 className="fw-bold mb-3">Biometric Security</h5>
+                  <p className="text-muted small">
+                    Advanced fingerprint recognition ensures accurate student
+                    identification and prevents proxy attendance.
+                  </p>
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col md={6} lg={3}>
+              <Card className="h-100 border-0 shadow-sm hover-lift">
+                <Card.Body className="text-center p-4">
+                  <div className="bg-success bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
+                    <i className="bi bi-clock-history text-success fs-1"></i>
+                  </div>
+                  <h5 className="fw-bold mb-3">Real-Time Tracking</h5>
+                  <p className="text-muted small">
+                    Monitor attendance instantly with real-time data
+                    synchronization and automated reporting.
+                  </p>
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col md={6} lg={3}>
+              <Card className="h-100 border-0 shadow-sm hover-lift">
+                <Card.Body className="text-center p-4">
+                  <div className="bg-info bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
+                    <i className="bi bi-graph-up-arrow text-info fs-1"></i>
+                  </div>
+                  <h5 className="fw-bold mb-3">Analytics Dashboard</h5>
+                  <p className="text-muted small">
+                    Comprehensive insights and visualizations to track
+                    attendance patterns and trends.
+                  </p>
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col md={6} lg={3}>
+              <Card className="h-100 border-0 shadow-sm hover-lift">
+                <Card.Body className="text-center p-4">
+                  <div className="bg-warning bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
+                    <i className="bi bi-shield-check text-warning fs-1"></i>
+                  </div>
+                  <h5 className="fw-bold mb-3">Data Privacy</h5>
+                  <p className="text-muted small">
+                    Your data is encrypted and secure, complying with privacy
+                    standards and regulations.
+                  </p>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+        </Container>
+      </section>
+
+      {/* ------------------- FEATURES SECTION ------------------- */}
+      <section id="features" className="py-5 bg-light">
+        <Container>
+          <Row className="justify-content-center text-center mb-5">
+            <Col lg={8}>
+              <div className="mb-4">
+                <i className="bi bi-stars text-primary fs-1"></i>
+              </div>
+              <h2 className="fw-bold mb-3">Key Features</h2>
+              <p className="lead text-muted">
+                Everything you need for seamless attendance management
+              </p>
+            </Col>
+          </Row>
+          <Row className="g-4 align-items-center">
+            <Col lg={6}>
+              <div className="pe-lg-4">
+                <div className="mb-4">
+                  <div className="d-flex align-items-start mb-3">
+                    <div className="bg-primary bg-opacity-10 rounded p-2 me-3">
+                      <i className="bi bi-check2-circle text-primary fs-4"></i>
+                    </div>
+                    <div>
+                      <h5 className="fw-bold mb-2">Quick Check-In/Out</h5>
+                      <p className="text-muted small mb-0">
+                        Students can mark attendance in seconds using biometric
+                        sensors with instant verification.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="mb-4">
+                  <div className="d-flex align-items-start mb-3">
+                    <div className="bg-success bg-opacity-10 rounded p-2 me-3">
+                      <i className="bi bi-bell text-success fs-4"></i>
+                    </div>
+                    <div>
+                      <h5 className="fw-bold mb-2">Automated Notifications</h5>
+                      <p className="text-muted small mb-0">
+                        Receive alerts for late arrivals, absences, and
+                        important attendance updates.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="mb-4">
+                  <div className="d-flex align-items-start mb-3">
+                    <div className="bg-info bg-opacity-10 rounded p-2 me-3">
+                      <i className="bi bi-file-earmark-bar-graph text-info fs-4"></i>
+                    </div>
+                    <div>
+                      <h5 className="fw-bold mb-2">Detailed Reports</h5>
+                      <p className="text-muted small mb-0">
+                        Generate comprehensive attendance reports for
+                        individuals, classes, or entire programs.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Col>
+            <Col lg={6}>
+              <div className="ps-lg-4">
+                <div className="mb-4">
+                  <div className="d-flex align-items-start mb-3">
+                    <div className="bg-warning bg-opacity-10 rounded p-2 me-3">
+                      <i className="bi bi-people text-warning fs-4"></i>
+                    </div>
+                    <div>
+                      <h5 className="fw-bold mb-2">Multi-User Access</h5>
+                      <p className="text-muted small mb-0">
+                        Role-based access for students, faculty, and
+                        administrators with customized permissions.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="mb-4">
+                  <div className="d-flex align-items-start mb-3">
+                    <div className="bg-danger bg-opacity-10 rounded p-2 me-3">
+                      <i className="bi bi-cloud-check text-danger fs-4"></i>
+                    </div>
+                    <div>
+                      <h5 className="fw-bold mb-2">Cloud-Based System</h5>
+                      <p className="text-muted small mb-0">
+                        Access your attendance data anywhere, anytime with
+                        secure cloud storage.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="mb-4">
+                  <div className="d-flex align-items-start mb-3">
+                    <div className="bg-secondary bg-opacity-10 rounded p-2 me-3">
+                      <i className="bi bi-download text-secondary fs-4"></i>
+                    </div>
+                    <div>
+                      <h5 className="fw-bold mb-2">Export & Integration</h5>
+                      <p className="text-muted small mb-0">
+                        Export data to Excel, PDF, or integrate with existing
+                        school management systems.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Col>
+          </Row>
+        </Container>
+      </section>
+
+      {/* ------------------- DOCUMENTATION SECTION ------------------- */}
+      <section id="documentation" className="py-5 bg-white">
+        <Container>
+          <Row className="justify-content-center text-center mb-5">
+            <Col lg={8}>
+              <div className="mb-4">
+                <i className="bi bi-book-fill text-primary fs-1"></i>
+              </div>
+              <h2 className="fw-bold mb-3">Documentation</h2>
+              <p className="lead text-muted">
+                Everything you need to get started with ARA System
+              </p>
+            </Col>
+          </Row>
+          <Row className="g-4">
+            <Col md={6} lg={4}>
+              <Card className="h-100 border-0 shadow-sm hover-lift">
+                <Card.Body className="p-4">
+                  <div className="bg-primary bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
+                    <i className="bi bi-rocket-takeoff text-primary fs-3"></i>
+                  </div>
+                  <h5 className="fw-bold mb-3">Getting Started</h5>
+                  <p className="text-muted small mb-3">
+                    Learn how to set up your account, register your biometric
+                    data, and start using the system.
+                  </p>
+                  <Button variant="outline-primary" size="sm">
+                    View Guide <i className="bi bi-arrow-right ms-1"></i>
+                  </Button>
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col md={6} lg={4}>
+              <Card className="h-100 border-0 shadow-sm hover-lift">
+                <Card.Body className="p-4">
+                  <div className="bg-success bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
+                    <i className="bi bi-gear-fill text-success fs-3"></i>
+                  </div>
+                  <h5 className="fw-bold mb-3">User Manual</h5>
+                  <p className="text-muted small mb-3">
+                    Detailed instructions on using all features, managing
+                    settings, and troubleshooting common issues.
+                  </p>
+                  <Button variant="outline-success" size="sm">
+                    Read Manual <i className="bi bi-arrow-right ms-1"></i>
+                  </Button>
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col md={6} lg={4}>
+              <Card className="h-100 border-0 shadow-sm hover-lift">
+                <Card.Body className="p-4">
+                  <div className="bg-info bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
+                    <i className="bi bi-code-square text-info fs-3"></i>
+                  </div>
+                  <h5 className="fw-bold mb-3">API Documentation</h5>
+                  <p className="text-muted small mb-3">
+                    Technical documentation for developers looking to integrate
+                    or extend the ARA System.
+                  </p>
+                  <Button variant="outline-info" size="sm">
+                    API Docs <i className="bi bi-arrow-right ms-1"></i>
+                  </Button>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+          <Row className="mt-4">
+            <Col lg={12}>
+              <Card className="border-0 shadow-sm bg-light">
+                <Card.Body className="p-4">
+                  <Row className="align-items-center">
+                    <Col md={8}>
+                      <h5 className="fw-bold mb-2">Need Additional Help?</h5>
+                      <p className="text-muted small mb-0">
+                        Can't find what you're looking for? Check out our FAQ
+                        section or contact our support team for assistance.
+                      </p>
+                    </Col>
+                    <Col md={4} className="text-md-end mt-3 mt-md-0">
+                      <Button variant="primary" className="me-2">
+                        <i className="bi bi-question-circle me-2"></i>FAQ
+                      </Button>
+                      <Button variant="outline-primary">
+                        <i className="bi bi-headset me-2"></i>Support
+                      </Button>
+                    </Col>
+                  </Row>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+        </Container>
+      </section>
+
+      {/* ------------------- CONTACT SECTION ------------------- */}
+      <section id="contact" className="py-5 bg-light">
+        <Container>
+          <Row className="justify-content-center text-center mb-5">
+            <Col lg={8}>
+              <div className="mb-4">
+                <i className="bi bi-envelope-fill text-primary fs-1"></i>
+              </div>
+              <h2 className="fw-bold mb-3">Get In Touch</h2>
+              <p className="lead text-muted">
+                Have questions? We'd love to hear from you
+              </p>
+            </Col>
+          </Row>
+          <Row className="g-4">
+            <Col lg={4}>
+              <Card className="h-100 border-0 shadow-sm text-center hover-lift">
+                <Card.Body className="p-4">
+                  <div className="bg-primary bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
+                    <i className="bi bi-geo-alt-fill text-primary fs-3"></i>
+                  </div>
+                  <h5 className="fw-bold mb-3">Visit Us</h5>
+                  <p className="text-muted small mb-0">
+                    123 University Avenue
+                    <br />
+                    Cotabato City, ARMM 9600
+                    <br />
+                    Philippines
+                  </p>
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col lg={4}>
+              <Card className="h-100 border-0 shadow-sm text-center hover-lift">
+                <Card.Body className="p-4">
+                  <div className="bg-success bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
+                    <i className="bi bi-telephone-fill text-success fs-3"></i>
+                  </div>
+                  <h5 className="fw-bold mb-3">Call Us</h5>
+                  <p className="text-muted small mb-0">
+                    Office: +63 (64) 421-xxxx
+                    <br />
+                    Mobile: +63 912 345 6789
+                    <br />
+                    Mon-Fri, 8:00 AM - 5:00 PM
+                  </p>
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col lg={4}>
+              <Card className="h-100 border-0 shadow-sm text-center hover-lift">
+                <Card.Body className="p-4">
+                  <div className="bg-info bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
+                    <i className="bi bi-envelope-fill text-info fs-3"></i>
+                  </div>
+                  <h5 className="fw-bold mb-3">Email Us</h5>
+                  <p className="text-muted small mb-0">
+                    General: info@arasystem.edu
+                    <br />
+                    Support: support@arasystem.edu
+                    <br />
+                    Technical: tech@arasystem.edu
+                  </p>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+          <Row className="mt-5">
+            <Col lg={12}>
+              <Card className="border-0 shadow-sm">
+                <Card.Body className="p-4">
+                  <h5 className="fw-bold mb-4 text-center">
+                    Send Us a Message
+                  </h5>
+                  <Row className="g-3">
+                    <Col md={6}>
+                      <input
+                        type="text"
+                        className="form-control py-2"
+                        placeholder="Your Name"
+                      />
+                    </Col>
+                    <Col md={6}>
+                      <input
+                        type="email"
+                        className="form-control py-2"
+                        placeholder="Your Email"
+                      />
+                    </Col>
+                    <Col md={12}>
+                      <input
+                        type="text"
+                        className="form-control py-2"
+                        placeholder="Subject"
+                      />
+                    </Col>
+                    <Col md={12}>
+                      <textarea
+                        className="form-control py-2"
+                        rows={5}
+                        placeholder="Your Message"></textarea>
+                    </Col>
+                    <Col md={12} className="text-center">
+                      <Button variant="primary" size="lg" className="px-5">
+                        <i className="bi bi-send-fill me-2"></i>
+                        Send Message
+                      </Button>
+                    </Col>
+                  </Row>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+        </Container>
+      </section>
+
+      {/*  MODALS */}
+      <RegisterModal show={showRegisterModal} handleClose={handleClose} />
+      <LoginModal show={showLogin} handleClose={() => setShowLogin(false)} />
+
+      {/* ------------------- FOOTER ------------------- */}
+      <footer className="bg-dark text-white py-4 mt-auto">
+        <Container>
+          <Row className="g-4">
+            <Col lg={4}>
+              <div className="d-flex align-items-center mb-3">
+                <img
+                  src={logo}
+                  alt="Logo"
+                  width="40"
+                  height="40"
+                  className="rounded-circle me-2"
+                />
+                <span className="fw-bold">ARA System</span>
+              </div>
+              <p className="small text-white-50">
+                Innovative biometric attendance management for modern
+                educational institutions.
+              </p>
+            </Col>
+            <Col lg={2} md={6}>
+              <h6 className="fw-bold mb-3">Quick Links</h6>
+              <ul className="list-unstyled small">
+                <li className="mb-2">
+                  <a
+                    href="#about"
+                    className="text-white-50 text-decoration-none">
+                    About
+                  </a>
+                </li>
+                <li className="mb-2">
+                  <a
+                    href="#features"
+                    className="text-white-50 text-decoration-none">
+                    Features
+                  </a>
+                </li>
+                <li className="mb-2">
+                  <a
+                    href="#documentation"
+                    className="text-white-50 text-decoration-none">
+                    Documentation
+                  </a>
+                </li>
+                <li className="mb-2">
+                  <a
+                    href="#contact"
+                    className="text-white-50 text-decoration-none">
+                    Contact
+                  </a>
+                </li>
+              </ul>
+            </Col>
+            <Col lg={2} md={6}>
+              <h6 className="fw-bold mb-3">Support</h6>
+              <ul className="list-unstyled small">
+                <li className="mb-2">
+                  <a href="#" className="text-white-50 text-decoration-none">
+                    Help Center
+                  </a>
+                </li>
+                <li className="mb-2">
+                  <a href="#" className="text-white-50 text-decoration-none">
+                    FAQ
+                  </a>
+                </li>
+                <li className="mb-2">
+                  <a href="#" className="text-white-50 text-decoration-none">
+                    Privacy Policy
+                  </a>
+                </li>
+                <li className="mb-2">
+                  <a href="#" className="text-white-50 text-decoration-none">
+                    Terms of Service
+                  </a>
+                </li>
+              </ul>
+            </Col>
+            <Col lg={4}>
+              <h6 className="fw-bold mb-3">Connect With Us</h6>
+              <div className="d-flex gap-3 mb-3">
+                <a href="#" className="text-white-50 fs-4">
+                  <i className="bi bi-facebook"></i>
+                </a>
+                <a href="#" className="text-white-50 fs-4">
+                  <i className="bi bi-twitter"></i>
+                </a>
+                <a href="#" className="text-white-50 fs-4">
+                  <i className="bi bi-instagram"></i>
+                </a>
+                <a href="#" className="text-white-50 fs-4">
+                  <i className="bi bi-linkedin"></i>
+                </a>
+              </div>
+              <p className="small text-white-50 mb-0">
+                Stay updated with our latest features and updates.
+              </p>
+            </Col>
+          </Row>
+          <hr className="my-4 border-secondary" />
+          <Row>
+            <Col className="text-center">
+              <p className="small text-white-50 mb-0">
+                &copy; {new Date().getFullYear()} ARA Attendance System. All
+                rights reserved.
+              </p>
+            </Col>
+          </Row>
+        </Container>
+      </footer>
+    </div>
+  );
+}
+
+export default Landingpage;

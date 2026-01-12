@@ -1,0 +1,47 @@
+.animated-alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-weight: 500;
+  animation: popFade 0.4s ease-out;
+}
+
+.animated-alert.success {
+  background-color: #e6f7ee;
+  color: #0f5132;
+}
+
+.animated-alert.error {
+  background-color: #fdecea;
+  color: #842029;
+}
+
+.icon-wrapper {
+  font-size: 1.4rem;
+  animation: iconPop 0.4s ease-out;
+}
+
+@keyframes popFade {
+  0% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes iconPop {
+  0% {
+    transform: scale(0.6);
+  }
+  80% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
