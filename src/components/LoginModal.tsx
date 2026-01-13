@@ -4,6 +4,8 @@ import { useLogin } from "../hooks/Login";
 import AnimatedAlert from "./AnimatedAlert";
 import { useNavigate } from "react-router-dom";
 import RegisterModal from "../components/RegisterModal";
+import ResetPasswordModal from "./ResetPasswordModal";
+import ForgotPasswordModal from "./ForgotPasswordModal";
 
 interface LoginModalProps {
   show: boolean;
@@ -15,6 +17,9 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [showForgot, setShowForgot] = useState(false);
+  const [showReset, setShowReset] = useState(false);
+  const [resetToken, setResetToken] = useState("");
 
   const [showRegister, setShowRegister] = useState(false);
 
@@ -96,7 +101,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
                 className="text-primary text-decoration-none small"
                 onClick={(e) => {
                   e.preventDefault();
-                  // Add forgot password logic here
+                  setShowForgot(true);
                 }}>
                 Forgot password?
               </a>
@@ -193,6 +198,23 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
           </div>
         </div>
       </Modal.Footer>
+
+      {/* Password Modals Modal */}
+      <ForgotPasswordModal
+        show={showForgot}
+        onClose={() => setShowForgot(false)}
+        onSuccess={(token) => {
+          setResetToken(token);
+          setShowForgot(false);
+          setShowReset(true);
+        }}
+      />
+
+      <ResetPasswordModal
+        show={showReset}
+        token={resetToken}
+        onClose={() => setShowReset(false)}
+      />
     </Modal>
   );
 };

@@ -1,5 +1,3 @@
-// src/pages/Dashboard.tsx
-import React from "react";
 import { useLogout } from "../hooks/Logout";
 
 function Dashboard() {
