@@ -35,22 +35,33 @@
   bottom: 0;
   left: -50%;
   z-index: 0;
+  filter: blur(0.5px);
 }
 
 .hero-section::before {
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 300' preserveAspectRatio='none'%3E%3Cpath d='M0,150 C300,250 600,50 900,150 C1050,200 1150,100 1200,150 L1200,300 L0,300 Z' fill='%23ffffff' fill-opacity='0.1'/%3E%3C/svg%3E")
-    repeat-x;
-  background-size: 1200px 300px;
-  opacity: 0.4;
-  animation: waveMove 20s linear infinite;
+  content: "";
+  position: absolute;
+  width: 180%;
+  height: 180%;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 43%;
+  top: -60%;
+  left: -40%;
+  animation: heroWave 14s linear infinite;
+  z-index: 0;
 }
 
 .hero-section::after {
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 300' preserveAspectRatio='none'%3E%3Cpath d='M0,100 C400,200 800,0 1200,100 L1200,300 L0,300 Z' fill='%23ffffff' fill-opacity='0.08'/%3E%3C/svg%3E")
-    repeat-x;
-  background-size: 1200px 300px;
-  opacity: 0.3;
-  animation: waveMove 15s linear infinite reverse;
+  content: "";
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 45%;
+  top: -65%;
+  left: -50%;
+  animation: heroWave 22s linear infinite reverse;
+  z-index: 0;
 }
 
 .hero-section .container {
@@ -148,4 +159,62 @@
   .hero-image {
     max-height: 300px;
   }
+}
+
+@keyframes waveMoveStrong {
+  0% {
+    transform: translateX(0) translateY(0);
+  }
+  50% {
+    transform: translateX(-25%) translateY(12px);
+  }
+  100% {
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes waveMoveSoft {
+  0% {
+    transform: translateX(0) translateY(0);
+  }
+  50% {
+    transform: translateX(-15%) translateY(6px);
+  }
+  100% {
+    transform: translateX(-30%) translateY(0);
+  }
+}
+
+@keyframes heroWave {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.fade-up {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+  will-change: opacity, transform;
+}
+
+.fade-up.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.fade-delay-1 {
+  transition-delay: 0.1s;
+}
+.fade-delay-2 {
+  transition-delay: 0.2s;
+}
+.fade-delay-3 {
+  transition-delay: 0.3s;
+}
+.fade-delay-4 {
+  transition-delay: 0.4s;
 }

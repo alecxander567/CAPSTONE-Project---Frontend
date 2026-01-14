@@ -84,7 +84,7 @@ const ResetPasswordModal = ({
             <div className="position-relative">
               <Form.Control
                 type={showPassword ? "text" : "password"}
-                placeholder="Enter new password (min 6 characters)"
+                placeholder="Enter new password (min 8 characters)"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="py-2 border-2 pe-5"

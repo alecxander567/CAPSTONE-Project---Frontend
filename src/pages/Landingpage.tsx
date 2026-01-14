@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Container,
   Row,
@@ -19,6 +19,29 @@ function Landingpage() {
 
   const handleClose = () => setShowRegisterModal(false);
   const handleShow = () => setShowRegisterModal(true);
+
+  useEffect(() => {
+    const elements = document.querySelectorAll(".fade-up");
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("show");
+          } else {
+            entry.target.classList.remove("show"); 
+          }
+        });
+      },
+      {
+        threshold: 0.15,
+      }
+    );
+
+    elements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <div className="bg-light min-vh-100 d-flex flex-column">
@@ -52,7 +75,7 @@ function Landingpage() {
       <div className="hero-section">
         <Container>
           <Row className="justify-content-center align-items-center text-center">
-            <Col xs={12} lg={10} xl={8}>
+            <Col xs={12} lg={10} xl={8} className="fade-up">
               <h1 className="hero-title fw-bold mb-4">
                 Activity Record Attendance (ARA){" "}
                 <span className="hero-primary">IoT Biometric</span> System
@@ -79,7 +102,7 @@ function Landingpage() {
       </div>
 
       {/* ------------------- ABOUT SECTION ------------------- */}
-      <section id="about" className="py-5 bg-white">
+      <section id="about" className="py-5 bg-white fade-up">
         <Container>
           <Row className="justify-content-center text-center mb-5">
             <Col lg={8}>
@@ -94,7 +117,7 @@ function Landingpage() {
             </Col>
           </Row>
           <Row className="g-4">
-            <Col md={6} lg={3}>
+            <Col md={6} lg={3} className="fade-up fade-delay-1">
               <Card className="h-100 border-0 shadow-sm hover-lift">
                 <Card.Body className="text-center p-4">
                   <div className="bg-primary bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
@@ -108,7 +131,7 @@ function Landingpage() {
                 </Card.Body>
               </Card>
             </Col>
-            <Col md={6} lg={3}>
+            <Col md={6} lg={3} className="fade-up fade-delay-2">
               <Card className="h-100 border-0 shadow-sm hover-lift">
                 <Card.Body className="text-center p-4">
                   <div className="bg-success bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
@@ -122,7 +145,7 @@ function Landingpage() {
                 </Card.Body>
               </Card>
             </Col>
-            <Col md={6} lg={3}>
+            <Col md={6} lg={3} className="fade-up fade-delay-3">
               <Card className="h-100 border-0 shadow-sm hover-lift">
                 <Card.Body className="text-center p-4">
                   <div className="bg-info bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
@@ -136,7 +159,7 @@ function Landingpage() {
                 </Card.Body>
               </Card>
             </Col>
-            <Col md={6} lg={3}>
+            <Col md={6} lg={3} className="fade-up fade-delay-4">
               <Card className="h-100 border-0 shadow-sm hover-lift">
                 <Card.Body className="text-center p-4">
                   <div className="bg-warning bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
@@ -155,7 +178,7 @@ function Landingpage() {
       </section>
 
       {/* ------------------- FEATURES SECTION ------------------- */}
-      <section id="features" className="py-5 bg-light">
+      <section id="features" className="py-5 bg-light fade-up">
         <Container>
           <Row className="justify-content-center text-center mb-5">
             <Col lg={8}>
@@ -266,7 +289,7 @@ function Landingpage() {
       </section>
 
       {/* ------------------- DOCUMENTATION SECTION ------------------- */}
-      <section id="documentation" className="py-5 bg-white">
+      <section id="documentation" className="py-5 bg-white fade-up">
         <Container>
           <Row className="justify-content-center text-center mb-5">
             <Col lg={8}>
@@ -280,7 +303,7 @@ function Landingpage() {
             </Col>
           </Row>
           <Row className="g-4">
-            <Col md={6} lg={4}>
+            <Col md={6} lg={4} className="fade-up fade-delay-1">
               <Card className="h-100 border-0 shadow-sm hover-lift">
                 <Card.Body className="p-4">
                   <div className="bg-primary bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
@@ -297,7 +320,7 @@ function Landingpage() {
                 </Card.Body>
               </Card>
             </Col>
-            <Col md={6} lg={4}>
+            <Col md={6} lg={4} className="fade-up fade-delay-1">
               <Card className="h-100 border-0 shadow-sm hover-lift">
                 <Card.Body className="p-4">
                   <div className="bg-success bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
@@ -314,7 +337,7 @@ function Landingpage() {
                 </Card.Body>
               </Card>
             </Col>
-            <Col md={6} lg={4}>
+            <Col md={6} lg={4} className="fade-up fade-delay-1">
               <Card className="h-100 border-0 shadow-sm hover-lift">
                 <Card.Body className="p-4">
                   <div className="bg-info bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
@@ -361,7 +384,7 @@ function Landingpage() {
       </section>
 
       {/* ------------------- CONTACT SECTION ------------------- */}
-      <section id="contact" className="py-5 bg-light">
+      <section id="contact" className="py-5 bg-light fade-up">
         <Container>
           <Row className="justify-content-center text-center mb-5">
             <Col lg={8}>
@@ -375,7 +398,7 @@ function Landingpage() {
             </Col>
           </Row>
           <Row className="g-4">
-            <Col lg={4}>
+            <Col lg={4} className="fade-up fade-delay-1">
               <Card className="h-100 border-0 shadow-sm text-center hover-lift">
                 <Card.Body className="p-4">
                   <div className="bg-primary bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
@@ -392,7 +415,7 @@ function Landingpage() {
                 </Card.Body>
               </Card>
             </Col>
-            <Col lg={4}>
+            <Col lg={4} className="fade-up fade-delay-1">
               <Card className="h-100 border-0 shadow-sm text-center hover-lift">
                 <Card.Body className="p-4">
                   <div className="bg-success bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
@@ -409,7 +432,7 @@ function Landingpage() {
                 </Card.Body>
               </Card>
             </Col>
-            <Col lg={4}>
+            <Col lg={4} className="fade-up fade-delay-1">
               <Card className="h-100 border-0 shadow-sm text-center hover-lift">
                 <Card.Body className="p-4">
                   <div className="bg-info bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
@@ -427,52 +450,6 @@ function Landingpage() {
               </Card>
             </Col>
           </Row>
-          <Row className="mt-5">
-            <Col lg={12}>
-              <Card className="border-0 shadow-sm">
-                <Card.Body className="p-4">
-                  <h5 className="fw-bold mb-4 text-center">
-                    Send Us a Message
-                  </h5>
-                  <Row className="g-3">
-                    <Col md={6}>
-                      <input
-                        type="text"
-                        className="form-control py-2"
-                        placeholder="Your Name"
-                      />
-                    </Col>
-                    <Col md={6}>
-                      <input
-                        type="email"
-                        className="form-control py-2"
-                        placeholder="Your Email"
-                      />
-                    </Col>
-                    <Col md={12}>
-                      <input
-                        type="text"
-                        className="form-control py-2"
-                        placeholder="Subject"
-                      />
-                    </Col>
-                    <Col md={12}>
-                      <textarea
-                        className="form-control py-2"
-                        rows={5}
-                        placeholder="Your Message"></textarea>
-                    </Col>
-                    <Col md={12} className="text-center">
-                      <Button variant="primary" size="lg" className="px-5">
-                        <i className="bi bi-send-fill me-2"></i>
-                        Send Message
-                      </Button>
-                    </Col>
-                  </Row>
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
         </Container>
       </section>
 
@@ -481,7 +458,7 @@ function Landingpage() {
       <LoginModal show={showLogin} handleClose={() => setShowLogin(false)} />
 
       {/* ------------------- FOOTER ------------------- */}
-      <footer className="bg-dark text-white py-4 mt-auto">
+      <footer className="bg-dark text-white py-4 mt-auto fade-up">
         <Container>
           <Row className="g-4">
             <Col lg={4}>

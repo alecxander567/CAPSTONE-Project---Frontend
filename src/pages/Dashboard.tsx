@@ -1,17 +1,15 @@
-import { useLogout } from "../hooks/Logout";
+import Sidebar from "../components/Sidebar";
+import "./Dashboard/Dashboard.css";
 
 function Dashboard() {
-  const { logout } = useLogout();
-
   return (
-    <div style={{ padding: "2rem" }}>
-      <h1>Welcome to your Dashboard</h1>
-      <button
-        className="btn btn-danger"
-        style={{ marginTop: "1rem" }}
-        onClick={logout}>
-        Logout
-      </button>
+    <div className="dashboard-layout">
+      <Sidebar />
+
+      <main className="dashboard-main">
+        <h1>Welcome to your Dashboard</h1>
+        <p>Dashboard content goes here.</p>
+      </main>
     </div>
   );
 }
