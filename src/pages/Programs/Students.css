@@ -1,0 +1,522 @@
+.students-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f5f7fa;
+}
+
+.students-content {
+  flex: 1;
+  margin-left: 260px;
+  transition: margin-left 0.3s ease;
+  position: relative;
+}
+
+.students-header {
+  position: relative;
+  background: linear-gradient(180deg, #0a1aff, #0f52ba, #00b4d8);
+  color: #fff;
+  padding: 3rem 2rem;
+  overflow: hidden;
+}
+
+.students-header .wave {
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 43%;
+  top: -50%;
+  left: -50%;
+  animation: wave 15s linear infinite;
+  z-index: 0;
+}
+
+@keyframes wave {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.students-header .header-content {
+  position: relative;
+  z-index: 1;
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.back-button {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border: none;
+  color: white;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1.25rem;
+  align-self: flex-start;
+}
+
+.back-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateX(-4px);
+}
+
+.back-button:active {
+  transform: translateX(-2px);
+}
+
+.students-header h1 {
+  margin: 0;
+  font-size: 2.25rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  text-transform: uppercase;
+}
+
+.students-header p {
+  margin: 0.5rem 0 0 0;
+  font-size: 1.125rem;
+  opacity: 0.95;
+  font-weight: 300;
+}
+
+.students-list {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 3rem 2rem;
+}
+
+.students-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.students-header-info {
+  flex: 1;
+  min-width: 250px;
+}
+
+.students-header-info h2 {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1a202c;
+}
+
+.students-header-info p {
+  margin: 0.5rem 0 0 0;
+  color: #718096;
+  font-size: 1rem;
+}
+
+.search-bar {
+  position: relative;
+  flex: 0 1 400px;
+  min-width: 280px;
+}
+
+.search-bar i.bi-search {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #718096;
+  font-size: 1.125rem;
+  pointer-events: none;
+}
+
+.search-bar input {
+  width: 100%;
+  padding: 0.875rem 3rem 0.875rem 3rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.search-bar input:focus {
+  outline: none;
+  border-color: #0f52ba;
+  box-shadow: 0 0 0 3px rgba(15, 82, 186, 0.1);
+}
+
+.search-bar input::placeholder {
+  color: #a0aec0;
+}
+
+.clear-search {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: #718096;
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.clear-search:hover {
+  color: #e53e3e;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.loading-state .spinner {
+  width: 50px;
+  height: 50px;
+  margin: 0 auto 1rem;
+  border: 4px solid #e6f0ff;
+  border-top: 4px solid #0f52ba;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-state p {
+  color: #718096;
+  font-size: 1rem;
+  margin: 0;
+}
+
+.error-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #e53e3e;
+}
+
+.error-state i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.error-state p {
+  font-size: 1rem;
+  margin: 0;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #718096;
+}
+
+.empty-state i {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  display: block;
+  opacity: 0.5;
+}
+
+.empty-state p {
+  font-size: 1.125rem;
+  margin: 0;
+}
+
+.students-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+}
+
+.student-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.student-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(15, 82, 186, 0.15);
+  border-color: #0f52ba;
+}
+
+.student-avatar {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(180deg, #0a1aff, #0f52ba, #00b4d8);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  color: white;
+  font-size: 3rem;
+}
+
+.student-info {
+  text-align: center;
+}
+
+.student-info h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a202c;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.student-details {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.detail-item {
+  font-size: 0.875rem;
+  color: #718096;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.detail-item i {
+  color: #0f52ba;
+  font-size: 1rem;
+}
+
+.student-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.action-btn {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.enroll-btn {
+  background: #0f52ba;
+  color: white;
+}
+
+.enroll-btn:hover {
+  background: #0a1aff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(15, 82, 186, 0.3);
+}
+
+.delete-btn {
+  background: #fee;
+  color: #e53e3e;
+}
+
+.delete-btn:hover {
+  background: #e53e3e;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(229, 62, 62, 0.3);
+}
+
+.students-list .spinner {
+  width: 50px;
+  height: 50px;
+  margin: 4rem auto 1rem;
+  border: 4px solid #e6f0ff;
+  border-top: 4px solid #0f52ba;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 991px) {
+  .students-content {
+    margin-left: 0;
+    padding-top: 4.5rem;
+  }
+
+  .students-header {
+    padding: 2.5rem 1.5rem;
+  }
+
+  .students-header h1 {
+    font-size: 1.875rem;
+  }
+
+  .students-header p {
+    font-size: 1rem;
+  }
+
+  .students-list {
+    padding: 2.5rem 1.5rem;
+  }
+
+  .students-controls {
+    gap: 1.5rem;
+  }
+
+  .students-grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.25rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .students-header {
+    padding: 2rem 1rem;
+  }
+
+  .students-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .students-header p {
+    font-size: 0.9375rem;
+  }
+
+  .students-list {
+    padding: 2rem 1rem;
+  }
+
+  .students-controls {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .search-bar {
+    flex: 1;
+    min-width: 100%;
+  }
+
+  .students-header-info h2 {
+    font-size: 1.5rem;
+  }
+
+  .students-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .student-card {
+    padding: 1.25rem;
+  }
+
+  .student-avatar {
+    width: 70px;
+    height: 70px;
+    font-size: 2.5rem;
+  }
+
+  .student-info h3 {
+    font-size: 1.125rem;
+  }
+
+  .action-btn {
+    padding: 0.625rem 0.875rem;
+    font-size: 0.8125rem;
+  }
+
+  .action-btn span {
+    display: none;
+  }
+
+  .action-btn i {
+    font-size: 1.125rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .students-header {
+    padding: 1.5rem 0.875rem;
+  }
+
+  .students-header h1 {
+    font-size: 1.25rem;
+  }
+
+  .students-header p {
+    font-size: 0.875rem;
+  }
+
+  .students-list {
+    padding: 1.5rem 0.875rem;
+  }
+
+  .students-header-info h2 {
+    font-size: 1.375rem;
+  }
+
+  .students-header-info p {
+    font-size: 0.9375rem;
+  }
+
+  .search-bar input {
+    padding: 0.75rem 2.5rem 0.75rem 2.75rem;
+    font-size: 0.9375rem;
+  }
+
+  .student-card {
+    padding: 1rem;
+  }
+
+  .student-avatar {
+    width: 60px;
+    height: 60px;
+    font-size: 2rem;
+  }
+
+  .student-info h3 {
+    font-size: 1rem;
+  }
+
+  .detail-item {
+    font-size: 0.8125rem;
+  }
+
+  .student-actions {
+    gap: 0.5rem;
+  }
+
+  .action-btn {
+    padding: 0.625rem;
+  }
+}

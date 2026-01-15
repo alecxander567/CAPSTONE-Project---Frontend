@@ -14,7 +14,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
   const [middleInitial, setMiddleInitial] = useState("");
   const [lastName, setLastName] = useState("");
   const [program, setProgram] = useState("");
-  const [role, setRole] = useState("student");
+  const [role, setRole] = useState<"admin" | "student">("student");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -32,6 +32,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
         program,
         email,
         password,
+        role, 
       });
 
       setSuccessMessage("Registration successful!");
@@ -39,7 +40,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
         setSuccessMessage("");
         handleClose();
       }, 1500);
-    } catch (error) {
+    } catch {
       // Error handled by the hook
     }
   };
@@ -167,7 +168,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
                   <option value="BEED">
                     Bachelor of Elementary Education (BEED)
                   </option>
-                  <option value="BSHS">
+                  <option value="BHumServ">
                     Bachelor of Human Services (BHumServ)
                   </option>
                 </Form.Select>
@@ -181,7 +182,9 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
                 </Form.Label>
                 <Form.Select
                   value={role}
-                  onChange={(e) => setRole(e.target.value)}
+                  onChange={(e) =>
+                    setRole(e.target.value as "admin" | "student")
+                  }
                   className="py-2 border-2"
                   style={{ fontSize: "0.95rem" }}>
                   <option value="student">Student</option>

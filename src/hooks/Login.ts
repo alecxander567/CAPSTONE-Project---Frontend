@@ -6,9 +6,10 @@ interface LoginPayload {
   password: string;
 }
 
-interface LoginResponse {
+export interface LoginResponse {
   message: string;
   student_id_no: string;
+  role: "admin" | "student";
 }
 
 export const useLogin = () => {

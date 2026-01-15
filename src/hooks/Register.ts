@@ -9,6 +9,7 @@ interface RegisterPayload {
   program: string;
   email: string;
   password: string;
+  role: "admin" | "student"; 
 }
 
 export const Register = () => {
@@ -24,7 +25,7 @@ export const Register = () => {
         "http://localhost:8000/auth/register",
         payload,
         {
-          withCredentials: true, 
+          withCredentials: true,
           headers: {
             "Content-Type": "application/json",
           },

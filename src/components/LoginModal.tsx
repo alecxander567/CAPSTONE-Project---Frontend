@@ -38,13 +38,21 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
 
       setSuccessMessage(data.message);
 
+      localStorage.setItem("role", data.role);
+      localStorage.setItem("student_id_no", data.student_id_no);
+
       setTimeout(() => {
         setSuccessMessage("");
         handleClose();
-        navigate("/dashboard");
+
+        if (data.role === "admin") {
+          navigate("/dashboard");
+        } else {
+          navigate("/student-dashboard");
+        }
       }, 1000);
-    } catch (err) {
-      // Error is handled by the hook
+    } catch {
+      // already handled in hook
     }
   };
 
