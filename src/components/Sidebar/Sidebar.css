@@ -98,7 +98,7 @@
   border-radius: 8px;
   cursor: pointer;
 
-  background: #dc3545; 
+  background: #dc3545;
   color: #ffffff;
   font-weight: 500;
 
@@ -120,16 +120,33 @@
 
 .sidebar-toggle {
   position: fixed;
-  top: 1rem;
-  left: 1rem;
+  top: 0;
+  left: 0;
+  width: 100%;
   z-index: 1200;
   background: #0f52ba;
   border: none;
   color: #fff;
-  padding: 0.5rem 0.75rem;
-  border-radius: 8px;
-  font-size: 1.5rem;
+  padding: 1rem;
+  border-radius: 0;
+  font-size: 1rem;
   display: none;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.toggle-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.toggle-left i {
+  font-size: 1.5rem;
+}
+
+.toggle-logo {
+  border-radius: 50%;
 }
 
 @media (max-width: 991px) {
@@ -144,7 +161,12 @@
   }
 
   .sidebar-toggle {
-    display: block;
+    display: flex;
+    top: 0;
+    left: 0;
+    width: 100%;
+    border-radius: 0;
+    padding: 1rem;
   }
 }
 

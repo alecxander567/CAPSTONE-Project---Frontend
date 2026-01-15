@@ -43,8 +43,8 @@ const ProgramStudents = () => {
     <div className="students-layout">
       <Sidebar />
 
-      <main className="students-content">
-        <header className="students-header">
+      <main className="students-content fade-up">
+        <header className="students-header fade-up">
           <div className="wave"></div>
           <div className="header-content">
             <button
@@ -65,12 +65,12 @@ const ProgramStudents = () => {
 
         <div className="students-list">
           {loading ? (
-            <div className="loading-state">
+            <div className="loading-state fade-up">
               <div className="spinner"></div>
               <p>Loading students...</p>
             </div>
           ) : error ? (
-            <div className="error-state">
+            <div className="error-state fade-up">
               <i className="bi bi-exclamation-triangle-fill"></i>
               <p>{error}</p>
             </div>
@@ -106,14 +106,14 @@ const ProgramStudents = () => {
               </div>
 
               {filteredStudents.length === 0 ? (
-                <div className="empty-state">
+                <div className="empty-state fade-up">
                   <i className="bi bi-search"></i>
                   <p>No students found matching "{searchQuery}"</p>
                 </div>
               ) : (
                 <div className="students-grid">
                   {filteredStudents.map((student: Student) => (
-                    <div key={student.id} className="student-card">
+                    <div key={student.id} className="student-card fade-up">
                       <div className="student-avatar">
                         <i className="bi bi-person-circle"></i>
                       </div>

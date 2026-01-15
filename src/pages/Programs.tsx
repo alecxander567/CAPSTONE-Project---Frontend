@@ -2,10 +2,32 @@ import Sidebar from "../components/Sidebar";
 import "./Programs/Programs.css";
 import { usePrograms } from "../hooks/useProgram";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 const Programs = () => {
   const { programs, loading, error } = usePrograms();
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: "0px 0px -50px 0px",
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("show");
+          observer.unobserve(entry.target); 
+        }
+      });
+    }, observerOptions);
+
+    const fadeElements = document.querySelectorAll(".fade-up");
+    fadeElements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, [programs, loading]); 
 
   return (
     <div className="programs-layout">
@@ -15,7 +37,7 @@ const Programs = () => {
         {/* Header */}
         <header className="programs-header">
           <div className="wave"></div>
-          <div className="header-content">
+          <div className="header-content fade-up">
             <div className="header-icon">
               <i className="bi bi-building"></i>
             </div>
@@ -28,57 +50,49 @@ const Programs = () => {
 
         {/* Stats Overview */}
         <div className="stats-container">
-          <div className="stat-card">
-            <i className="bi bi-mortarboard-fill stat-icon"></i>
-            <div className="stat-info">
-              <h3>{programs.length}</h3>
-              <p>Departments</p>
-            </div>
-          </div>
-          <div className="stat-card">
-            <i className="bi bi-people-fill stat-icon"></i>
-            <div className="stat-info">
-              <h3>{programs.reduce((acc, p) => acc + p.students, 0)}</h3>
-              <p>Total Students</p>
-            </div>
-          </div>
-          <div className="stat-card">
-            <i className="bi bi-graph-up-arrow stat-icon"></i>
-            <div className="stat-info">
-              <h3>Active</h3>
-              <p>All Programs</p>
-            </div>
-          </div>
+          {["Departments", "Total Students", "Active Programs"].map(
+            (label, i) => (
+              <div key={i} className={`stat-card fade-up fade-delay-${i + 1}`}>
+                <i
+                  className={`bi stat-icon ${
+                    [
+                      "bi-mortarboard-fill",
+                      "bi-people-fill",
+                      "bi-graph-up-arrow",
+                    ][i]
+                  }`}></i>
+                <div className="stat-info">
+                  <h3>
+                    {i === 0
+                      ? programs.length
+                      : i === 1
+                      ? programs.reduce((acc, p) => acc + p.students, 0)
+                      : "Active"}
+                  </h3>
+                  <p>{label}</p>
+                </div>
+              </div>
+            )
+          )}
         </div>
 
         {/* Program List */}
         <div className="programs-section">
-          <div className="section-header">
+          <div className="section-header fade-up">
             <h2>All Departments</h2>
             <p>Click on any department to view enrolled students</p>
           </div>
 
           <div className="programs-list">
-            {loading && (
-              <div className="loading-state">
-                <div className="spinner"></div>
-                <p>Loading departments...</p>
-              </div>
-            )}
-
-            {error && (
-              <div className="error-state">
-                <i className="bi bi-exclamation-triangle-fill"></i>
-                <p>{error}</p>
-              </div>
-            )}
-
             {!loading &&
               !error &&
-              programs.map((program) => (
+              programs.map((program, index) => (
                 <div
                   key={program.code}
-                  className="program-card"
+                  className={`program-card fade-up fade-delay-${Math.min(
+                    (index % 4) + 1,
+                    4
+                  )}`}
                   onClick={() =>
                     navigate(`/programs/${program.code}/students`)
                   }>

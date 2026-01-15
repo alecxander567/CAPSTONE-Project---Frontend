@@ -2,6 +2,7 @@ import "./Sidebar/Sidebar.css";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useLogout } from "../hooks/Logout";
 import { useState } from "react";
+import logo from "../assets/logo.jpg";
 
 const Sidebar = () => {
   const navigate = useNavigate();
@@ -14,13 +15,20 @@ const Sidebar = () => {
 
   const handleNavigate = (path: string) => {
     navigate(path);
-    setOpen(false); 
+    setOpen(false);
   };
 
   return (
     <>
       <button className="sidebar-toggle" onClick={() => setOpen(!open)}>
         <i className="bi bi-list"></i>
+        <img
+          src={logo}
+          alt="Logo"
+          width="40"
+          height="40"
+          className="d-inline-block align-top rounded-circle me-2"
+        />
       </button>
 
       <aside className={`sidebar ${open ? "open" : ""}`}>

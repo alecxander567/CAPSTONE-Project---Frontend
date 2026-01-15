@@ -29,7 +29,7 @@ function Landingpage() {
           if (entry.isIntersecting) {
             entry.target.classList.add("show");
           } else {
-            entry.target.classList.remove("show"); 
+            entry.target.classList.remove("show");
           }
         });
       },
@@ -56,7 +56,7 @@ function Landingpage() {
             className="d-inline-block align-top rounded-circle me-2"
           />
           <span className="d-none d-md-inline">
-            IoT Biometric ARA Attendance System
+            IoT Activity Record Attendance(ARA) System using Biometric
           </span>
           <span className="d-inline d-md-none">ARA System</span>
         </Navbar.Brand>
@@ -77,8 +77,8 @@ function Landingpage() {
           <Row className="justify-content-center align-items-center text-center">
             <Col xs={12} lg={10} xl={8} className="fade-up">
               <h1 className="hero-title fw-bold mb-4">
-                Activity Record Attendance (ARA){" "}
-                <span className="hero-primary">IoT Biometric</span> System
+                IoT Activity Record Attendance (ARA) System using{" "}
+                <span className="hero-primary">Biometric</span>
               </h1>
               <p className="lead mb-4 px-3">
                 A simple and secure way to manage student attendance
