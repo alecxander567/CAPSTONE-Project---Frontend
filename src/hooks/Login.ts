@@ -23,10 +23,17 @@ export const useLogin = () => {
     try {
       const response = await axios.post(
         "http://localhost:8000/auth/login",
-        payload
+        payload,
       );
 
-      return response.data;
+      const data = response.data;
+
+      localStorage.setItem("token", data.access_token);
+
+      localStorage.setItem("role", data.role);
+      localStorage.setItem("student_id_no", data.student_id_no);
+
+      return data;
     } catch (err: any) {
       if (err.response?.data?.detail) {
         setError(err.response.data.detail);

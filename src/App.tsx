@@ -4,6 +4,7 @@ import Landingpage from "./pages/Landingpage";
 import Dashboard from "./pages/Dashboard";
 import Programs from "./pages/Programs";
 import ProgramStudents from "./pages/ProgramStudents";
+import Events from "./pages/Events";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         path="/programs/:programCode/students"
         element={<ProgramStudents />}
       />
+      <Route path="/events" element={<Events />} />
     </Routes>
   );
 }

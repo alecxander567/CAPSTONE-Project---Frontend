@@ -102,7 +102,9 @@
   color: #ffffff;
   font-weight: 500;
 
-  transition: background 0.25s ease, transform 0.15s ease;
+  transition:
+    background 0.25s ease,
+    transform 0.15s ease;
 }
 
 .sidebar-logout.danger i {
