@@ -42,7 +42,6 @@ export const useEvents = (): UseEventsResult => {
         );
         setEvents(response.data);
 
-        // ✅ fetch count
         const countResponse = await axios.get<{ total_events: number }>(
           "http://127.0.0.1:8000/events/count",
         );
