@@ -46,6 +46,13 @@ const Sidebar = () => {
             </li>
 
             <li
+              className={isActive("/notifications") ? "active" : ""}
+              onClick={() => handleNavigate("/notifications")}>
+              <i className="bi bi-bell"></i>
+              <span>Notifications</span>
+            </li>
+
+            <li
               className={isActive("/events") ? "active" : ""}
               onClick={() => handleNavigate("/events")}>
               <i className="bi bi-calendar-event"></i>

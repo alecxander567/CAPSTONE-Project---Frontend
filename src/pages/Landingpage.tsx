@@ -35,7 +35,7 @@ function Landingpage() {
       },
       {
         threshold: 0.15,
-      }
+      },
     );
 
     elements.forEach((el) => observer.observe(el));
@@ -89,7 +89,7 @@ function Landingpage() {
                   className="btn-login"
                   size="lg"
                   onClick={() => setShowLogin(true)}>
-                  <i className="bi bi-mortarboard-fill me-2"></i>
+                  <i className="bi bi-box-arrow-in-right me-2"></i>
                   Login
                 </Button>
                 <Button className="btn-register" size="lg" onClick={handleShow}>

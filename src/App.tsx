@@ -5,6 +5,7 @@ import Dashboard from "./pages/Dashboard";
 import Programs from "./pages/Programs";
 import ProgramStudents from "./pages/ProgramStudents";
 import Events from "./pages/Events";
+import Notifications from "./pages/Notifications";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         element={<ProgramStudents />}
       />
       <Route path="/events" element={<Events />} />
+      <Route path="/notifications" element={<Notifications />} />
     </Routes>
   );
 }
