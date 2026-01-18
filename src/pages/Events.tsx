@@ -8,8 +8,15 @@ import SuccessAlert from "../components/SuccessAlert";
 import "./Events/Events.css";
 
 function Events() {
-  const { events, loading, error, addEvent, editEvent, deleteEvent } =
-    useEvents();
+  const {
+    events,
+    totalEvents,
+    loading,
+    error,
+    addEvent,
+    editEvent,
+    deleteEvent,
+  } = useEvents();
   const [showModal, setShowModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
 
@@ -91,8 +98,13 @@ function Events() {
             <div className="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
               <h2 className="events-section-title mb-0">
                 <i className="bi bi-calendar-check me-2 text-primary"></i>
-                Upcoming Events & Highlights
+                Upcoming Events & Highlights{" "}
+                <span className="badge bg-primary">{totalEvents}</span>
               </h2>
+
+              {loading && <p>Loading...</p>}
+              {error && <p>{error}</p>}
+
               <button
                 className="btn btn-primary btn-add-event shadow-sm"
                 onClick={handleOpenModal}>

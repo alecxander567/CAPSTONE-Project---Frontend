@@ -17,6 +17,7 @@ interface UseEventsResult {
   events: Event[];
   loading: boolean;
   error: string | null;
+  totalEvents: number;
   addEvent: (
     data: Omit<Event, "id" | "created_by" | "created_at">,
   ) => Promise<void>;
@@ -30,6 +31,7 @@ export const useEvents = (): UseEventsResult => {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [totalEvents, setTotalEvents] = useState<number>(0);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -39,6 +41,13 @@ export const useEvents = (): UseEventsResult => {
           "http://127.0.0.1:8000/events/",
         );
         setEvents(response.data);
+
+        // ✅ fetch count
+        const countResponse = await axios.get<{ total_events: number }>(
+          "http://127.0.0.1:8000/events/count",
+        );
+        setTotalEvents(countResponse.data.total_events);
+
         setError(null);
       } catch (err) {
         console.error(err);
@@ -114,5 +123,13 @@ export const useEvents = (): UseEventsResult => {
     }
   };
 
-  return { events, loading, error, addEvent, editEvent, deleteEvent };
+  return {
+    events,
+    loading,
+    error,
+    totalEvents,
+    addEvent,
+    editEvent,
+    deleteEvent,
+  };
 };
