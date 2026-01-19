@@ -134,15 +134,6 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
               />
             </div>
           </Form.Group>
-
-          {/* Remember Me */}
-          <Form.Group className="mb-3">
-            <Form.Check
-              type="checkbox"
-              label="Remember me"
-              className="small text-secondary"
-            />
-          </Form.Group>
         </Form>
 
         {/* Alerts */}
@@ -167,7 +158,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
               onClick={handleLogin}
               disabled={loading}
               className="flex-fill py-2 fw-semibold">
-              {loading ? (
+              {loading ?
                 <>
                   <span
                     className="spinner-border spinner-border-sm me-2"
@@ -175,12 +166,11 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
                     aria-hidden="true"></span>
                   Signing in...
                 </>
-              ) : (
-                <>
+              : <>
                   <i className="bi bi-box-arrow-in-right me-2"></i>
                   Sign In
                 </>
-              )}
+              }
             </Button>
           </div>
 

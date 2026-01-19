@@ -16,6 +16,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
   initialData = null,
 }) => {
   const [visible, setVisible] = useState(false);
+  const [active, setActive] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [eventDate, setEventDate] = useState("");
@@ -42,11 +43,17 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
   }, [initialData, show]);
 
   useEffect(() => {
-    if (show) setVisible(true);
-    else {
-      const timeout = setTimeout(() => setVisible(false), 300);
-      return () => clearTimeout(timeout);
+    let timeout: number;
+
+    if (show) {
+      setVisible(true);
+      timeout = window.setTimeout(() => setActive(true), 20); 
+    } else {
+      setActive(false);
+      timeout = window.setTimeout(() => setVisible(false), 300); 
     }
+
+    return () => clearTimeout(timeout);
   }, [show]);
 
   const handleSubmit = (e: FormEvent) => {
@@ -64,20 +71,18 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
   if (!visible) return null;
 
   return (
-    <div
-      className={`modal fade ${show ? "show d-block" : ""}`}
-      tabIndex={-1}
-      role="dialog"
-      style={{
-        backgroundColor: show ? "rgba(10, 26, 255, 0.15)" : "transparent",
-      }}>
-      <div className="modal-dialog modal-dialog-centered" role="document">
+    <div className={`custom-modal ${active ? "active" : ""}`} onClick={onClose}>
+      <div
+        className="modal-dialog modal-dialog-centered"
+        onClick={(e) => e.stopPropagation()}>
         <div className="modal-content modal-content-enhanced">
           <div className="modal-header modal-header-enhanced">
             <div className="modal-header-content">
               <div className="modal-icon">
                 <i
-                  className={`bi ${initialData ? "bi-pencil-square" : "bi-calendar-plus"}`}></i>
+                  className={`bi ${
+                    initialData ? "bi-pencil-square" : "bi-calendar-plus"
+                  }`}></i>
               </div>
               <div>
                 <h5 className="modal-title">
@@ -201,7 +206,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                 type="submit"
                 className="btn btn-primary btn-primary-enhanced">
                 <i
-                  className={`bi ${initialData ? "bi-save" : "bi-check-circle"} me-2`}></i>
+                  className={`bi ${
+                    initialData ? "bi-save" : "bi-check-circle"
+                  } me-2`}></i>
                 {initialData ? "Update Event" : "Save Event"}
               </button>
             </div>

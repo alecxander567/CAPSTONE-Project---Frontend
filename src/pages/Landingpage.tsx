@@ -21,7 +21,7 @@ function Landingpage() {
   const handleShow = () => setShowRegisterModal(true);
 
   useEffect(() => {
-    const elements = document.querySelectorAll(".fade-up");
+    const sections = document.querySelectorAll(".fade-section");
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -34,11 +34,12 @@ function Landingpage() {
         });
       },
       {
-        threshold: 0.15,
+        threshold: 0.3,
+        rootMargin: "0px 0px -120px 0px",
       },
     );
 
-    elements.forEach((el) => observer.observe(el));
+    sections.forEach((section) => observer.observe(section));
 
     return () => observer.disconnect();
   }, []);
@@ -72,18 +73,20 @@ function Landingpage() {
       </Navbar>
 
       {/* ------------------- HERO SECTION ------------------- */}
-      <div className="hero-section">
+      <div className="hero-section" id="hero">
         <Container>
           <Row className="justify-content-center align-items-center text-center">
-            <Col xs={12} lg={10} xl={8} className="fade-up">
+            <Col xs={12} lg={10} xl={8} className="hero-content fade-section">
               <h1 className="hero-title fw-bold mb-4">
                 IoT Activity Record Attendance (ARA) System using{" "}
                 <span className="hero-primary">Biometric</span>
               </h1>
+
               <p className="lead mb-4 px-3">
                 A simple and secure way to manage student attendance
                 efficiently.
               </p>
+
               <div className="d-flex flex-column flex-sm-row justify-content-center gap-3 mb-4">
                 <Button
                   className="btn-login"
@@ -92,6 +95,7 @@ function Landingpage() {
                   <i className="bi bi-box-arrow-in-right me-2"></i>
                   Login
                 </Button>
+
                 <Button className="btn-register" size="lg" onClick={handleShow}>
                   <i className="bi bi-person-plus-fill me-2"></i> Register
                 </Button>
@@ -102,7 +106,7 @@ function Landingpage() {
       </div>
 
       {/* ------------------- ABOUT SECTION ------------------- */}
-      <section id="about" className="py-5 bg-white fade-up">
+      <section id="about" className="py-5 bg-white fade-section">
         <Container>
           <Row className="justify-content-center text-center mb-5">
             <Col lg={8}>
@@ -120,7 +124,7 @@ function Landingpage() {
             <Col md={6} lg={3} className="fade-up fade-delay-1">
               <Card className="h-100 border-0 shadow-sm hover-lift">
                 <Card.Body className="text-center p-4">
-                  <div className="bg-primary bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
+                  <div className="mb-3">
                     <i className="bi bi-fingerprint text-primary fs-1"></i>
                   </div>
                   <h5 className="fw-bold mb-3">Biometric Security</h5>
@@ -134,7 +138,7 @@ function Landingpage() {
             <Col md={6} lg={3} className="fade-up fade-delay-2">
               <Card className="h-100 border-0 shadow-sm hover-lift">
                 <Card.Body className="text-center p-4">
-                  <div className="bg-success bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
+                  <div className="mb-3">
                     <i className="bi bi-clock-history text-success fs-1"></i>
                   </div>
                   <h5 className="fw-bold mb-3">Real-Time Tracking</h5>
@@ -148,7 +152,7 @@ function Landingpage() {
             <Col md={6} lg={3} className="fade-up fade-delay-3">
               <Card className="h-100 border-0 shadow-sm hover-lift">
                 <Card.Body className="text-center p-4">
-                  <div className="bg-info bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
+                  <div className="mb-3">
                     <i className="bi bi-graph-up-arrow text-info fs-1"></i>
                   </div>
                   <h5 className="fw-bold mb-3">Analytics Dashboard</h5>
@@ -162,7 +166,7 @@ function Landingpage() {
             <Col md={6} lg={3} className="fade-up fade-delay-4">
               <Card className="h-100 border-0 shadow-sm hover-lift">
                 <Card.Body className="text-center p-4">
-                  <div className="bg-warning bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
+                  <div className="mb-3">
                     <i className="bi bi-shield-check text-warning fs-1"></i>
                   </div>
                   <h5 className="fw-bold mb-3">Data Privacy</h5>
@@ -178,7 +182,7 @@ function Landingpage() {
       </section>
 
       {/* ------------------- FEATURES SECTION ------------------- */}
-      <section id="features" className="py-5 bg-light fade-up">
+      <section id="features" className="py-5 bg-light fade-section">
         <Container>
           <Row className="justify-content-center text-center mb-5">
             <Col lg={8}>
@@ -196,7 +200,7 @@ function Landingpage() {
               <div className="pe-lg-4">
                 <div className="mb-4">
                   <div className="d-flex align-items-start mb-3">
-                    <div className="bg-primary bg-opacity-10 rounded p-2 me-3">
+                    <div className="me-3">
                       <i className="bi bi-check2-circle text-primary fs-4"></i>
                     </div>
                     <div>
@@ -210,7 +214,7 @@ function Landingpage() {
                 </div>
                 <div className="mb-4">
                   <div className="d-flex align-items-start mb-3">
-                    <div className="bg-success bg-opacity-10 rounded p-2 me-3">
+                    <div className="me-3">
                       <i className="bi bi-bell text-success fs-4"></i>
                     </div>
                     <div>
@@ -224,7 +228,7 @@ function Landingpage() {
                 </div>
                 <div className="mb-4">
                   <div className="d-flex align-items-start mb-3">
-                    <div className="bg-info bg-opacity-10 rounded p-2 me-3">
+                    <div className="me-3">
                       <i className="bi bi-file-earmark-bar-graph text-info fs-4"></i>
                     </div>
                     <div>
@@ -242,7 +246,7 @@ function Landingpage() {
               <div className="ps-lg-4">
                 <div className="mb-4">
                   <div className="d-flex align-items-start mb-3">
-                    <div className="bg-warning bg-opacity-10 rounded p-2 me-3">
+                    <div className="me-3">
                       <i className="bi bi-people text-warning fs-4"></i>
                     </div>
                     <div>
@@ -256,7 +260,7 @@ function Landingpage() {
                 </div>
                 <div className="mb-4">
                   <div className="d-flex align-items-start mb-3">
-                    <div className="bg-danger bg-opacity-10 rounded p-2 me-3">
+                    <div className="me-3">
                       <i className="bi bi-cloud-check text-danger fs-4"></i>
                     </div>
                     <div>
@@ -270,7 +274,7 @@ function Landingpage() {
                 </div>
                 <div className="mb-4">
                   <div className="d-flex align-items-start mb-3">
-                    <div className="bg-secondary bg-opacity-10 rounded p-2 me-3">
+                    <div className="me-3">
                       <i className="bi bi-download text-secondary fs-4"></i>
                     </div>
                     <div>
@@ -289,7 +293,7 @@ function Landingpage() {
       </section>
 
       {/* ------------------- DOCUMENTATION SECTION ------------------- */}
-      <section id="documentation" className="py-5 bg-white fade-up">
+      <section id="documentation" className="py-5 bg-white fade-section">
         <Container>
           <Row className="justify-content-center text-center mb-5">
             <Col lg={8}>
@@ -306,7 +310,7 @@ function Landingpage() {
             <Col md={6} lg={4} className="fade-up fade-delay-1">
               <Card className="h-100 border-0 shadow-sm hover-lift">
                 <Card.Body className="p-4">
-                  <div className="bg-primary bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
+                  <div className="mb-3">
                     <i className="bi bi-rocket-takeoff text-primary fs-3"></i>
                   </div>
                   <h5 className="fw-bold mb-3">Getting Started</h5>
@@ -320,10 +324,10 @@ function Landingpage() {
                 </Card.Body>
               </Card>
             </Col>
-            <Col md={6} lg={4} className="fade-up fade-delay-1">
+            <Col md={6} lg={4} className="fade-up fade-delay-2">
               <Card className="h-100 border-0 shadow-sm hover-lift">
                 <Card.Body className="p-4">
-                  <div className="bg-success bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
+                  <div className="mb-3">
                     <i className="bi bi-gear-fill text-success fs-3"></i>
                   </div>
                   <h5 className="fw-bold mb-3">User Manual</h5>
@@ -337,10 +341,10 @@ function Landingpage() {
                 </Card.Body>
               </Card>
             </Col>
-            <Col md={6} lg={4} className="fade-up fade-delay-1">
+            <Col md={6} lg={4} className="fade-up fade-delay-3">
               <Card className="h-100 border-0 shadow-sm hover-lift">
                 <Card.Body className="p-4">
-                  <div className="bg-info bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
+                  <div className="mb-3">
                     <i className="bi bi-code-square text-info fs-3"></i>
                   </div>
                   <h5 className="fw-bold mb-3">API Documentation</h5>
@@ -384,7 +388,7 @@ function Landingpage() {
       </section>
 
       {/* ------------------- CONTACT SECTION ------------------- */}
-      <section id="contact" className="py-5 bg-light fade-up">
+      <section id="contact" className="py-5 bg-light fade-section">
         <Container>
           <Row className="justify-content-center text-center mb-5">
             <Col lg={8}>
@@ -401,7 +405,7 @@ function Landingpage() {
             <Col lg={4} className="fade-up fade-delay-1">
               <Card className="h-100 border-0 shadow-sm text-center hover-lift">
                 <Card.Body className="p-4">
-                  <div className="bg-primary bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
+                  <div className="mb-3">
                     <i className="bi bi-geo-alt-fill text-primary fs-3"></i>
                   </div>
                   <h5 className="fw-bold mb-3">Visit Us</h5>
@@ -415,10 +419,10 @@ function Landingpage() {
                 </Card.Body>
               </Card>
             </Col>
-            <Col lg={4} className="fade-up fade-delay-1">
+            <Col lg={4} className="fade-up fade-delay-2">
               <Card className="h-100 border-0 shadow-sm text-center hover-lift">
                 <Card.Body className="p-4">
-                  <div className="bg-success bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
+                  <div className="mb-3">
                     <i className="bi bi-telephone-fill text-success fs-3"></i>
                   </div>
                   <h5 className="fw-bold mb-3">Call Us</h5>
@@ -432,10 +436,10 @@ function Landingpage() {
                 </Card.Body>
               </Card>
             </Col>
-            <Col lg={4} className="fade-up fade-delay-1">
+            <Col lg={4} className="fade-up fade-delay-3">
               <Card className="h-100 border-0 shadow-sm text-center hover-lift">
                 <Card.Body className="p-4">
-                  <div className="bg-info bg-opacity-10 rounded-circle p-3 d-inline-flex mb-3">
+                  <div className="mb-3">
                     <i className="bi bi-envelope-fill text-info fs-3"></i>
                   </div>
                   <h5 className="fw-bold mb-3">Email Us</h5>
@@ -458,7 +462,7 @@ function Landingpage() {
       <LoginModal show={showLogin} handleClose={() => setShowLogin(false)} />
 
       {/* ------------------- FOOTER ------------------- */}
-      <footer className="bg-dark text-white py-4 mt-auto fade-up">
+      <footer className="bg-dark text-white py-4 mt-auto fade-section">
         <Container>
           <Row className="g-4">
             <Col lg={4}>
