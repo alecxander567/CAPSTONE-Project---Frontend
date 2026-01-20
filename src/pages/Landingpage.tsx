@@ -12,10 +12,14 @@ import "./Landingpage/Landingpage.css";
 import logo from "../assets/logo.jpg";
 import RegisterModal from "../components/RegisterModal";
 import LoginModal from "../components/LoginModal";
+import AdminUserManualModal from "../components/AdminUserManualModal";
+import StudentUserManualModal from "../components/StudentsuserManualModal";
 
 function Landingpage() {
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  const [showAdminManual, setShowAdminManual] = useState(false);
+  const [showStudentManual, setShowStudentManual] = useState(false);
 
   const handleClose = () => setShowRegisterModal(false);
   const handleShow = () => setShowRegisterModal(true);
@@ -295,6 +299,7 @@ function Landingpage() {
       {/* ------------------- DOCUMENTATION SECTION ------------------- */}
       <section id="documentation" className="py-5 bg-white fade-section">
         <Container>
+          {/* Header */}
           <Row className="justify-content-center text-center mb-5">
             <Col lg={8}>
               <div className="mb-4">
@@ -306,59 +311,56 @@ function Landingpage() {
               </p>
             </Col>
           </Row>
+
+          {/* User Manuals */}
           <Row className="g-4">
-            <Col md={6} lg={4} className="fade-up fade-delay-1">
+            {/* Admin Manual */}
+            <Col md={6} className="fade-up fade-delay-1">
               <Card className="h-100 border-0 shadow-sm hover-lift">
                 <Card.Body className="p-4">
                   <div className="mb-3">
-                    <i className="bi bi-rocket-takeoff text-primary fs-3"></i>
+                    <i className="bi bi-shield-lock-fill text-primary fs-3"></i>
                   </div>
-                  <h5 className="fw-bold mb-3">Getting Started</h5>
+                  <h5 className="fw-bold mb-3">Admin User Manual</h5>
                   <p className="text-muted small mb-3">
-                    Learn how to set up your account, register your biometric
-                    data, and start using the system.
+                    Documentation intended for administrators and event
+                    managers.
                   </p>
-                  <Button variant="outline-primary" size="sm">
-                    View Guide <i className="bi bi-arrow-right ms-1"></i>
+                  <Button
+                    variant="outline-primary"
+                    size="sm"
+                    onClick={() => setShowAdminManual(true)}>
+                    View Admin Guide <i className="bi bi-arrow-right ms-1"></i>
                   </Button>
                 </Card.Body>
               </Card>
             </Col>
-            <Col md={6} lg={4} className="fade-up fade-delay-2">
+
+            {/* Student Manual */}
+            <Col md={6} className="fade-up fade-delay-2">
               <Card className="h-100 border-0 shadow-sm hover-lift">
                 <Card.Body className="p-4">
                   <div className="mb-3">
-                    <i className="bi bi-gear-fill text-success fs-3"></i>
+                    <i className="bi bi-person-fill text-primary fs-3"></i>
                   </div>
-                  <h5 className="fw-bold mb-3">User Manual</h5>
+                  <h5 className="fw-bold mb-3">Student User Manual</h5>
                   <p className="text-muted small mb-3">
-                    Detailed instructions on using all features, managing
-                    settings, and troubleshooting common issues.
+                    Documentation intended for students using the attendance
+                    system.
                   </p>
-                  <Button variant="outline-success" size="sm">
-                    Read Manual <i className="bi bi-arrow-right ms-1"></i>
-                  </Button>
-                </Card.Body>
-              </Card>
-            </Col>
-            <Col md={6} lg={4} className="fade-up fade-delay-3">
-              <Card className="h-100 border-0 shadow-sm hover-lift">
-                <Card.Body className="p-4">
-                  <div className="mb-3">
-                    <i className="bi bi-code-square text-info fs-3"></i>
-                  </div>
-                  <h5 className="fw-bold mb-3">API Documentation</h5>
-                  <p className="text-muted small mb-3">
-                    Technical documentation for developers looking to integrate
-                    or extend the ARA System.
-                  </p>
-                  <Button variant="outline-info" size="sm">
-                    API Docs <i className="bi bi-arrow-right ms-1"></i>
+                  <Button
+                    variant="outline-primary"
+                    size="sm"
+                    onClick={() => setShowStudentManual(true)}>
+                    View Student Guide{" "}
+                    <i className="bi bi-arrow-right ms-1"></i>
                   </Button>
                 </Card.Body>
               </Card>
             </Col>
           </Row>
+
+          {/* Help Card */}
           <Row className="mt-4">
             <Col lg={12}>
               <Card className="border-0 shadow-sm bg-light">
@@ -460,6 +462,14 @@ function Landingpage() {
       {/*  MODALS */}
       <RegisterModal show={showRegisterModal} handleClose={handleClose} />
       <LoginModal show={showLogin} handleClose={() => setShowLogin(false)} />
+      <AdminUserManualModal
+        show={showAdminManual}
+        onHide={() => setShowAdminManual(false)}
+      />
+      <StudentUserManualModal
+        show={showStudentManual}
+        onHide={() => setShowStudentManual(false)}
+      />
 
       {/* ------------------- FOOTER ------------------- */}
       <footer className="bg-dark text-white py-4 mt-auto fade-section">

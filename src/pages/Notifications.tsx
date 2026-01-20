@@ -81,10 +81,9 @@ const Notifications = () => {
             </div>
 
             <div className="notifications-header-actions">
-              {/* Delete All Button */}
               {sortedNotifications.length > 0 && (
                 <button
-                  onClick={deleteAllNotifications}
+                  onClick={handleDeleteAll}
                   disabled={isDeleting}
                   className="clear-all-btn">
                   <i className="bi bi-trash"></i>
@@ -142,13 +141,6 @@ const Notifications = () => {
                     </div>
 
                     <p className="notification-message">{n.message}</p>
-
-                    {n.event_id && (
-                      <div className="notification-event-id">
-                        <i className="bi bi-calendar-event"></i>
-                        Event ID: {n.event_id}
-                      </div>
-                    )}
                   </div>
                 ))}
               </>

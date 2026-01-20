@@ -31,12 +31,7 @@ const SuccessAlert: React.FC<SuccessAlertProps> = ({
       <div className="success-alert-container">
         <div className="success-alert-icon">
           <div className="success-checkmark">
-            <div className="check-icon">
-              <span className="icon-line line-tip"></span>
-              <span className="icon-line line-long"></span>
-              <div className="icon-circle"></div>
-              <div className="icon-fix"></div>
-            </div>
+            <i className="bi bi-check-lg"></i>
           </div>
         </div>
         <h3 className="success-alert-title">Success!</h3>
