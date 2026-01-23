@@ -2,12 +2,14 @@ import "./Sidebar.css";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useLogout } from "../../hooks/Logout";
 import { useState } from "react";
+import { useNotifications } from "../../hooks/useNotifyEvents";
 import logo from "../../assets/logo.jpg";
 
 const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { logout } = useLogout();
+  const { notifications } = useNotifications();
 
   const [open, setOpen] = useState(false);
 
@@ -17,6 +19,8 @@ const Sidebar = () => {
     navigate(path);
     setOpen(false);
   };
+
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   return (
     <>
@@ -47,9 +51,32 @@ const Sidebar = () => {
 
             <li
               className={isActive("/notifications") ? "active" : ""}
-              onClick={() => handleNavigate("/notifications")}>
+              onClick={() => handleNavigate("/notifications")}
+              style={{ position: "relative" }}>
               <i className="bi bi-bell"></i>
               <span>Notifications</span>
+              {unreadCount > 0 && (
+                <span
+                  className="notification-badge"
+                  style={{
+                    position: "absolute",
+                    top: "50%",
+                    right: "20px",
+                    transform: "translateY(-50%)",
+                    backgroundColor: "#dc3545",
+                    color: "white",
+                    borderRadius: "50%",
+                    width: "24px",
+                    height: "24px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                  }}>
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
             </li>
 
             <li

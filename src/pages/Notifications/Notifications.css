@@ -395,7 +395,7 @@
 @media (max-width: 991px) {
   .page-content {
     margin-left: 0;
-    padding-top: 72px; 
+    padding-top: 72px;
     width: 100%;
   }
 
@@ -567,4 +567,114 @@
   .empty-state {
     padding: 2rem 1rem;
   }
+}
+
+.mark-all-btn {
+  padding: 0.75rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #ffffff;
+
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.25),
+    rgba(255, 255, 255, 0.15)
+  );
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 12px;
+
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  cursor: pointer;
+  white-space: nowrap;
+
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mark-all-btn i {
+  font-size: 1.05rem;
+}
+
+.mark-all-btn:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.35),
+    rgba(255, 255, 255, 0.25)
+  );
+
+  transform: translateY(-2px);
+  box-shadow:
+    0 6px 14px rgba(0, 0, 0, 0.15),
+    0 0 12px rgba(255, 255, 255, 0.25);
+}
+
+.mark-all-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+}
+
+.mark-all-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.notification-action-group {
+  position: absolute;
+  bottom: 1.25rem;
+  right: 1.25rem;
+
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.mark-read-btn {
+  padding: 0.5rem 1.1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+
+  border: none;
+  border-radius: 999px;
+
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+
+  cursor: pointer;
+  transition: all 0.25s ease;
+
+  box-shadow: 0 4px 10px rgba(34, 197, 94, 0.25);
+}
+
+.mark-read-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(34, 197, 94, 0.35);
+}
+
+.mark-read-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.mark-read-btn i {
+  font-size: 0.9rem;
+}
+
+.delete-btn {
+  border-radius: 999px;
+  padding: 0.5rem 1.1rem;
+  font-size: 0.85rem;
 }

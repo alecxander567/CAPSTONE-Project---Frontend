@@ -1,0 +1,9 @@
+{
+  "name": "ARA Biometric Attendance",
+  "short_name": "ARA",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0d6efd",
+  "gcm_sender_id": "482941778795"
+}

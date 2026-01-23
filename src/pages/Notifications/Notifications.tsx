@@ -1,23 +1,39 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import { useNotifications } from "../../hooks/useNotifyEvents";
 import SuccessAlert from "../../components/SuccessAlert/SuccessAlert";
 import ErrorAlert from "../../components/SuccessAlert/ErrorAlert";
+import DeleteNotificationModal from "../../components/DeleteNotificationModal/DeleteNotificationModal";
 import "./Notifications.css";
 
 const Notifications = () => {
   const {
     notifications,
-    error,
     isDeleting,
     deletingIds,
+    markingIds,
+    error,
+    isMarkingAll,
     successMessage,
     errorMessage,
+    markAsRead,
+    markAllAsRead,
     deleteNotification,
     deleteAllNotifications,
     clearSuccessMessage,
     clearErrorMessage,
   } = useNotifications();
+
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: number | null;
+    title: string;
+    isAll: boolean;
+  }>({
+    id: null,
+    title: "",
+    isAll: false,
+  });
 
   const sortedNotifications = useMemo(() => {
     return [...notifications].sort((a, b) => {
@@ -25,21 +41,33 @@ const Notifications = () => {
     });
   }, [notifications]);
 
-  const handleDeleteNotification = async (notificationId: number) => {
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
+
+  const handleDeleteClick = (id: number, title: string) => {
+    setDeleteTarget({ id, title, isAll: false });
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteAllClick = () => {
+    setDeleteTarget({ id: null, title: "", isAll: true });
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
     try {
-      await deleteNotification(notificationId);
+      if (deleteTarget.isAll) {
+        await deleteAllNotifications();
+      } else if (deleteTarget.id) {
+        await deleteNotification(deleteTarget.id);
+      }
     } catch (err) {
       // Error is already handled in the hook
     }
   };
 
-  const handleDeleteAll = async () => {
-    if (!confirm("Are you sure you want to delete all notifications?")) {
-      return;
-    }
-
+  const handleMarkAllAsRead = async () => {
     try {
-      await deleteAllNotifications();
+      await markAllAsRead();
     } catch (err) {
       // Error is already handled in the hook
     }
@@ -49,14 +77,20 @@ const Notifications = () => {
     <>
       <Sidebar />
 
-      {/* Success Alert */}
+      <DeleteNotificationModal
+        show={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleConfirmDelete}
+        notificationTitle={deleteTarget.title}
+        isAll={deleteTarget.isAll}
+      />
+
       <SuccessAlert
         show={!!successMessage}
         message={successMessage || ""}
         onClose={clearSuccessMessage}
       />
 
-      {/* Error Alert */}
       <ErrorAlert
         show={!!errorMessage}
         message={errorMessage || ""}
@@ -64,7 +98,6 @@ const Notifications = () => {
       />
 
       <main className="page-content">
-        {/* Notifications Header */}
         <header className="notifications-header">
           <div className="wave"></div>
 
@@ -81,9 +114,19 @@ const Notifications = () => {
             </div>
 
             <div className="notifications-header-actions">
+              {unreadCount > 0 && (
+                <button
+                  onClick={handleMarkAllAsRead}
+                  disabled={isMarkingAll}
+                  className="mark-all-btn"
+                  style={{ marginRight: "10px" }}>
+                  <i className="bi bi-check-all"></i>
+                  {isMarkingAll ? "Marking..." : "Mark All as Read"}
+                </button>
+              )}
               {sortedNotifications.length > 0 && (
                 <button
-                  onClick={handleDeleteAll}
+                  onClick={handleDeleteAllClick}
                   disabled={isDeleting}
                   className="clear-all-btn">
                   <i className="bi bi-trash"></i>
@@ -94,7 +137,6 @@ const Notifications = () => {
           </div>
         </header>
 
-        {/* Notifications Content */}
         <div className="notifications-content">
           {error && <p className="text-danger">{error}</p>}
 
@@ -114,6 +156,11 @@ const Notifications = () => {
                 <div className="notification-count">
                   <strong>{sortedNotifications.length}</strong> notification
                   {sortedNotifications.length !== 1 ? "s" : ""}
+                  {unreadCount > 0 && (
+                    <span style={{ marginLeft: "10px", color: "#dc3545" }}>
+                      ({unreadCount} unread)
+                    </span>
+                  )}
                 </div>
 
                 {sortedNotifications.map((n) => (
@@ -122,22 +169,54 @@ const Notifications = () => {
                     className={`notification-card ${!n.is_read ? "unread" : ""}`}>
                     <div className="notification-card-header">
                       <div className="notification-info">
-                        <h4>{n.title}</h4>
+                        <h4>
+                          {n.title}
+                          {!n.is_read && (
+                            <span
+                              style={{
+                                marginLeft: "10px",
+                                fontSize: "10px",
+                                backgroundColor: "#dc3545",
+                                color: "white",
+                                padding: "2px 8px",
+                                borderRadius: "12px",
+                                fontWeight: "bold",
+                              }}>
+                              NEW
+                            </span>
+                          )}
+                        </h4>
                         <div className="notification-timestamp">
                           <i className="bi bi-clock"></i>
                           {new Date(n.timestamp).toLocaleString()}
                         </div>
                       </div>
 
-                      {/* Delete Button */}
-                      <button
-                        onClick={() => deleteNotification(n.id)}
-                        disabled={deletingIds.includes(n.id)}
-                        className="delete-btn"
-                        title="Delete notification">
-                        <i className="bi bi-trash"></i>
-                        {deletingIds.includes(n.id) ? "Deleting..." : "Delete"}
-                      </button>
+                      <div className="notification-action-group">
+                        {!n.is_read && (
+                          <button
+                            onClick={() => markAsRead(n.id)}
+                            disabled={markingIds.includes(n.id)}
+                            className="mark-read-btn"
+                            title="Mark as read">
+                            <i className="bi bi-check"></i>
+                            {markingIds.includes(n.id) ?
+                              "Marking..."
+                            : "Mark Read"}
+                          </button>
+                        )}
+
+                        <button
+                          onClick={() => handleDeleteClick(n.id, n.title)}
+                          disabled={deletingIds.includes(n.id)}
+                          className="delete-btn"
+                          title="Delete notification">
+                          <i className="bi bi-trash"></i>
+                          {deletingIds.includes(n.id) ?
+                            "Deleting..."
+                          : "Delete"}
+                        </button>
+                      </div>
                     </div>
 
                     <p className="notification-message">{n.message}</p>
