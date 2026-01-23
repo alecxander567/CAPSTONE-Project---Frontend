@@ -1,5 +1,5 @@
-import Sidebar from "../components/Sidebar";
-import "./Dashboard/Dashboard.css";
+import Sidebar from "../../components/Sidebar/Sidebar";
+import "./Dashboard.css";
 import {
   BarChart,
   Bar,

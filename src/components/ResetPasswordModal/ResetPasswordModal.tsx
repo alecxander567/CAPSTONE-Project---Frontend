@@ -1,7 +1,7 @@
 import { Modal, Button, Form } from "react-bootstrap";
 import { useState } from "react";
-import { Password } from "../hooks/Password";
-import AnimatedAlert from "./AnimatedAlert";
+import { Password } from "../../hooks/Password";
+import AnimatedAlert from "../AnimatedAlert/AnimatedAlert";
 
 interface ResetPasswordModalProps {
   show: boolean;
@@ -136,11 +136,9 @@ const ResetPasswordModal = ({
               <div className="progress" style={{ height: "5px" }}>
                 <div
                   className={`progress-bar ${
-                    password.length < 6
-                      ? "bg-danger"
-                      : password.length < 10
-                      ? "bg-warning"
-                      : "bg-success"
+                    password.length < 6 ? "bg-danger"
+                    : password.length < 10 ? "bg-warning"
+                    : "bg-success"
                   }`}
                   style={{
                     width: `${Math.min((password.length / 12) * 100, 100)}%`,
@@ -148,17 +146,15 @@ const ResetPasswordModal = ({
               </div>
               <small
                 className={`${
-                  password.length < 6
-                    ? "text-danger"
-                    : password.length < 10
-                    ? "text-warning"
-                    : "text-success"
+                  password.length < 6 ? "text-danger"
+                  : password.length < 10 ? "text-warning"
+                  : "text-success"
                 }`}>
-                {password.length < 6
-                  ? "Weak"
-                  : password.length < 10
-                  ? "Good"
-                  : "Strong"}
+                {password.length < 6 ?
+                  "Weak"
+                : password.length < 10 ?
+                  "Good"
+                : "Strong"}
               </small>
             </div>
           )}
@@ -189,7 +185,7 @@ const ResetPasswordModal = ({
               onClick={handleReset}
               disabled={loading || !password || !confirmPassword}
               className="flex-fill py-2 fw-semibold">
-              {loading ? (
+              {loading ?
                 <>
                   <span
                     className="spinner-border spinner-border-sm me-2"
@@ -197,12 +193,11 @@ const ResetPasswordModal = ({
                     aria-hidden="true"></span>
                   Resetting...
                 </>
-              ) : (
-                <>
+              : <>
                   <i className="bi bi-check-circle me-2"></i>
                   Reset Password
                 </>
-              )}
+              }
             </Button>
           </div>
         </div>

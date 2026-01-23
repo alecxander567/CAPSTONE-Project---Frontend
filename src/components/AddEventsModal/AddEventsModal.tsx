@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import type { FormEvent } from "react";
-import "./AddEventsModal/AddEventsModal.css";
+import "./AddEventsModal.css";
 
 interface AddEventModalProps {
   show: boolean;
@@ -47,10 +47,10 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
 
     if (show) {
       setVisible(true);
-      timeout = window.setTimeout(() => setActive(true), 20); 
+      timeout = window.setTimeout(() => setActive(true), 20);
     } else {
       setActive(false);
-      timeout = window.setTimeout(() => setVisible(false), 300); 
+      timeout = window.setTimeout(() => setVisible(false), 300);
     }
 
     return () => clearTimeout(timeout);

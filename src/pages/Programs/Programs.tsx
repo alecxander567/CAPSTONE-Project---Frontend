@@ -1,6 +1,6 @@
-import Sidebar from "../components/Sidebar";
-import "./Programs/Programs.css";
-import { usePrograms } from "../hooks/useProgram";
+import Sidebar from "../../components/Sidebar/Sidebar";
+import "./Programs.css";
+import { usePrograms } from "../../hooks/useProgram";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
@@ -18,7 +18,7 @@ const Programs = () => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           entry.target.classList.add("show");
-          observer.unobserve(entry.target); 
+          observer.unobserve(entry.target);
         }
       });
     }, observerOptions);
@@ -27,7 +27,7 @@ const Programs = () => {
     fadeElements.forEach((el) => observer.observe(el));
 
     return () => observer.disconnect();
-  }, [programs, loading]); 
+  }, [programs, loading]);
 
   return (
     <div className="programs-layout">
@@ -63,16 +63,16 @@ const Programs = () => {
                   }`}></i>
                 <div className="stat-info">
                   <h3>
-                    {i === 0
-                      ? programs.length
-                      : i === 1
-                      ? programs.reduce((acc, p) => acc + p.students, 0)
-                      : "Active"}
+                    {i === 0 ?
+                      programs.length
+                    : i === 1 ?
+                      programs.reduce((acc, p) => acc + p.students, 0)
+                    : "Active"}
                   </h3>
                   <p>{label}</p>
                 </div>
               </div>
-            )
+            ),
           )}
         </div>
 
@@ -91,7 +91,7 @@ const Programs = () => {
                   key={program.code}
                   className={`program-card fade-up fade-delay-${Math.min(
                     (index % 4) + 1,
-                    4
+                    4,
                   )}`}
                   onClick={() =>
                     navigate(`/programs/${program.code}/students`)

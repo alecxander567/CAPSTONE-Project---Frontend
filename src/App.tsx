@@ -1,11 +1,11 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
-import Landingpage from "./pages/Landingpage";
-import Dashboard from "./pages/Dashboard";
-import Programs from "./pages/Programs";
-import ProgramStudents from "./pages/ProgramStudents";
-import Events from "./pages/Events";
-import Notifications from "./pages/Notifications";
+import Landingpage from "./pages/Landingpage/Landingpage";
+import Dashboard from "./pages/Dashboard/Dashboard";
+import Programs from "./pages/Programs/Programs";
+import ProgramStudents from "./pages/Programs/ProgramStudents";
+import Events from "./pages/Events/Events";
+import Notifications from "./pages/Notifications/Notifications";
 
 function App() {
   return (

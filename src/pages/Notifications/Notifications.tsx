@@ -1,9 +1,9 @@
 import { useMemo } from "react";
-import Sidebar from "../components/Sidebar";
-import { useNotifications } from "../hooks/useNotifyEvents";
-import SuccessAlert from "../components/SuccessAlert";
-import ErrorAlert from "../components/ErrorAlert";
-import "./Notifications/Notifications.css";
+import Sidebar from "../../components/Sidebar/Sidebar";
+import { useNotifications } from "../../hooks/useNotifyEvents";
+import SuccessAlert from "../../components/SuccessAlert/SuccessAlert";
+import ErrorAlert from "../../components/SuccessAlert/ErrorAlert";
+import "./Notifications.css";
 
 const Notifications = () => {
   const {

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Modal, Button, Form, Row, Col } from "react-bootstrap";
-import { Register } from "../hooks/Register";
-import AnimatedAlert from "./AnimatedAlert";
+import { Register } from "../../hooks/Register";
+import AnimatedAlert from "../AnimatedAlert/AnimatedAlert";
 
 interface RegisterModalProps {
   show: boolean;
@@ -32,7 +32,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
         program,
         email,
         password,
-        role, 
+        role,
       });
 
       setSuccessMessage("Registration successful!");
@@ -261,7 +261,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
             onClick={handleRegister}
             disabled={loading}
             className="flex-fill py-2 fw-semibold">
-            {loading ? (
+            {loading ?
               <>
                 <span
                   className="spinner-border spinner-border-sm me-2"
@@ -269,12 +269,11 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
                   aria-hidden="true"></span>
                 Creating Account...
               </>
-            ) : (
-              <>
+            : <>
                 <i className="bi bi-check-circle me-2"></i>
                 Create Account
               </>
-            )}
+            }
           </Button>
         </div>
       </Modal.Footer>

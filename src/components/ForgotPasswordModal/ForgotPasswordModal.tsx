@@ -1,7 +1,7 @@
 import { Modal, Button, Form } from "react-bootstrap";
 import { useState } from "react";
-import { Password } from "../hooks/Password";
-import AnimatedAlert from "./AnimatedAlert";
+import { Password } from "../../hooks/Password";
+import AnimatedAlert from "../AnimatedAlert/AnimatedAlert";
 
 interface Props {
   show: boolean;
@@ -83,7 +83,7 @@ const ForgotPasswordModal = ({ show, onClose, onSuccess }: Props) => {
               onClick={handleSubmit}
               disabled={loading || !studentId.trim()}
               className="flex-fill py-2 fw-semibold">
-              {loading ? (
+              {loading ?
                 <>
                   <span
                     className="spinner-border spinner-border-sm me-2"
@@ -91,12 +91,11 @@ const ForgotPasswordModal = ({ show, onClose, onSuccess }: Props) => {
                     aria-hidden="true"></span>
                   Verifying...
                 </>
-              ) : (
-                <>
+              : <>
                   <i className="bi bi-arrow-right-circle me-2"></i>
                   Continue
                 </>
-              )}
+              }
             </Button>
           </div>
         </div>

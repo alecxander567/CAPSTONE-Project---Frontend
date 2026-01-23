@@ -1,8 +1,8 @@
 import { useParams, useNavigate } from "react-router-dom";
-import Sidebar from "../components/Sidebar";
-import { useProgramStudents } from "../hooks/useProgramStudents";
+import Sidebar from "../../components/Sidebar/Sidebar";
+import { useProgramStudents } from "../../hooks/useProgramStudents";
 import { useState } from "react";
-import "./Programs/Students.css";
+import "./Students.css";
 
 interface Student {
   id: number;
@@ -64,23 +64,22 @@ const ProgramStudents = () => {
         </header>
 
         <div className="students-list">
-          {loading ? (
+          {loading ?
             <div className="loading-state fade-up">
               <div className="spinner"></div>
               <p>Loading students...</p>
             </div>
-          ) : error ? (
+          : error ?
             <div className="error-state fade-up">
               <i className="bi bi-exclamation-triangle-fill"></i>
               <p>{error}</p>
             </div>
-          ) : students.length === 0 ? (
+          : students.length === 0 ?
             <div className="empty-state">
               <i className="bi bi-inbox"></i>
               <p>No students enrolled yet</p>
             </div>
-          ) : (
-            <>
+          : <>
               <div className="students-controls">
                 <div className="students-header-info">
                   <h2>All Students ({filteredStudents.length})</h2>
@@ -105,13 +104,12 @@ const ProgramStudents = () => {
                 </div>
               </div>
 
-              {filteredStudents.length === 0 ? (
+              {filteredStudents.length === 0 ?
                 <div className="empty-state fade-up">
                   <i className="bi bi-search"></i>
                   <p>No students found matching "{searchQuery}"</p>
                 </div>
-              ) : (
-                <div className="students-grid">
+              : <div className="students-grid">
                   {filteredStudents.map((student: Student) => (
                     <div key={student.id} className="student-card fade-up">
                       <div className="student-avatar">
@@ -151,9 +149,9 @@ const ProgramStudents = () => {
                     </div>
                   ))}
                 </div>
-              )}
+              }
             </>
-          )}
+          }
         </div>
       </main>
     </div>

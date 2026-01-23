@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import Sidebar from "../components/Sidebar";
-import { useEvents } from "../hooks/useEvents";
-import type { Event } from "../hooks/useEvents";
-import AddEventModal from "../components/AddEventsModal";
-import DeleteEventModal from "../components/deleteEventModal";
-import SuccessAlert from "../components/SuccessAlert";
-import "./Events/Events.css";
+import Sidebar from "../../components/Sidebar/Sidebar";
+import { useEvents } from "../../hooks/useEvents";
+import type { Event } from "../../hooks/useEvents";
+import AddEventModal from "../../components/AddEventsModal/AddEventsModal";
+import DeleteEventModal from "../../components/DeleteEventModal/deleteEventModal";
+import SuccessAlert from "../../components/SuccessAlert/SuccessAlert";
+import "./Events.css";
 
 function Events() {
   const {

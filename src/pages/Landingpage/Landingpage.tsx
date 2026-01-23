@@ -8,12 +8,12 @@ import {
   Nav,
   Card,
 } from "react-bootstrap";
-import "./Landingpage/Landingpage.css";
-import logo from "../assets/logo.jpg";
-import RegisterModal from "../components/RegisterModal";
-import LoginModal from "../components/LoginModal";
-import AdminUserManualModal from "../components/AdminUserManualModal";
-import StudentUserManualModal from "../components/StudentsuserManualModal";
+import "./Landingpage.css";
+import logo from "../../assets/logo.jpg";
+import RegisterModal from "../../components/RegisterModal/RegisterModal";
+import LoginModal from "../../components/LoginModal/LoginModal";
+import AdminUserManualModal from "../../components/AdminUserManualModal/AdminUserManualModal";
+import StudentUserManualModal from "../../components/StudentUserManualModal/StudentsuserManualModal";
 
 function Landingpage() {
   const [showRegisterModal, setShowRegisterModal] = useState(false);

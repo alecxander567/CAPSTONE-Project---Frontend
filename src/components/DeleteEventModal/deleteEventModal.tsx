@@ -1,4 +1,4 @@
-import "./DeleteEventModal/deleteEvent.css";
+import "./deleteEvent.css";
 
 interface DeleteEventModalProps {
   show: boolean;
@@ -13,7 +13,7 @@ const DeleteEventModal: React.FC<DeleteEventModalProps> = ({
   onConfirm,
   eventTitle,
 }) => {
-  if (!show) return null; 
+  if (!show) return null;
 
   return (
     <div

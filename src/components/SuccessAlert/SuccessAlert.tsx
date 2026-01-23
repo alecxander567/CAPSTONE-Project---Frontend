@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import "./SuccessAlert/SuccessAlert.css";
+import "./SuccessAlert.css";
 
 interface SuccessAlertProps {
   show: boolean;

@@ -1,8 +1,8 @@
-import "./Sidebar/Sidebar.css";
+import "./Sidebar.css";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useLogout } from "../hooks/Logout";
+import { useLogout } from "../../hooks/Logout";
 import { useState } from "react";
-import logo from "../assets/logo.jpg";
+import logo from "../../assets/logo.jpg";
 
 const Sidebar = () => {
   const navigate = useNavigate();

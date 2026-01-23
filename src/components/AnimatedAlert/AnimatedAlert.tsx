@@ -1,5 +1,5 @@
 import React from "react";
-import "./AnimatedAlert/AnimatedAlert.css";
+import "./AnimatedAlert.css";
 
 interface AnimatedAlertProps {
   type: "success" | "error";
