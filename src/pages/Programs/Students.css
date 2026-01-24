@@ -50,30 +50,58 @@
   gap: 1rem;
 }
 
-.back-button {
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  border: none;
+.students-header {
+  position: relative; /* ensure the button is positioned relative to header */
+  background: linear-gradient(180deg, #0a1aff, #0f52ba, #00b4d8);
+  color: #fff;
+  padding: 3rem 2rem;
+  overflow: hidden;
+}
+
+.btn-back-header {
+  position: absolute;
+  top: 1rem; /* distance from top of header */
+  left: 1rem; /* distance from left of header */
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   color: white;
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
+  padding: 0.6rem 1.2rem;
+  border-radius: 30px;
+  font-weight: 600;
+  font-size: 0.9rem;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
   cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 1.25rem;
-  align-self: flex-start;
 }
 
-.back-button:hover {
+.btn-back-header:hover {
   background: rgba(255, 255, 255, 0.3);
-  transform: translateX(-4px);
+  transform: translateX(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.back-button:active {
-  transform: translateX(-2px);
+.btn-back-header i {
+  font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+  .btn-back-header {
+    top: 0.75rem; /* slightly inside on mobile */
+    left: 1rem;
+    padding: 0.5rem;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    justify-content: center;
+  }
+
+  .btn-back-header span {
+    display: none;
+  }
 }
 
 .students-header h1 {
@@ -238,53 +266,78 @@
 
 .students-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 1.5rem;
 }
 
 .student-card {
   background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
-  transition: all 0.3s ease;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: 2px solid transparent;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  align-items: center;
+  gap: 1.25rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.student-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #0a1aff, #0f52ba, #00b4d8);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.student-card:hover::before {
+  transform: scaleX(1);
 }
 
 .student-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(15, 82, 186, 0.15);
-  border-color: #0f52ba;
+  transform: translateY(-6px);
+  box-shadow: 0 16px 32px rgba(15, 82, 186, 0.2);
+  border-color: #e6f0ff;
 }
 
 .student-avatar {
-  width: 80px;
-  height: 80px;
-  background: linear-gradient(180deg, #0a1aff, #0f52ba, #00b4d8);
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, #0a1aff, #0f52ba, #00b4d8);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto;
   color: white;
-  font-size: 3rem;
+  font-size: 1.75rem;
+  box-shadow: 0 4px 12px rgba(15, 82, 186, 0.3);
+  transition: transform 0.3s ease;
+  flex-shrink: 0;
+}
+
+.student-card:hover .student-avatar {
+  transform: scale(1.1) rotate(-5deg);
 }
 
 .student-info {
   text-align: center;
+  width: 100%;
 }
 
 .student-info h3 {
   margin: 0;
   font-size: 1.25rem;
-  font-weight: 600;
+  font-weight: 700;
   color: #1a202c;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.4;
 }
 
 .student-details {
@@ -295,12 +348,13 @@
 }
 
 .detail-item {
-  font-size: 0.875rem;
-  color: #718096;
+  font-size: 0.9375rem;
+  color: #4a5568;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  font-weight: 500;
 }
 
 .detail-item i {
@@ -311,6 +365,7 @@
 .student-actions {
   display: flex;
   gap: 0.75rem;
+  width: 100%;
   margin-top: 0.5rem;
 }
 
@@ -396,7 +451,6 @@
 
   .students-grid {
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1.25rem;
   }
 }
 
@@ -437,22 +491,7 @@
   }
 
   .student-card {
-    padding: 1.25rem;
-  }
-
-  .student-avatar {
-    width: 70px;
-    height: 70px;
-    font-size: 2.5rem;
-  }
-
-  .student-info h3 {
-    font-size: 1.125rem;
-  }
-
-  .action-btn {
-    padding: 0.625rem 0.875rem;
-    font-size: 0.8125rem;
+    padding: 1.5rem;
   }
 
   .action-btn span {
@@ -495,21 +534,11 @@
   }
 
   .student-card {
-    padding: 1rem;
-  }
-
-  .student-avatar {
-    width: 60px;
-    height: 60px;
-    font-size: 2rem;
-  }
-
-  .student-info h3 {
-    font-size: 1rem;
+    padding: 1.25rem;
   }
 
   .detail-item {
-    font-size: 0.8125rem;
+    font-size: 0.875rem;
   }
 
   .student-actions {
@@ -521,21 +550,30 @@
   }
 }
 
-/* Fade-up animation */
+/* Fade-up Animation */
 .fade-up {
   opacity: 0;
-  transform: translateY(20px);
-  animation: fadeUpAnim 0.6s ease forwards;
+  transform: translateY(40px);
+  transition:
+    opacity 0.8s ease,
+    transform 0.8s ease;
+  will-change: opacity, transform;
 }
 
-@keyframes fadeUpAnim {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.fade-up.show {
+  opacity: 1;
+  transform: translateY(0);
 }
 
-/* Optional: stagger effect for cards */
-.student-card.fade-up {
-  animation-delay: var(--delay, 0s);
+.fade-delay-1 {
+  transition-delay: 0.1s;
+}
+.fade-delay-2 {
+  transition-delay: 0.2s;
+}
+.fade-delay-3 {
+  transition-delay: 0.3s;
+}
+.fade-delay-4 {
+  transition-delay: 0.4s;
 }

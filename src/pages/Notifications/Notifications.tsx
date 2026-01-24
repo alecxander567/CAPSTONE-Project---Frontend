@@ -12,7 +12,6 @@ const Notifications = () => {
     isDeleting,
     deletingIds,
     markingIds,
-    error,
     isMarkingAll,
     successMessage,
     errorMessage,
@@ -60,7 +59,7 @@ const Notifications = () => {
       } else if (deleteTarget.id) {
         await deleteNotification(deleteTarget.id);
       }
-    } catch (err) {
+    } catch {
       // Error is already handled in the hook
     }
   };
@@ -68,7 +67,7 @@ const Notifications = () => {
   const handleMarkAllAsRead = async () => {
     try {
       await markAllAsRead();
-    } catch (err) {
+    } catch {
       // Error is already handled in the hook
     }
   };
@@ -138,7 +137,6 @@ const Notifications = () => {
         </header>
 
         <div className="notifications-content">
-          {error && <p className="text-danger">{error}</p>}
 
           <div className="notifications-wrapper">
             {sortedNotifications.length === 0 ?

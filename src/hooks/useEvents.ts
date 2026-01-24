@@ -25,6 +25,8 @@ interface UseEventsResult {
     id: number,
     data: Omit<Event, "id" | "created_by" | "created_at">,
   ) => Promise<void>;
+  deleteEvent: (id: number) => Promise<void>; 
+  getEventById: (id: number) => Promise<Event>;
 }
 
 export const useEvents = (): UseEventsResult => {
@@ -122,6 +124,23 @@ export const useEvents = (): UseEventsResult => {
     }
   };
 
+  const getEventById = async (id: number): Promise<Event> => {
+    try {
+      const existingEvent = events.find((e) => e.id === id);
+      if (existingEvent) {
+        return existingEvent;
+      }
+
+      const response = await axios.get<Event>(
+        `http://127.0.0.1:8000/events/${id}`,
+      );
+      return response.data;
+    } catch (err) {
+      console.error(err);
+      throw new Error("Failed to fetch event details.");
+    }
+  };
+
   return {
     events,
     loading,
@@ -130,5 +149,6 @@ export const useEvents = (): UseEventsResult => {
     addEvent,
     editEvent,
     deleteEvent,
+    getEventById,
   };
 };

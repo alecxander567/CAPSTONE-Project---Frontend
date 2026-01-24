@@ -89,28 +89,25 @@ const Programs = () => {
               programs.map((program, index) => (
                 <div
                   key={program.code}
-                  className={`program-card fade-up fade-delay-${Math.min(
-                    (index % 4) + 1,
-                    4,
-                  )}`}
+                  className="program-card fade-up"
                   onClick={() =>
                     navigate(`/programs/${program.code}/students`)
                   }>
                   <div className="program-icon-wrapper">
-                    <i className="bi bi-mortarboard"></i>
+                    <i className="bi bi-mortarboard-fill"></i>{" "}
                   </div>
                   <div className="program-details">
                     <h3>{program.name}</h3>
                     <div className="program-meta">
                       <span className="program-code">{program.code}</span>
                       <span className="program-students">
-                        <i className="bi bi-people"></i>
+                        <i className="bi bi-people-fill"></i>
                         {program.students} Students
                       </span>
                     </div>
                   </div>
                   <div className="program-arrow">
-                    <i className="bi bi-arrow-right"></i>
+                    <i className="bi bi-chevron-right"></i>{" "}
                   </div>
                 </div>
               ))}

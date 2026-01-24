@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import { useEvents } from "../../hooks/useEvents";
 import type { Event } from "../../hooks/useEvents";
@@ -8,6 +9,7 @@ import SuccessAlert from "../../components/SuccessAlert/SuccessAlert";
 import "./Events.css";
 
 function Events() {
+  const navigate = useNavigate();
   const {
     events,
     totalEvents,
@@ -73,169 +75,175 @@ function Events() {
     }
   };
 
+  const handleViewAttendance = (eventId: number) => {
+    navigate(`/attendance/${eventId}`);
+  };
+
   return (
-    <div className="d-flex">
+    <div className="events-layout">
       <Sidebar />
-      <div className="flex-grow-1 content-area">
-        <div className="content-wrapper">
-          {/* Header */}
-          <header className="dashboard-header">
-            <div className="wave"></div>
-            <div className="dashboard-header-content fade-up">
-              <div className="dashboard-header-icon">
-                <i className="bi bi-calendar-event"></i>
-              </div>
-              <div className="dashboard-header-text">
-                <h1>Events</h1>
-                <p>View upcoming events and details</p>
-              </div>
+
+      {/* Main Content Area */}
+      <div className="content-area">
+        {/* Header */}
+        <header className="dashboard-header">
+          <div className="wave"></div>
+          <div className="dashboard-header-content fade-up">
+            <div className="dashboard-header-icon">
+              <i className="bi bi-calendar-event"></i>
             </div>
-          </header>
+            <div className="dashboard-header-text">
+              <h1>Events</h1>
+              <p>View upcoming events and details</p>
+            </div>
+          </div>
+        </header>
 
-          {/* Main Content */}
-          <div className="events-container p-4">
-            {/* Add Event Button */}
-            <div className="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
-              <h2 className="events-section-title mb-0">
-                <i className="bi bi-calendar-check me-2 text-primary"></i>
-                Upcoming Events & Highlights{" "}
-                <span className="badge bg-primary">{totalEvents}</span>
-              </h2>
-
-              {loading && <p>Loading...</p>}
-              {error && <p>{error}</p>}
-
-              <button
-                className="btn btn-primary btn-add-event shadow-sm"
-                onClick={handleOpenModal}>
-                <i className="bi bi-plus-circle me-2"></i>
-                Add New Event
-              </button>
+        <div className="content-wrapper p-4">
+          {/* Controls & Title */}
+          <div className="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div className="fade-up delay-1">
+              <h2 className="events-section-title mb-1">Upcoming Events</h2>
+              <p className="text-muted mb-0">
+                Total Events:{" "}
+                <span className="fw-bold text-primary">{totalEvents}</span>
+              </p>
             </div>
 
-            {/* Loading State */}
-            {loading && (
-              <div className="text-center py-5">
-                <div className="spinner-border text-primary" role="status">
-                  <span className="visually-hidden">Loading...</span>
-                </div>
-                <p className="mt-3 text-muted">Loading events...</p>
-              </div>
-            )}
-
-            {/* Error State */}
-            {error && (
-              <div
-                className="alert alert-danger d-flex align-items-center"
-                role="alert">
-                <i className="bi bi-exclamation-triangle-fill me-2"></i>
-                <div>{error}</div>
-              </div>
-            )}
-
-            {/* Empty State */}
-            {events.length === 0 && !loading && !error && (
-              <div className="empty-state text-center py-5">
-                <div className="empty-state-icon mb-3">
-                  <i className="bi bi-calendar-x"></i>
-                </div>
-                <h4 className="text-muted">No Events Yet</h4>
-                <p className="text-muted mb-4">
-                  Get started by adding your first event
-                </p>
-              </div>
-            )}
-
-            {/* Events Grid */}
-            {events.length > 0 && !loading && (
-              <div className="events-grid">
-                {events.map((event: Event) => (
-                  <div key={event.id} className="event-card">
-                    <div className="event-card-header">
-                      <div className="event-date-badge">
-                        <div className="event-date-month">
-                          {new Date(event.event_date).toLocaleDateString(
-                            "en-US",
-                            { month: "short" },
-                          )}
-                        </div>
-                        <div className="event-date-day">
-                          {new Date(event.event_date).getDate()}
-                        </div>
-                      </div>
-                      <h5 className="event-card-title">{event.title}</h5>
-                    </div>
-
-                    <div className="event-card-body">
-                      <p className="event-description">{event.description}</p>
-
-                      <div className="event-details">
-                        <div className="event-detail-item">
-                          <i className="bi bi-clock"></i>
-                          <span>
-                            {event.start_time} - {event.end_time}
-                          </span>
-                        </div>
-                        <div className="event-detail-item">
-                          <i className="bi bi-geo-alt"></i>
-                          <span>{event.location}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="event-card-footer d-flex flex-wrap gap-2">
-                      <button className="btn btn-sm btn-view shadow-sm d-flex align-items-center">
-                        <i className="bi bi-eye me-2"></i>
-                        <span>View</span>
-                      </button>
-
-                      <button
-                        className="btn btn-sm btn-edit shadow-sm d-flex align-items-center"
-                        onClick={() => handleEditEvent(event)}>
-                        <i className="bi bi-pencil-square me-2"></i>
-                        <span>Edit</span>
-                      </button>
-
-                      <button
-                        className="btn btn-sm btn-delete shadow-sm d-flex align-items-center"
-                        onClick={() => handleDeleteEvent(event)}>
-                        <i className="bi bi-trash3-fill me-2"></i>
-                        <span>Delete</span>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            <button
+              className="btn btn-primary btn-add-event shadow-sm fade-up delay-1"
+              onClick={handleOpenModal}>
+              <i className="bi bi-plus-lg me-2"></i>
+              Create Event
+            </button>
           </div>
 
-          <AddEventModal
-            show={showModal}
-            onClose={() => {
-              handleCloseModal();
-              setEditingEvent(null);
-            }}
-            onSave={handleSaveEvent}
-            initialData={editingEvent}
-          />
+          {/* Loading & Error States */}
+          {loading && (
+            <div className="text-center py-5">
+              <div className="spinner-border text-primary" role="status"></div>
+              <p className="mt-2 text-muted">Loading events...</p>
+            </div>
+          )}
 
-          <DeleteEventModal
-            show={showDeleteModal}
-            onClose={() => {
-              setShowDeleteModal(false);
-              setDeletingEvent(null);
-            }}
-            onConfirm={handleConfirmDelete}
-            eventTitle={deletingEvent?.title || ""}
-          />
+          {error && (
+            <div
+              className="alert alert-danger d-flex align-items-center"
+              role="alert">
+              <i className="bi bi-exclamation-triangle-fill me-2"></i>
+              <div>{error}</div>
+            </div>
+          )}
 
-          <SuccessAlert
-            show={showSuccess}
-            message={successMessage}
-            onClose={() => setShowSuccess(false)}
-            duration={3000}
-          />
+          {/* Empty State */}
+          {events.length === 0 && !loading && !error && (
+            <div className="empty-state text-center py-5">
+              <div className="empty-state-icon mb-3">
+                <i className="bi bi-calendar-x"></i>
+              </div>
+              <h4 className="text-muted">No Events Yet</h4>
+              <p className="text-muted mb-4">
+                Get started by adding your first event
+              </p>
+            </div>
+          )}
+
+          {/* Events Grid */}
+          {events.length > 0 && !loading && (
+            <div className="events-grid fade-up delay-2">
+              {events.map((event: Event) => (
+                <div key={event.id} className="event-card">
+                  {/* Card Header */}
+                  <div className="event-card-header">
+                    <div className="event-date-badge">
+                      <div className="event-date-month">
+                        {new Date(event.event_date).toLocaleDateString(
+                          "en-US",
+                          { month: "short" },
+                        )}
+                      </div>
+                      <div className="event-date-day">
+                        {new Date(event.event_date).getDate()}
+                      </div>
+                    </div>
+                    <div className="header-overlay"></div>
+                    <h5 className="event-card-title">{event.title}</h5>
+                  </div>
+
+                  {/* Card Body */}
+                  <div className="event-card-body">
+                    <p className="event-description">
+                      {event.description || "No description provided."}
+                    </p>
+
+                    <div className="event-details-list">
+                      <div className="detail-row">
+                        <i className="bi bi-clock"></i>
+                        <span>
+                          {event.start_time} - {event.end_time}
+                        </span>
+                      </div>
+                      <div className="detail-row">
+                        <i className="bi bi-geo-alt"></i>
+                        <span>{event.location}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card Footer */}
+                  <div className="event-card-footer">
+                    <button
+                      className="btn-action btn-view"
+                      onClick={() => handleViewAttendance(event.id)}
+                      title="View Attendance">
+                      <i className="bi bi-eye"></i> View
+                    </button>
+                    <button
+                      className="btn-action btn-edit"
+                      onClick={() => handleEditEvent(event)}
+                      title="Edit Event">
+                      <i className="bi bi-pencil"></i> Edit
+                    </button>
+                    <button
+                      className="btn-action btn-delete"
+                      onClick={() => handleDeleteEvent(event)}
+                      title="Delete Event">
+                      <i className="bi bi-trash3"></i> Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
+
+        {/* Modals */}
+        <AddEventModal
+          show={showModal}
+          onClose={() => {
+            handleCloseModal();
+            setEditingEvent(null);
+          }}
+          onSave={handleSaveEvent}
+          initialData={editingEvent}
+        />
+
+        <DeleteEventModal
+          show={showDeleteModal}
+          onClose={() => {
+            setShowDeleteModal(false);
+            setDeletingEvent(null);
+          }}
+          onConfirm={handleConfirmDelete}
+          eventTitle={deletingEvent?.title || ""}
+        />
+
+        <SuccessAlert
+          show={showSuccess}
+          message={successMessage}
+          onClose={() => setShowSuccess(false)}
+          duration={3000}
+        />
       </div>
     </div>
   );

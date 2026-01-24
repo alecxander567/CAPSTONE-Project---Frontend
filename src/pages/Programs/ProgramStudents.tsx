@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import { useProgramStudents } from "../../hooks/useProgramStudents";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./Students.css";
 
 interface Student {
@@ -18,6 +18,28 @@ const ProgramStudents = () => {
   const navigate = useNavigate();
   const { students, loading, error } = useProgramStudents(programCode || "");
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Add IntersectionObserver for fade-up animation
+  useEffect(() => {
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: "0px 0px -50px 0px",
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("show");
+          observer.unobserve(entry.target);
+        }
+      });
+    }, observerOptions);
+
+    const fadeElements = document.querySelectorAll(".fade-up");
+    fadeElements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, [students, loading]);
 
   const filteredStudents = students.filter((student: Student) => {
     const query = searchQuery.toLowerCase();
@@ -43,16 +65,18 @@ const ProgramStudents = () => {
     <div className="students-layout">
       <Sidebar />
 
-      <main className="students-content fade-up">
+      <main className="students-content">
         <header className="students-header fade-up">
           <div className="wave"></div>
+
+          <button
+            className="btn-back-header"
+            onClick={() => navigate("/programs")}>
+            <i className="bi bi-arrow-left"></i>
+            <span>Back to Programs</span>
+          </button>
+
           <div className="header-content">
-            <button
-              className="back-button"
-              onClick={() => navigate("/programs")}
-              aria-label="Back to programs">
-              <i className="bi bi-arrow-left"></i>
-            </button>
             <div className="d-flex align-items-center gap-3">
               <i className="bi bi-people fs-2"></i>
               <div>
@@ -80,7 +104,7 @@ const ProgramStudents = () => {
               <p>No students enrolled yet</p>
             </div>
           : <>
-              <div className="students-controls">
+              <div className="students-controls fade-up">
                 <div className="students-header-info">
                   <h2>All Students ({filteredStudents.length})</h2>
                   <p>Total enrolled students in this program</p>
@@ -110,8 +134,10 @@ const ProgramStudents = () => {
                   <p>No students found matching "{searchQuery}"</p>
                 </div>
               : <div className="students-grid">
-                  {filteredStudents.map((student: Student) => (
-                    <div key={student.id} className="student-card fade-up">
+                  {filteredStudents.map((student: Student, index: number) => (
+                    <div
+                      key={student.id}
+                      className={`student-card fade-up fade-delay-${Math.min((index % 4) + 1, 4)}`}>
                       <div className="student-avatar">
                         <i className="bi bi-person-circle"></i>
                       </div>
