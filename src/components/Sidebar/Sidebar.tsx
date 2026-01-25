@@ -95,7 +95,7 @@ const Sidebar = () => {
 
             <li
               className={isActive("/attendance") ? "active" : ""}
-              onClick={() => handleNavigate("/attendance")}>
+              onClick={() => handleNavigate("/attendancehistory")}>
               <i className="bi bi-clipboard-check"></i>
               <span>Attendance History</span>
             </li>

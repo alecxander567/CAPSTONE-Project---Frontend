@@ -27,6 +27,7 @@ function Events() {
 
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const handleOpenModal = () => setShowModal(true);
   const handleCloseModal = () => {
@@ -79,11 +80,14 @@ function Events() {
     navigate(`/attendance/${eventId}`);
   };
 
+  const filteredEvents = events.filter((event) =>
+    event.title.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
+
   return (
     <div className="events-layout">
       <Sidebar />
 
-      {/* Main Content Area */}
       <div className="content-area">
         {/* Header */}
         <header className="dashboard-header">
@@ -100,22 +104,35 @@ function Events() {
         </header>
 
         <div className="content-wrapper p-4">
-          {/* Controls & Title */}
-          <div className="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
-            <div className="fade-up delay-1">
+          <div className="events-header-controls fade-up delay-1 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center flex-wrap gap-3">
+            {/* Title and Total Events */}
+            <div>
               <h2 className="events-section-title mb-1">Upcoming Events</h2>
-              <p className="text-muted mb-0">
+              <p className="text-muted mb-2 mb-md-0">
                 Total Events:{" "}
                 <span className="fw-bold text-primary">{totalEvents}</span>
               </p>
             </div>
 
-            <button
-              className="btn btn-primary btn-add-event shadow-sm fade-up delay-1"
-              onClick={handleOpenModal}>
-              <i className="bi bi-plus-lg me-2"></i>
-              Create Event
-            </button>
+            <div className="d-flex gap-2 flex-wrap align-items-center">
+              <div className="search-wrapper">
+                <input
+                  type="text"
+                  className="form-control search-input"
+                  placeholder="Search events..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <i className="bi bi-search search-icon"></i>
+              </div>
+
+              <button
+                className="btn btn-primary btn-add-event shadow-sm"
+                onClick={handleOpenModal}>
+                <i className="bi bi-plus-lg me-2"></i>
+                Create Event
+              </button>
+            </div>
           </div>
 
           {/* Loading & Error States */}
@@ -149,9 +166,9 @@ function Events() {
           )}
 
           {/* Events Grid */}
-          {events.length > 0 && !loading && (
+          {filteredEvents.length > 0 && !loading && (
             <div className="events-grid fade-up delay-2">
-              {events.map((event: Event) => (
+              {filteredEvents.map((event: Event) => (
                 <div key={event.id} className="event-card">
                   {/* Card Header */}
                   <div className="event-card-header">
@@ -175,7 +192,6 @@ function Events() {
                     <p className="event-description">
                       {event.description || "No description provided."}
                     </p>
-
                     <div className="event-details-list">
                       <div className="detail-row">
                         <i className="bi bi-clock"></i>

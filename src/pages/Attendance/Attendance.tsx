@@ -145,7 +145,6 @@ function Attendance() {
                         </div>
                       </div>
 
-                      {/* Scrollable Student Table */}
                       <div className="table-responsive student-table-wrapper">
                         <table className="table table-hover align-middle mb-0">
                           <thead className="table-light sticky-top">
