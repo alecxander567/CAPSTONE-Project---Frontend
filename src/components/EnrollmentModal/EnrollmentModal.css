@@ -1,0 +1,285 @@
+.enrollment-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.enrollment-modal-content {
+  background: white;
+  padding: 2.5rem;
+  border-radius: 24px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(40px) scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.enrollment-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.enrollment-icon {
+  font-size: 4rem;
+  color: #0f52ba;
+  margin-bottom: 1rem;
+  display: block;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.enrollment-header h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.75rem;
+  color: #1a202c;
+  font-weight: 700;
+}
+
+.enrollment-header p {
+  margin: 0;
+  color: #718096;
+  font-size: 1rem;
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #0a1aff, #0f52ba, #00b4d8);
+  border-radius: 10px;
+  transition: width 0.5s ease;
+}
+
+.enrollment-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.enrollment-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-radius: 12px;
+  background: #f7fafc;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.enrollment-step.waiting {
+  opacity: 0.5;
+}
+
+.enrollment-step.active {
+  background: #e6f0ff;
+  border-color: #0f52ba;
+  transform: scale(1.02);
+}
+
+.enrollment-step.completed {
+  background: #f0fdf4;
+  border-color: #10b981;
+}
+
+.step-indicator {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.step-number {
+  font-weight: 700;
+  color: #718096;
+  font-size: 1.125rem;
+}
+
+.enrollment-step.active .step-number {
+  color: #0f52ba;
+}
+
+.enrollment-step.completed .step-indicator i {
+  color: #10b981;
+  font-size: 1.5rem;
+}
+
+.step-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #e6f0ff;
+  border-top: 3px solid #0f52ba;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.step-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.step-icon {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #0a1aff, #0f52ba);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+}
+
+.enrollment-step.completed .step-icon {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.step-text {
+  flex: 1;
+}
+
+.step-text h4 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+.step-text p {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: #4a5568;
+}
+
+.enrollment-success {
+  text-align: center;
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #f0fdf4, #d1fae5);
+  border-radius: 12px;
+  animation: successPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes successPop {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.enrollment-success i {
+  font-size: 3rem;
+  color: #10b981;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.enrollment-success p {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #065f46;
+}
+
+@media (max-width: 768px) {
+  .enrollment-modal-content {
+    padding: 2rem 1.5rem;
+  }
+
+  .enrollment-icon {
+    font-size: 3rem;
+  }
+
+  .enrollment-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .enrollment-step {
+    padding: 1rem;
+  }
+
+  .step-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.25rem;
+  }
+}
+
+.enrollment-step.failed {
+  background: #fef2f2;
+  border-color: #ef4444;
+}
+
+.enrollment-step.failed .step-indicator i {
+  color: #ef4444;
+  font-size: 1.5rem;
+}
+
+.enrollment-step.failed .step-icon {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}

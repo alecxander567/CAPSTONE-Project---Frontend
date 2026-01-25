@@ -79,7 +79,11 @@ const Programs = () => {
         {/* Program List */}
         <div className="programs-section">
           <div className="section-header fade-up">
-            <h2>All Departments</h2>
+            <h2>
+              {" "}
+              <i className="bi bi-building me-2 text-primary"></i>All
+              Departments
+            </h2>
             <p>Click on any department to view enrolled students</p>
           </div>
 

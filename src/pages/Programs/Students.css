@@ -51,7 +51,7 @@
 }
 
 .students-header {
-  position: relative; /* ensure the button is positioned relative to header */
+  position: relative; 
   background: linear-gradient(180deg, #0a1aff, #0f52ba, #00b4d8);
   color: #fff;
   padding: 3rem 2rem;
@@ -60,8 +60,8 @@
 
 .btn-back-header {
   position: absolute;
-  top: 1rem; /* distance from top of header */
-  left: 1rem; /* distance from left of header */
+  top: 1rem; 
+  left: 1rem;
   z-index: 10;
   background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(5px);
@@ -90,7 +90,7 @@
 
 @media (max-width: 768px) {
   .btn-back-header {
-    top: 0.75rem; /* slightly inside on mobile */
+    top: 0.75rem; 
     left: 1rem;
     padding: 0.5rem;
     border-radius: 50%;
@@ -369,11 +369,12 @@
   margin-top: 0.5rem;
 }
 
-.action-btn {
+.action-btn,
+.btn-primary {
   flex: 1;
   padding: 0.75rem 1rem;
   border: none;
-  border-radius: 8px;
+  border-radius: 50px; 
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
@@ -384,15 +385,20 @@
   gap: 0.5rem;
 }
 
-.enroll-btn {
+.btn-primary {
   background: #0f52ba;
   color: white;
 }
 
-.enroll-btn:hover {
+.btn-primary:hover:not(:disabled) {
   background: #0a1aff;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(15, 82, 186, 0.3);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .delete-btn {
@@ -550,7 +556,6 @@
   }
 }
 
-/* Fade-up Animation */
 .fade-up {
   opacity: 0;
   transform: translateY(40px);

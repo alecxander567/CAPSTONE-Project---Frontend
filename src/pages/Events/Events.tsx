@@ -107,7 +107,10 @@ function Events() {
           <div className="events-header-controls fade-up delay-1 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center flex-wrap gap-3">
             {/* Title and Total Events */}
             <div>
-              <h2 className="events-section-title mb-1">Upcoming Events</h2>
+              <h2 className="events-section-title mb-1">
+                <i className="bi bi-calendar-event me-2 text-primary"></i>{" "}
+                Upcoming Events
+              </h2>
               <p className="text-muted mb-2 mb-md-0">
                 Total Events:{" "}
                 <span className="fw-bold text-primary">{totalEvents}</span>

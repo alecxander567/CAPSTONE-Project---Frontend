@@ -8,6 +8,7 @@ export interface Student {
   last_name: string;
   program: string;
   email: string;
+  fingerprint_status: "not_enrolled" | "pending" | "enrolled" | "failed";
 }
 
 export const useProgramStudents = (programCode: string) => {
@@ -21,7 +22,7 @@ export const useProgramStudents = (programCode: string) => {
       setError("");
       try {
         const res = await axios.get<Student[]>(
-          `http://localhost:8000/programs/${programCode}/students`
+          `http://localhost:8000/programs/${programCode}/students`,
         );
         setStudents(res.data);
       } catch (err: any) {

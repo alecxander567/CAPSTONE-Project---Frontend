@@ -1,6 +1,8 @@
 import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import { useProgramStudents } from "../../hooks/useProgramStudents";
+import { useEnrollFingerprint } from "../../hooks/useEnrollFingerprint";
+import EnrollmentModal from "../../components/EnrollmentModal/EnrollmentModal";
 import { useState, useEffect } from "react";
 import "./Students.css";
 
@@ -11,15 +13,48 @@ interface Student {
   last_name: string;
   program: string;
   email: string;
+  fingerprint_status: "not_enrolled" | "pending" | "enrolled" | "failed";
 }
+
+type FingerprintStatus = "not_enrolled" | "pending" | "enrolled" | "failed";
+
+const FingerprintStatusBadge = ({ status }: { status: FingerprintStatus }) => {
+  const statusMap: Record<
+    FingerprintStatus,
+    { label: string; className: string }
+  > = {
+    not_enrolled: { label: "Not Enrolled", className: "status-not" },
+    pending: { label: "Pending", className: "status-pending" },
+    enrolled: { label: "Enrolled", className: "status-enrolled" },
+    failed: { label: "Failed", className: "status-failed" },
+  };
+
+  const { label, className } = statusMap[status];
+
+  return (
+    <span className={`fingerprint-status ${className}`}>
+      <i className="bi bi-fingerprint"></i>
+      {label}
+    </span>
+  );
+};
 
 const ProgramStudents = () => {
   const { programCode } = useParams();
   const navigate = useNavigate();
   const { students, loading, error } = useProgramStudents(programCode || "");
   const [searchQuery, setSearchQuery] = useState("");
+  const [showEnrollmentModal, setShowEnrollmentModal] = useState(false);
+  const [selectedStudentId, setSelectedStudentId] = useState<number | null>(
+    null,
+  );
 
-  // Add IntersectionObserver for fade-up animation
+  const {
+    enrollFingerprint,
+    isLoading,
+    error: enrollError,
+  } = useEnrollFingerprint();
+
   useEffect(() => {
     const observerOptions = {
       threshold: 0.1,
@@ -51,8 +86,14 @@ const ProgramStudents = () => {
     );
   });
 
-  const handleEnrollFingerprint = (studentId: number) => {
-    console.log("Enroll fingerprint for student:", studentId);
+  const handleEnrollClick = async (studentId: number) => {
+    try {
+      setSelectedStudentId(studentId);
+      setShowEnrollmentModal(true);
+      await enrollFingerprint(studentId);
+    } catch {
+      setShowEnrollmentModal(false);
+    }
   };
 
   const handleDeleteStudent = (studentId: number) => {
@@ -64,6 +105,12 @@ const ProgramStudents = () => {
   return (
     <div className="students-layout">
       <Sidebar />
+
+      <EnrollmentModal
+        isOpen={showEnrollmentModal}
+        onClose={() => setShowEnrollmentModal(false)}
+        userId={selectedStudentId || 0}
+      />
 
       <main className="students-content">
         <header className="students-header fade-up">
@@ -145,6 +192,11 @@ const ProgramStudents = () => {
                         <h3>
                           {student.first_name} {student.last_name}
                         </h3>
+
+                        <FingerprintStatusBadge
+                          status={student.fingerprint_status}
+                        />
+
                         <div className="student-details">
                           <span className="detail-item">
                             <i className="bi bi-hash"></i>
@@ -158,11 +210,11 @@ const ProgramStudents = () => {
                       </div>
                       <div className="student-actions">
                         <button
-                          className="action-btn enroll-btn"
-                          onClick={() => handleEnrollFingerprint(student.id)}
-                          title="Enroll Fingerprint">
+                          className="btn btn-primary"
+                          onClick={() => handleEnrollClick(student.id)}
+                          disabled={isLoading}>
                           <i className="bi bi-fingerprint"></i>
-                          <span>Enroll</span>
+                          Enroll
                         </button>
                         <button
                           className="action-btn delete-btn"
