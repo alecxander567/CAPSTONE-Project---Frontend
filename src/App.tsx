@@ -9,6 +9,7 @@ import Notifications from "./pages/Notifications/Notifications";
 import { registerSW } from "./serviceWorker";
 import Attendance from "./pages/Attendance/Attendance";
 import AttendanceHistory from "./pages/Attendance History/AttendanceHistory";
+import Calendar from "./pages/Calendar/Calendar";
 
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker
@@ -35,6 +36,7 @@ function App() {
       <Route path="/notifications" element={<Notifications />} />
       <Route path="/attendance/:eventId" element={<Attendance />} />
       <Route path="/attendancehistory" element={<AttendanceHistory />} />
+      <Route path="/calendar" element={<Calendar />} />
     </Routes>
   );
 }
