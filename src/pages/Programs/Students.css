@@ -50,17 +50,9 @@
   gap: 1rem;
 }
 
-.students-header {
-  position: relative; 
-  background: linear-gradient(180deg, #0a1aff, #0f52ba, #00b4d8);
-  color: #fff;
-  padding: 3rem 2rem;
-  overflow: hidden;
-}
-
 .btn-back-header {
   position: absolute;
-  top: 1rem; 
+  top: 1rem;
   left: 1rem;
   z-index: 10;
   background: rgba(255, 255, 255, 0.15);
@@ -88,35 +80,17 @@
   font-size: 1.1rem;
 }
 
-@media (max-width: 768px) {
-  .btn-back-header {
-    top: 0.75rem; 
-    left: 1rem;
-    padding: 0.5rem;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    justify-content: center;
-  }
-
-  .btn-back-header span {
-    display: none;
-  }
-}
-
 .students-header h1 {
-  margin: 0;
-  font-size: 2.25rem;
+  margin: 0 0 0.5rem 0;
+  font-size: 2rem;
   font-weight: 700;
-  letter-spacing: -0.5px;
-  text-transform: uppercase;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .students-header p {
-  margin: 0.5rem 0 0 0;
-  font-size: 1.125rem;
+  margin: 0;
   opacity: 0.95;
-  font-weight: 300;
+  font-size: 1rem;
 }
 
 .students-list {
@@ -374,7 +348,7 @@
   flex: 1;
   padding: 0.75rem 1rem;
   border: none;
-  border-radius: 50px; 
+  border-radius: 50px;
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
@@ -429,6 +403,37 @@
   }
 }
 
+.fingerprint-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+.status-not {
+  background: #fee;
+  color: #e53e3e;
+}
+
+.status-pending {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.status-enrolled {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.status-failed {
+  background: #fee;
+  color: #dc2626;
+}
+
 @media (max-width: 991px) {
   .students-content {
     margin-left: 0;
@@ -440,11 +445,7 @@
   }
 
   .students-header h1 {
-    font-size: 1.875rem;
-  }
-
-  .students-header p {
-    font-size: 1rem;
+    font-size: 1.75rem;
   }
 
   .students-list {
@@ -460,17 +461,27 @@
   }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 768px) {
+  .btn-back-header {
+    top: 0.75rem;
+    left: 1rem;
+    padding: 0.5rem;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    justify-content: center;
+  }
+
+  .btn-back-header span {
+    display: none;
+  }
+
   .students-header {
     padding: 2rem 1rem;
   }
 
   .students-header h1 {
-    font-size: 1.5rem;
-  }
-
-  .students-header p {
-    font-size: 0.9375rem;
+    font-size: 1.75rem;
   }
 
   .students-list {
@@ -506,6 +517,12 @@
 
   .action-btn i {
     font-size: 1.125rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .students-header h1 {
+    font-size: 1.5rem;
   }
 }
 

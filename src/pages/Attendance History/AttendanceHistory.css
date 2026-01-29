@@ -53,14 +53,18 @@
 }
 
 .attendance-header-content {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   gap: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 .attendance-header-icon {
   background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(5px);
   width: 64px;
   height: 64px;
   border-radius: 16px;
@@ -70,15 +74,17 @@
   font-size: 2rem;
 }
 
-.attendance-header-text h1 {
-  margin: 0;
-  font-weight: 700;
+/* Header text styles - matching Calendar component */
+.attendance-header-content h1 {
+  margin: 0 0 0.5rem 0;
   font-size: 2rem;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.attendance-header-text p {
-  margin: 0.25rem 0 0 0;
-  opacity: 0.9;
+.attendance-header-content p {
+  margin: 0;
+  opacity: 0.95;
   font-size: 1rem;
 }
 
@@ -145,7 +151,7 @@
   max-width: 1600px;
   margin: 0 auto;
   width: 100%;
-  padding-top: 0; 
+  padding-top: 0;
 }
 
 .attendance-placeholder {
@@ -203,6 +209,10 @@
     padding-bottom: 3rem;
   }
 
+  .attendance-header-content h1 {
+    font-size: 1.75rem;
+  }
+
   .attendance-content {
     padding: 0 1rem 1rem 1rem;
     padding-top: 0;
@@ -220,5 +230,11 @@
 
   .programs-list-container {
     margin-top: 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .attendance-header-content h1 {
+    font-size: 1.5rem;
   }
 }
