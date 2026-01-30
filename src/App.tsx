@@ -10,6 +10,7 @@ import { registerSW } from "./serviceWorker";
 import Attendance from "./pages/Attendance/Attendance";
 import AttendanceHistory from "./pages/Attendance History/AttendanceHistory";
 import Calendar from "./pages/Calendar/Calendar";
+import Settings from "./pages/SettingsProfile/Settings";
 
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker
@@ -37,6 +38,7 @@ function App() {
       <Route path="/attendance/:eventId" element={<Attendance />} />
       <Route path="/attendancehistory" element={<AttendanceHistory />} />
       <Route path="/calendar" element={<Calendar />} />
+      <Route path="/Settings" element={<Settings />} />
     </Routes>
   );
 }

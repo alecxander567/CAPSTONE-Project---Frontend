@@ -351,7 +351,7 @@ function Calendar() {
                       <h5 style={styles.eventTitle}>
                         <i
                           className="bi bi-calendar-event-fill"
-                          style={{ marginRight: "8px" }}></i>
+                          style={{ marginRight: "8px", color: "#0d6efd" }}></i>
                         {event.title}
                       </h5>
                       <div style={styles.eventMeta}>
@@ -373,7 +373,7 @@ function Calendar() {
                       </span>
                     </div>
                   </div>
-                );  
+                );
               })}
           </div>
         </div>

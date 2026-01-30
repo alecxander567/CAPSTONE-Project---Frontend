@@ -1,4 +1,6 @@
 import Sidebar from "../../components/Sidebar/Sidebar";
+import { usePrograms } from "../../hooks/useProgram";
+import { useEvents } from "../../hooks/useEvents";
 import "./Dashboard.css";
 import {
   BarChart,
@@ -13,6 +15,15 @@ import {
 } from "recharts";
 
 function Dashboard() {
+  const { programs } = usePrograms();
+  const { totalEvents } = useEvents();
+
+  const totalPrograms = programs.length;
+  const totalStudents = programs.reduce(
+    (sum, prog) => sum + (prog.studentList?.length || 0),
+    0,
+  );
+
   const mockEventData = [
     { event: "Orientation", students: 120 },
     { event: "Workshop A", students: 85 },
@@ -66,7 +77,7 @@ function Dashboard() {
               </div>
               <div className="stat-info">
                 <h4>Programs</h4>
-                <span>12</span>
+                <span>{totalPrograms}</span>
               </div>
             </div>
 
@@ -76,7 +87,7 @@ function Dashboard() {
               </div>
               <div className="stat-info">
                 <h4>Total Students</h4>
-                <span>1,248</span>
+                <span>{totalStudents}</span>
               </div>
             </div>
 
@@ -86,7 +97,7 @@ function Dashboard() {
               </div>
               <div className="stat-info">
                 <h4>Total Events</h4>
-                <span>38</span>
+                <span>{totalEvents}</span>
               </div>
             </div>
 
