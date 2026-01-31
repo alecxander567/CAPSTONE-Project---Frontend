@@ -44,8 +44,6 @@ export const useUserProfile = () => {
         return;
       }
 
-      console.log("✅ Token exists:", token.substring(0, 30) + "...");
-
       const response = await axios.get<UserProfile>(
         "http://localhost:8000/auth/profile",
         {
@@ -55,7 +53,6 @@ export const useUserProfile = () => {
         },
       );
 
-      console.log("✅ Profile loaded successfully:", response.data);
       setProfile(response.data);
     } catch (err: any) {
       console.error("Error fetching user profile:", err);
@@ -96,7 +93,6 @@ export const useUserProfile = () => {
         },
       );
 
-      console.log("Profile updated successfully:", response.data);
       setProfile(response.data);
       return response.data;
     } catch (err: any) {
