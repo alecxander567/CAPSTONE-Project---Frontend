@@ -7,9 +7,9 @@ interface RegisterPayload {
   middle_initial?: string;
   last_name: string;
   program: string;
-  email: string;
+  mobile_phone: string;
   password: string;
-  role: "admin" | "student"; 
+  role: "admin" | "student";
 }
 
 export const Register = () => {
@@ -29,13 +29,24 @@ export const Register = () => {
           headers: {
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       return response.data;
     } catch (err: any) {
+      console.error("Registration error:", err.response?.data);
+
       if (err.response?.data?.detail) {
-        setError(err.response.data.detail);
+        if (Array.isArray(err.response.data.detail)) {
+          const errors = err.response.data.detail
+            .map((e: any) => `${e.loc[e.loc.length - 1]}: ${e.msg}`)
+            .join(", ");
+          setError(errors);
+        } else if (typeof err.response.data.detail === "string") {
+          setError(err.response.data.detail);
+        } else {
+          setError(JSON.stringify(err.response.data.detail));
+        }
       } else {
         setError("Something went wrong. Please try again.");
       }

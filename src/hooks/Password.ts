@@ -5,7 +5,7 @@ export const Password = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const forgotPassword = async (studentId: string) => {
+  const forgotPassword = async (mobilePhone: string) => {
     try {
       setLoading(true);
       setError(null);
@@ -13,13 +13,13 @@ export const Password = () => {
       const res = await axios.post(
         "http://localhost:8000/auth/forgot-password",
         {
-          student_id: studentId.trim(),
-        }
+          mobile_phone: mobilePhone.trim(),
+        },
       );
 
       return res.data;
     } catch (err: any) {
-      setError(err.response?.data?.detail || "Student not found");
+      setError(err.response?.data?.detail || "Phone number not found");
       throw err;
     } finally {
       setLoading(false);

@@ -60,9 +60,7 @@ function Landingpage() {
             height="40"
             className="d-inline-block align-top rounded-circle me-2"
           />
-          <span className="d-none d-md-inline">
-            IoT Activity Record Attendance(ARA) System using Biometric
-          </span>
+          <span className="d-none d-md-inline">ARAS-BT</span>
           <span className="d-inline d-md-none">ARA System</span>
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
@@ -82,8 +80,8 @@ function Landingpage() {
           <Row className="justify-content-center align-items-center text-center">
             <Col xs={12} lg={10} xl={8} className="hero-content fade-section">
               <h1 className="hero-title fw-bold mb-4">
-                IoT Activity Record Attendance (ARA) System using{" "}
-                <span className="hero-primary">Biometric</span>
+                Activity Record Attendance (ARA) System using{" "}
+                <span className="hero-primary">Biometric Technology</span>
               </h1>
 
               <p className="lead mb-4 px-3">

@@ -9,7 +9,8 @@ interface UserProfile {
   middle_initial?: string;
   program: string;
   role: string;
-  email: string;
+  mobile_phone: string;
+  profile_image?: string;
   status: string;
   created_at: string;
   updated_at: string;
@@ -19,8 +20,9 @@ interface ProfileUpdateData {
   first_name?: string;
   last_name?: string;
   middle_initial?: string;
-  email?: string;
+  mobile_phone?: string;
   program?: string;
+  profile_image?: string;
 }
 
 export const useUserProfile = () => {
@@ -29,6 +31,7 @@ export const useUserProfile = () => {
   const [error, setError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
   const [updateError, setUpdateError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const fetchUserProfile = async () => {
     try {
@@ -106,6 +109,72 @@ export const useUserProfile = () => {
     }
   };
 
+  const uploadProfilePicture = async (file: File): Promise<void> => {
+    try {
+      setUploading(true);
+      setUpdateError(null);
+
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await axios.post(
+        "http://localhost:8000/auth/profile/upload-picture",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        },
+      );
+
+      await fetchUserProfile();
+    } catch (err: any) {
+      console.error("Error uploading profile picture:", err);
+      const errorMessage =
+        err.response?.data?.detail || "Failed to upload profile picture";
+      setUpdateError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const deleteProfilePicture = async (): Promise<void> => {
+    try {
+      setUpdating(true);
+      setUpdateError(null);
+
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      await axios.delete("http://localhost:8000/auth/profile/delete-picture", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      await fetchUserProfile();
+    } catch (err: any) {
+      console.error("Error deleting profile picture:", err);
+      const errorMessage =
+        err.response?.data?.detail || "Failed to delete profile picture";
+      setUpdateError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   useEffect(() => {
     fetchUserProfile();
   }, []);
@@ -115,8 +184,11 @@ export const useUserProfile = () => {
     loading,
     error,
     updating,
+    uploading,
     updateError,
     refetch: fetchUserProfile,
     updateProfile,
+    uploadProfilePicture,
+    deleteProfilePicture,
   };
 };

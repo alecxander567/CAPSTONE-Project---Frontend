@@ -14,8 +14,8 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
   const [middleInitial, setMiddleInitial] = useState("");
   const [lastName, setLastName] = useState("");
   const [program, setProgram] = useState("");
-  const [role, setRole] = useState<"admin" | "student">("student");
-  const [email, setEmail] = useState("");
+  const [role, setRole] = useState<"ADMIN" | "STUDENT">("STUDENT");
+  const [mobilePhone, setMobilePhone] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
@@ -23,25 +23,47 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
   const { register, loading, error } = Register();
 
   const handleRegister = async () => {
+    // Basic validation
+    if (!firstName.trim()) {
+      return;
+    }
+    if (!lastName.trim()) {
+      return;
+    }
+    if (!program) {
+      // Program is required!
+      return;
+    }
+    if (!mobilePhone.trim()) {
+      return;
+    }
+    if (!password.trim()) {
+      return;
+    }
+
+    const payload = {
+      student_id_no: studentId.trim() || undefined,
+      first_name: firstName.trim(),
+      middle_initial: middleInitial.trim() || undefined,
+      last_name: lastName.trim(),
+      program: program, // Required field
+      mobile_phone: mobilePhone.trim(),
+      password: password.trim(),
+      role: role.toLowerCase() as "admin" | "student",
+    };
+
+    console.log("Sending registration payload:", payload);
+
     try {
-      await register({
-        student_id_no: studentId || undefined,
-        first_name: firstName,
-        middle_initial: middleInitial || undefined,
-        last_name: lastName,
-        program,
-        email,
-        password,
-        role,
-      });
+      await register(payload);
 
       setSuccessMessage("Registration successful!");
       setTimeout(() => {
         setSuccessMessage("");
         handleClose();
       }, 1500);
-    } catch {
-      // Error handled by the hook
+    } catch (err) {
+      console.error("Registration failed:", err);
     }
   };
 
@@ -88,7 +110,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
             <Col md={5}>
               <Form.Group>
                 <Form.Label className="fw-semibold small text-secondary">
-                  <i className="bi bi-person me-2"></i>First Name
+                  <i className="bi bi-person me-2"></i>First Name *
                 </Form.Label>
                 <Form.Control
                   type="text"
@@ -97,6 +119,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
                   onChange={(e) => setFirstName(e.target.value)}
                   className="py-2 border-2"
                   style={{ fontSize: "0.95rem" }}
+                  required
                 />
               </Form.Group>
             </Col>
@@ -123,7 +146,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
             <Col md={5}>
               <Form.Group>
                 <Form.Label className="fw-semibold small text-secondary">
-                  Last Name
+                  Last Name *
                 </Form.Label>
                 <Form.Control
                   type="text"
@@ -132,6 +155,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
                   onChange={(e) => setLastName(e.target.value)}
                   className="py-2 border-2"
                   style={{ fontSize: "0.95rem" }}
+                  required
                 />
               </Form.Group>
             </Col>
@@ -142,13 +166,14 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
             <Col md={7}>
               <Form.Group>
                 <Form.Label className="fw-semibold small text-secondary">
-                  <i className="bi bi-mortarboard me-2"></i>Program
+                  <i className="bi bi-mortarboard me-2"></i>Program *
                 </Form.Label>
                 <Form.Select
                   value={program}
                   onChange={(e) => setProgram(e.target.value)}
                   className="py-2 border-2"
-                  style={{ fontSize: "0.95rem" }}>
+                  style={{ fontSize: "0.95rem" }}
+                  required>
                   <option value="">Select your program</option>
                   <option value="BSED">
                     Bachelor of Secondary Education (BSED)
@@ -183,36 +208,40 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
                 <Form.Select
                   value={role}
                   onChange={(e) =>
-                    setRole(e.target.value as "admin" | "student")
+                    setRole(e.target.value as "ADMIN" | "STUDENT")
                   }
                   className="py-2 border-2"
                   style={{ fontSize: "0.95rem" }}>
-                  <option value="student">Student</option>
-                  <option value="admin">Administrator</option>
+                  <option value="STUDENT">Student</option>
+                  <option value="ADMIN">Administrator</option>
                 </Form.Select>
               </Form.Group>
             </Col>
           </Row>
 
-          {/* Email */}
+          {/* Mobile Phone */}
           <Form.Group className="mb-3">
             <Form.Label className="fw-semibold small text-secondary">
-              <i className="bi bi-envelope me-2"></i>Email Address
+              <i className="bi bi-phone me-2"></i>Mobile Phone Number *
             </Form.Label>
             <Form.Control
-              type="email"
-              placeholder="your.email@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="tel"
+              placeholder="+63 912 345 6789"
+              value={mobilePhone}
+              onChange={(e) => setMobilePhone(e.target.value)}
               className="py-2 border-2"
               style={{ fontSize: "0.95rem" }}
+              required
             />
+            <Form.Text className="text-muted small">
+              Enter your mobile phone number (e.g., +63 912 345 6789)
+            </Form.Text>
           </Form.Group>
 
           {/* Password */}
           <Form.Group className="mb-3">
             <Form.Label className="fw-semibold small text-secondary">
-              <i className="bi bi-lock me-2"></i>Password
+              <i className="bi bi-lock me-2"></i>Password *
             </Form.Label>
             <div className="position-relative">
               <Form.Control
@@ -222,6 +251,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
                 onChange={(e) => setPassword(e.target.value)}
                 className="py-2 border-2 pe-5"
                 style={{ fontSize: "0.95rem" }}
+                required
               />
               <i
                 className={`bi ${

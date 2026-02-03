@@ -4,22 +4,34 @@ import SuccessAlert from "../../components/SuccessAlert/SuccessAlert";
 import ErrorAlert from "../../components/SuccessAlert/ErrorAlert";
 
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 function Settings() {
-  const { profile, loading, error, updating, updateProfile } = useUserProfile();
+  const {
+    profile,
+    loading,
+    error,
+    updating,
+    uploading,
+    updateProfile,
+    uploadProfilePicture,
+    deleteProfilePicture,
+  } = useUserProfile();
+
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editError, setEditError] = useState(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
     middle_initial: "",
-    email: "",
+    mobile_phone: "",
     program: "",
   });
 
@@ -36,7 +48,7 @@ function Settings() {
         first_name: profile.first_name || "",
         last_name: profile.last_name || "",
         middle_initial: profile.middle_initial || "",
-        email: profile.email || "",
+        mobile_phone: profile.mobile_phone || "",
         program: profile.program || "",
       });
     }
@@ -49,7 +61,7 @@ function Settings() {
           first_name: profile.first_name || "",
           last_name: profile.last_name || "",
           middle_initial: profile.middle_initial || "",
-          email: profile.email || "",
+          mobile_phone: profile.mobile_phone || "",
           program: profile.program || "",
         });
       }
@@ -80,6 +92,65 @@ function Settings() {
       setErrorMessage(message);
       setShowError(true);
     }
+  };
+
+  const handleFileSelect = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const validTypes = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+    ];
+    if (!validTypes.includes(file.type)) {
+      setErrorMessage(
+        "Please select a valid image file (JPG, PNG, GIF, or WebP)",
+      );
+      setShowError(true);
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setErrorMessage("Image must be less than 5MB");
+      setShowError(true);
+      return;
+    }
+
+    try {
+      await uploadProfilePicture(file);
+      setShowSuccess(true);
+    } catch (err: any) {
+      setErrorMessage(err.message || "Failed to upload profile picture");
+      setShowError(true);
+    }
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleDeletePicture = () => {
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    setShowDeleteModal(false);
+    try {
+      await deleteProfilePicture();
+      setShowSuccess(true);
+    } catch (err: any) {
+      setErrorMessage(err.message || "Failed to delete profile picture");
+      setShowError(true);
+    }
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
   };
 
   const getStatusBadgeStyle = (status) => {
@@ -142,6 +213,108 @@ function Settings() {
         message={errorMessage}
         onClose={() => setShowError(false)}
       />
+
+      {/* Custom Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div
+          className="modal fade show"
+          id="deletePictureModal"
+          tabIndex={-1}
+          role="dialog"
+          style={{ display: "block" }}>
+          <div className="modal-dialog modal-dialog-centered" role="document">
+            <div className="modal-content modal-content-delete">
+              {/* Modal Header */}
+              <div className="modal-header modal-header-delete">
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "1rem",
+                    position: "relative",
+                    zIndex: 1,
+                  }}>
+                  <div className="modal-icon-delete">
+                    <i className="bi bi-trash-fill"></i>
+                  </div>
+                  <div>
+                    <h5
+                      className="modal-title"
+                      style={{
+                        margin: 0,
+                        fontWeight: 700,
+                        fontSize: "1.35rem",
+                      }}>
+                      Remove Profile Picture
+                    </h5>
+                    <p
+                      className="modal-subtitle"
+                      style={{
+                        margin: "0.25rem 0 0",
+                        opacity: 0.85,
+                        fontSize: "0.875rem",
+                      }}>
+                      This action cannot be undone
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="btn-close btn-close-white"
+                  onClick={() => setShowDeleteModal(false)}
+                  style={{ position: "relative", zIndex: 1 }}
+                  aria-label="Close"
+                />
+              </div>
+
+              {/* Modal Body */}
+              <div className="modal-body modal-body-delete">
+                <div className="delete-warning-icon">
+                  <i className="bi bi-exclamation-lg"></i>
+                </div>
+                <p className="delete-question">
+                  Are you sure you want to remove your profile picture?
+                </p>
+                <div className="event-title-display">
+                  <i className="bi bi-person-circle me-2"></i>
+                  {profile?.first_name} {profile?.last_name}'s Profile Picture
+                </div>
+                <p className="delete-warning-text">
+                  Your profile picture will be permanently deleted and replaced
+                  with your default initials avatar. You can upload a new
+                  picture at any time.
+                </p>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="modal-footer modal-footer-delete justify-content-center">
+                <button
+                  type="button"
+                  className="btn btn-cancel-delete"
+                  onClick={() => setShowDeleteModal(false)}>
+                  <i className="bi bi-x-lg me-1"></i>
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-confirm-delete text-white"
+                  onClick={handleConfirmDelete}>
+                  <i className="bi bi-trash-fill me-1"></i>
+                  Remove Picture
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Backdrop */}
+      {showDeleteModal && (
+        <div
+          className="modal-backdrop fade show"
+          onClick={() => setShowDeleteModal(false)}
+        />
+      )}
 
       <style>
         {`
@@ -433,6 +606,168 @@ function Settings() {
             margin-bottom: 1.5rem;
           }
 
+          /* ─── Delete Modal Styles ─── */
+          .modal-content-delete {
+            border-radius: 20px;
+            border: none;
+            box-shadow: 0 20px 60px rgba(220, 53, 69, 0.25);
+            overflow: hidden;
+          }
+
+          .modal-header-delete {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            padding: 2rem 2rem 1.75rem;
+            border-bottom: none;
+            position: relative;
+            overflow: hidden;
+          }
+
+          .modal-header-delete::before {
+            content: "";
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 45%;
+            top: -100%;
+            left: -50%;
+            animation: deleteModalWave 15s linear infinite;
+          }
+
+          @keyframes deleteModalWave {
+            from {
+              transform: rotate(0deg);
+            }
+            to {
+              transform: rotate(360deg);
+            }
+          }
+
+          .modal-icon-delete {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+            animation: pulse-warning 2s ease-in-out infinite;
+          }
+
+          @keyframes pulse-warning {
+            0%, 100% {
+              transform: scale(1);
+            }
+            50% {
+              transform: scale(1.05);
+            }
+          }
+
+          .modal-body-delete {
+            padding: 2.5rem 2rem;
+            background: linear-gradient(to bottom, #ffffff 0%, #fff5f5 100%);
+            text-align: center;
+          }
+
+          .delete-warning-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: white;
+            box-shadow: 0 8px 24px rgba(220, 53, 69, 0.3);
+            animation: bounce-warning 1s ease-in-out;
+          }
+
+          @keyframes bounce-warning {
+            0%, 100% {
+              transform: translateY(0);
+            }
+            50% {
+              transform: translateY(-10px);
+            }
+          }
+
+          .delete-question {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 1.25rem;
+          }
+
+          .event-title-display {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.75rem 1.25rem;
+            background: white;
+            border: 2px solid #ffc4c4;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            color: #dc3545;
+            font-size: 1rem;
+          }
+
+          .delete-warning-text {
+            color: #6c757d;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            max-width: 400px;
+            margin: 0 auto;
+          }
+
+          .modal-footer-delete {
+            padding: 1.5rem 2rem;
+            background: #fff8f8;
+            border-top: 2px solid #ffe6e6;
+            gap: 0.75rem;
+            display: flex;
+          }
+
+          .btn-cancel-delete {
+            padding: 0.625rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+            border: 2px solid #6c757d;
+            background: white;
+            color: #6c757d;
+            transition: all 0.3s ease;
+            cursor: pointer;
+          }
+
+          .btn-cancel-delete:hover {
+            background: #6c757d;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+          }
+
+          .btn-confirm-delete {
+            padding: 0.625rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            border: none;
+            color: white;
+            transition: all 0.3s ease;
+            cursor: pointer;
+          }
+
+          .btn-confirm-delete:hover {
+            background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(220, 53, 69, 0.4);
+          }
+
+          /* ─── Settings Page Media Queries ─── */
           /* Tablet (992px and below) */
           @media (max-width: 992px) {
             .settings-page-wrapper {
@@ -558,6 +893,53 @@ function Settings() {
             .settings-field-value {
               font-size: 1rem;
             }
+
+            /* Delete Modal Mobile */
+            .modal-dialog {
+              margin: 0.5rem;
+            }
+
+            .modal-header-delete {
+              padding: 1.5rem 1.5rem 1.25rem;
+            }
+
+            .modal-icon-delete {
+              width: 45px;
+              height: 45px;
+              font-size: 1.25rem;
+            }
+
+            .modal-title {
+              font-size: 1.25rem;
+            }
+
+            .modal-subtitle {
+              font-size: 0.8rem;
+            }
+
+            .modal-body-delete {
+              padding: 2rem 1.5rem;
+            }
+
+            .delete-warning-icon {
+              width: 70px;
+              height: 70px;
+              font-size: 2rem;
+            }
+
+            .delete-question {
+              font-size: 1.1rem;
+            }
+
+            .modal-footer-delete {
+              padding: 1.25rem 1.5rem;
+              flex-direction: column;
+            }
+
+            .btn-cancel-delete,
+            .btn-confirm-delete {
+              width: 100%;
+            }
           }
 
           /* Extra Small (400px and below) */
@@ -658,9 +1040,76 @@ function Settings() {
               <div className="settings-profile-card">
                 <div className="settings-profile-header">
                   <div className="settings-profile-header-left">
-                    <div className="settings-avatar-circle">
-                      {getInitials(profile.first_name, profile.last_name)}
+                    {/* Profile Picture with Upload */}
+                    <div
+                      style={{ position: "relative", display: "inline-block" }}>
+                      {profile.profile_image ?
+                        <img
+                          src={`http://localhost:8000/${profile.profile_image}`}
+                          alt="Profile"
+                          style={{
+                            width: "100px",
+                            height: "100px",
+                            objectFit: "cover",
+                            borderRadius: "50%",
+                            border: "3px solid #fff",
+                            boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                          }}
+                        />
+                      : <div className="settings-avatar-circle">
+                          {getInitials(profile.first_name, profile.last_name)}
+                        </div>
+                      }
+
+                      {/* Camera button overlay */}
+                      <button
+                        type="button"
+                        onClick={handleUploadClick}
+                        disabled={uploading}
+                        style={{
+                          position: "absolute",
+                          bottom: "0",
+                          right: "0",
+                          width: "32px",
+                          height: "32px",
+                          borderRadius: "50%",
+                          background:
+                            "linear-gradient(135deg, #0a1aff 0%, #00b4d8 100%)",
+                          border: "3px solid white",
+                          color: "white",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          cursor: "pointer",
+                          transition: "transform 0.2s",
+                          boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                        }}
+                        onMouseEnter={(e) =>
+                          (e.currentTarget.style.transform = "scale(1.1)")
+                        }
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.transform = "scale(1)")
+                        }>
+                        {uploading ?
+                          <span
+                            className="spinner-border spinner-border-sm"
+                            style={{ width: "14px", height: "14px" }}></span>
+                        : <i
+                            className="bi bi-camera-fill"
+                            style={{ fontSize: "14px" }}></i>
+                        }
+                      </button>
+
+                      {/* Hidden file input */}
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                        onChange={handleFileSelect}
+                        style={{ display: "none" }}
+                      />
                     </div>
+
                     <div className="settings-profile-header-text">
                       <h2 className="settings-profile-name">
                         {profile.first_name}{" "}
@@ -680,6 +1129,22 @@ function Settings() {
                           {formatStatus(profile.status)}
                         </span>
                       </div>
+
+                      {/* Delete picture button */}
+                      {profile.profile_image && (
+                        <button
+                          type="button"
+                          onClick={handleDeletePicture}
+                          className="btn btn-sm btn-outline-danger mt-2"
+                          style={{
+                            fontSize: "0.75rem",
+                            padding: "0.25rem 0.5rem",
+                          }}
+                          disabled={updating}>
+                          <i className="bi bi-trash me-1"></i>
+                          Remove Picture
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -807,22 +1272,24 @@ function Settings() {
                   </div>
 
                   <div className="settings-profile-field">
-                    <label className="settings-field-label" htmlFor="email">
-                      Email Address
+                    <label
+                      className="settings-field-label"
+                      htmlFor="mobile_phone">
+                      Mobile Phone Number
                     </label>
                     {isEditing ?
                       <input
                         className="settings-form-input"
-                        type="email"
-                        id="email"
-                        name="email"
-                        value={formData.email}
+                        type="tel"
+                        id="mobile_phone"
+                        name="mobile_phone"
+                        value={formData.mobile_phone}
                         onChange={handleInputChange}
                         required
                       />
                     : <div className="settings-field-value">
-                        <i className="bi bi-envelope settings-field-icon"></i>
-                        {profile.email}
+                        <i className="bi bi-phone settings-field-icon"></i>
+                        {profile.mobile_phone}
                       </div>
                     }
                   </div>

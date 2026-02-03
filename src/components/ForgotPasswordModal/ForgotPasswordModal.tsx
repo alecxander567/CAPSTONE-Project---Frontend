@@ -10,13 +10,13 @@ interface Props {
 }
 
 const ForgotPasswordModal = ({ show, onClose, onSuccess }: Props) => {
-  const [studentId, setStudentId] = useState("");
+  const [mobilePhone, setMobilePhone] = useState("");
 
   const { forgotPassword, loading, error } = Password();
 
   const handleSubmit = async () => {
     try {
-      const res = await forgotPassword(studentId);
+      const res = await forgotPassword(mobilePhone);
       onSuccess(res.token);
     } catch {
       // error already handled by hook
@@ -41,7 +41,7 @@ const ForgotPasswordModal = ({ show, onClose, onSuccess }: Props) => {
             </div>
             <h4 className="mb-1 fw-bold">Forgot Password?</h4>
             <p className="text-muted small mb-0">
-              Enter your Student ID to recover your account
+              Enter your mobile phone number to recover your account
             </p>
           </div>
         </Modal.Title>
@@ -51,13 +51,13 @@ const ForgotPasswordModal = ({ show, onClose, onSuccess }: Props) => {
         <Form onKeyPress={handleKeyPress}>
           <Form.Group className="mb-3">
             <Form.Label className="fw-semibold small text-secondary">
-              <i className="bi bi-credit-card me-2"></i>Student ID
+              <i className="bi bi-phone-fill me-2"></i>Mobile Phone Number
             </Form.Label>
             <Form.Control
-              type="text"
-              placeholder="Enter your student ID number"
-              value={studentId}
-              onChange={(e) => setStudentId(e.target.value)}
+              type="tel"
+              placeholder="Enter your mobile phone number"
+              value={mobilePhone}
+              onChange={(e) => setMobilePhone(e.target.value)}
               className="py-2 border-2"
               style={{ fontSize: "0.95rem" }}
               autoFocus
@@ -81,7 +81,7 @@ const ForgotPasswordModal = ({ show, onClose, onSuccess }: Props) => {
             <Button
               variant="primary"
               onClick={handleSubmit}
-              disabled={loading || !studentId.trim()}
+              disabled={loading || !mobilePhone.trim()}
               className="flex-fill py-2 fw-semibold">
               {loading ?
                 <>
