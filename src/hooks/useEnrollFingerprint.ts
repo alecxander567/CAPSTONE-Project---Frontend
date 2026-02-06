@@ -5,8 +5,7 @@ type FingerprintStatus = "not_enrolled" | "pending" | "enrolled" | "failed";
 
 interface EnrollResponse {
   message: string;
-  user_id: number;
-  fingerprint_status: FingerprintStatus;
+  finger_id: number;
 }
 
 export const useEnrollFingerprint = () => {
@@ -20,12 +19,18 @@ export const useEnrollFingerprint = () => {
     setSuccessMessage(null);
 
     try {
-      const response = await axios.post<EnrollResponse>(
-        `http://localhost:8000/fingerprints/enroll/${userId}`,
+      const response = await axios.post(
+        `http://localhost:8000/fingerprints/start-enrollment`,
+        { user_id: userId }, 
       );
 
       setSuccessMessage(response.data.message);
-      return response.data;
+
+      return {
+        user_id: userId,
+        fingerprint_status: "pending" as FingerprintStatus,
+        finger_id: response.data.finger_id, 
+      };
     } catch (err: any) {
       const message =
         err.response?.data?.detail || "Failed to start fingerprint enrollment";

@@ -1,13 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import SuccessAlert from "../SuccessAlert/SuccessAlert";
 import ErrorAlert from "../SuccessAlert/ErrorAlert";
 import "./EnrollmentModal.css";
 
+type FingerprintStatus = "not_enrolled" | "pending" | "enrolled" | "failed";
+
 interface EnrollmentModalProps {
   isOpen: boolean;
   onClose?: () => void;
   userId: number;
+  updateStatus: (studentId: number, status: FingerprintStatus) => void;
 }
 
 type EnrollmentStep = {
@@ -18,11 +21,21 @@ type EnrollmentStep = {
   status: "waiting" | "active" | "completed" | "failed";
 };
 
-const EnrollmentModal = ({ isOpen, onClose, userId }: EnrollmentModalProps) => {
+const EnrollmentModal = ({
+  isOpen,
+  onClose,
+  userId,
+  updateStatus,
+}: EnrollmentModalProps) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [timeoutSeconds, setTimeoutSeconds] = useState(10);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const countdownRef = useRef<NodeJS.Timeout | null>(null);
+  const lastStepRef = useRef<string | null>(null);
+
   const [steps, setSteps] = useState<EnrollmentStep[]>([
     {
       id: 1,
@@ -68,11 +81,47 @@ const EnrollmentModal = ({ isOpen, onClose, userId }: EnrollmentModalProps) => {
     },
   ]);
 
+  const clearTimers = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    if (countdownRef.current) {
+      clearInterval(countdownRef.current);
+      countdownRef.current = null;
+    }
+  };
+
+  const resetInactivityTimer = () => {
+    clearTimers();
+    setTimeoutSeconds(10);
+
+    countdownRef.current = setInterval(() => {
+      setTimeoutSeconds((prev) => {
+        if (prev <= 1) {
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    timeoutRef.current = setTimeout(() => {
+      setErrorMessage("No fingerprint detected. Enrollment timed out.");
+      updateStatus(userId, "failed");
+      onClose?.();
+      setShowError(true);
+      clearTimers();
+    }, 10000);
+  };
+
   useEffect(() => {
     if (!isOpen) {
       setCurrentStep(0);
       setShowSuccess(false);
       setShowError(false);
+      setTimeoutSeconds(10);
+      lastStepRef.current = null;
+      clearTimers();
       setSteps((prev) =>
         prev.map((step, idx) => ({
           ...step,
@@ -82,6 +131,8 @@ const EnrollmentModal = ({ isOpen, onClose, userId }: EnrollmentModalProps) => {
       return;
     }
 
+    resetInactivityTimer();
+
     const pollInterval = setInterval(async () => {
       try {
         const response = await axios.get(
@@ -89,6 +140,11 @@ const EnrollmentModal = ({ isOpen, onClose, userId }: EnrollmentModalProps) => {
         );
 
         const { status, step, message } = response.data;
+
+        if (step !== lastStepRef.current && step !== "waiting_first_finger") {
+          lastStepRef.current = step;
+          resetInactivityTimer(); 
+        }
 
         if (step === "waiting_first_finger") {
           updateStep(0);
@@ -106,19 +162,27 @@ const EnrollmentModal = ({ isOpen, onClose, userId }: EnrollmentModalProps) => {
 
         if (status === "success") {
           clearInterval(pollInterval);
+          clearTimers();
           setSteps((prev) => prev.map((s) => ({ ...s, status: "completed" })));
+
+          updateStatus(userId, "enrolled");
+
           setTimeout(() => {
             onClose?.();
             setShowSuccess(true);
           }, 1000);
         } else if (status === "failed") {
           clearInterval(pollInterval);
+          clearTimers();
           setErrorMessage(message);
           setSteps((prev) =>
             prev.map((s, idx) =>
               idx === currentStep ? { ...s, status: "failed" } : s,
             ),
           );
+
+          updateStatus(userId, "failed");
+
           setTimeout(() => {
             onClose?.();
             setShowError(true);
@@ -127,9 +191,12 @@ const EnrollmentModal = ({ isOpen, onClose, userId }: EnrollmentModalProps) => {
       } catch (error) {
         console.error("Polling error:", error);
       }
-    }, 1000); 
+    }, 1000);
 
-    return () => clearInterval(pollInterval);
+    return () => {
+      clearInterval(pollInterval);
+      clearTimers();
+    };
   }, [isOpen, userId]);
 
   const updateStep = (stepIndex: number) => {
@@ -157,6 +224,14 @@ const EnrollmentModal = ({ isOpen, onClose, userId }: EnrollmentModalProps) => {
             <i className="bi bi-fingerprint enrollment-icon"></i>
             <h2>Fingerprint Enrollment</h2>
             <p>Please follow the steps below</p>
+
+            {/* Timeout Warning */}
+            {timeoutSeconds <= 5 && timeoutSeconds > 0 && (
+              <div className="timeout-warning">
+                <i className="bi bi-exclamation-triangle"></i>
+                <span>Auto-closing in {timeoutSeconds}s if no activity...</span>
+              </div>
+            )}
           </div>
 
           <div className="progress-bar-container">

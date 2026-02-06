@@ -283,3 +283,31 @@
 .enrollment-step.failed .step-icon {
   background: linear-gradient(135deg, #ef4444, #dc2626);
 }
+
+.timeout-warning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  margin-top: 12px;
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  border-radius: 8px;
+  color: #ffc107;
+  font-size: 0.9rem;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+.timeout-warning i {
+  font-size: 1.1rem;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}

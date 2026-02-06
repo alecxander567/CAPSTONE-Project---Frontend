@@ -42,7 +42,12 @@ const FingerprintStatusBadge = ({ status }: { status: FingerprintStatus }) => {
 const ProgramStudents = () => {
   const { programCode } = useParams();
   const navigate = useNavigate();
-  const { students, loading, error } = useProgramStudents(programCode || "");
+  const {
+    students: fetchedStudents,
+    loading,
+    error,
+  } = useProgramStudents(programCode || "");
+  const [students, setStudents] = useState<Student[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showEnrollmentModal, setShowEnrollmentModal] = useState(false);
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(
@@ -102,6 +107,21 @@ const ProgramStudents = () => {
     }
   };
 
+  useEffect(() => {
+    setStudents(fetchedStudents);
+  }, [fetchedStudents]);
+
+  const updateStudentStatus = (
+    studentId: number,
+    status: FingerprintStatus,
+  ) => {
+    setStudents((prev: Student[]) =>
+      prev.map((s) =>
+        s.id === studentId ? { ...s, fingerprint_status: status } : s,
+      ),
+    );
+  };
+
   return (
     <div className="students-layout">
       <Sidebar />
@@ -110,6 +130,7 @@ const ProgramStudents = () => {
         isOpen={showEnrollmentModal}
         onClose={() => setShowEnrollmentModal(false)}
         userId={selectedStudentId || 0}
+        updateStatus={updateStudentStatus}
       />
 
       <main className="students-content">
