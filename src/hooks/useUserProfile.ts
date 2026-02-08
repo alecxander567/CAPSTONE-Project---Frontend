@@ -8,6 +8,7 @@ interface UserProfile {
   last_name: string;
   middle_initial?: string;
   program: string;
+  year_level?: string;
   role: string;
   mobile_phone: string;
   profile_image?: string;

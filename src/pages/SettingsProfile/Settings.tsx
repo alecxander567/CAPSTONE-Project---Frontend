@@ -28,12 +28,26 @@ function Settings() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
+  const getSuffix = (year: string) => {
+    switch (year) {
+      case "1":
+        return "st";
+      case "2":
+        return "nd";
+      case "3":
+        return "rd";
+      default:
+        return "th";
+    }
+  };
+
   const [formData, setFormData] = useState(() => ({
     first_name: profile?.first_name || "",
     last_name: profile?.last_name || "",
     middle_initial: profile?.middle_initial || "",
     mobile_phone: profile?.mobile_phone || "",
     program: profile?.program || "",
+    year_level: profile?.year_level || "",
   }));
 
   useEffect(() => {
@@ -52,6 +66,7 @@ function Settings() {
           middle_initial: profile.middle_initial || "",
           mobile_phone: profile.mobile_phone || "",
           program: profile.program || "",
+          year_level: profile.year_level || "", 
         });
       }, 0);
 
@@ -68,6 +83,7 @@ function Settings() {
           middle_initial: profile.middle_initial || "",
           mobile_phone: profile.mobile_phone || "",
           program: profile.program || "",
+          year_level: profile.year_level || "", 
         });
       }
       setEditError(null);
@@ -1275,6 +1291,33 @@ function Settings() {
                     : <div className="settings-field-value">
                         <i className="bi bi-person settings-field-icon"></i>
                         {profile.last_name}
+                      </div>
+                    }
+                  </div>
+
+                  <div className="settings-profile-field">
+                    <label
+                      className="settings-field-label"
+                      htmlFor="year_level">
+                      Year Level
+                    </label>
+                    {isEditing ?
+                      <select
+                        name="year_level"
+                        id="year_level"
+                        className="settings-form-select"
+                        value={formData.year_level}
+                        onChange={handleInputChange}>
+                        <option value="">Select Year Level</option>
+                        <option value="1">1st Year</option>
+                        <option value="2">2nd Year</option>
+                        <option value="3">3rd Year</option>
+                        <option value="4">4th Year</option>
+                      </select>
+                    : <div className="settings-field-value">
+                        {formData.year_level ?
+                          `${formData.year_level}${getSuffix(formData.year_level)} Year`
+                        : "-"}
                       </div>
                     }
                   </div>

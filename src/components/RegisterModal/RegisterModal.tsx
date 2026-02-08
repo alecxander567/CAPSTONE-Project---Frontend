@@ -19,6 +19,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [yearLevel, setYearLevel] = useState("");
 
   const { register, loading, error } = useRegister();
 
@@ -44,7 +45,8 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
       first_name: firstName.trim(),
       middle_initial: middleInitial.trim() || undefined,
       last_name: lastName.trim(),
-      program: program, 
+      program: program,
+      year_level: yearLevel,
       mobile_phone: mobilePhone.trim(),
       password: password.trim(),
       role: role.toLowerCase() as "admin" | "student",
@@ -194,6 +196,26 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
                   <option value="BHumServ">
                     Bachelor of Human Services (BHumServ)
                   </option>
+                </Form.Select>
+              </Form.Group>
+            </Col>
+
+            <Col md={5}>
+              <Form.Group>
+                <Form.Label className="fw-semibold small text-secondary">
+                  <i className="bi bi-building me-2"></i>Year Level *
+                </Form.Label>
+                <Form.Select
+                  value={yearLevel}
+                  onChange={(e) => setYearLevel(e.target.value)}
+                  className="py-2 border-2"
+                  style={{ fontSize: "0.95rem" }}
+                  required>
+                  <option value="">Select your year level</option>
+                  <option value="1st year">1st Year</option>
+                  <option value="2nd year">2nd Year</option>
+                  <option value="3rd year">3rd Year</option>
+                  <option value="4th year">4th Year</option>
                 </Form.Select>
               </Form.Group>
             </Col>
