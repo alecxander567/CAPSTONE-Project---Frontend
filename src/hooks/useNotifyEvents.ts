@@ -8,7 +8,7 @@ export interface Notification {
   id: number;
   title: string;
   message: string;
-  timestamp: string; 
+  timestamp: string;
   is_read: boolean;
 }
 
@@ -110,7 +110,7 @@ export const useNotifications = () => {
 
   const handleAxiosError = (err: unknown, fallbackMsg: string) => {
     if (err instanceof AxiosError) {
-      return err.response?.data ?? fallbackMsg;
+      return err.response?.data?.detail || err.response?.data || fallbackMsg;
     } else if (err instanceof Error) {
       return err.message;
     }
@@ -121,11 +121,15 @@ export const useNotifications = () => {
     setMarkingIds((prev) => [...prev, notificationId]);
     try {
       const token = localStorage.getItem("token");
+
       await axios.patch(
         `${API_BASE_URL}/notifications/${notificationId}/read`,
-        {},
+        null, 
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         },
       );
 
@@ -134,12 +138,15 @@ export const useNotifications = () => {
         notification.is_read = true;
         notifyAllListeners();
       }
+
+      setSuccessMessage("Notification marked as read");
     } catch (err: unknown) {
-      console.error(
-        "Failed to mark notification as read:",
-        handleAxiosError(err, "Failed to mark notification as read"),
+      const errorMsg = handleAxiosError(
+        err,
+        "Failed to mark notification as read",
       );
-      setErrorMessage("Failed to mark notification as read");
+      console.error("Failed to mark notification as read:", errorMsg);
+      setErrorMessage(errorMsg);
     } finally {
       setMarkingIds((prev) => prev.filter((id) => id !== notificationId));
     }
@@ -157,9 +164,12 @@ export const useNotifications = () => {
         unreadIds.map((id) =>
           axios.patch(
             `${API_BASE_URL}/notifications/${id}/read`,
-            {},
+            null, 
             {
-              headers: { Authorization: `Bearer ${token}` },
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
             },
           ),
         ),
@@ -169,11 +179,9 @@ export const useNotifications = () => {
       notifyAllListeners();
       setSuccessMessage("All notifications marked as read");
     } catch (err: unknown) {
-      console.error(
-        "Failed to mark all as read:",
-        handleAxiosError(err, "Failed to mark all as read"),
-      );
-      setErrorMessage("Failed to mark all as read");
+      const errorMsg = handleAxiosError(err, "Failed to mark all as read");
+      console.error("Failed to mark all as read:", errorMsg);
+      setErrorMessage(errorMsg);
     } finally {
       setIsMarkingAll(false);
     }
@@ -191,11 +199,9 @@ export const useNotifications = () => {
       notifyAllListeners();
       setSuccessMessage("Notification deleted successfully");
     } catch (err: unknown) {
-      console.error(
-        "Failed to delete notification:",
-        handleAxiosError(err, "Failed to delete notification"),
-      );
-      setErrorMessage("Failed to delete notification");
+      const errorMsg = handleAxiosError(err, "Failed to delete notification");
+      console.error("Failed to delete notification:", errorMsg);
+      setErrorMessage(errorMsg);
     } finally {
       setDeletingIds((prev) => prev.filter((id) => id !== notificationId));
     }
@@ -213,11 +219,12 @@ export const useNotifications = () => {
       notifyAllListeners();
       setSuccessMessage("All notifications cleared successfully");
     } catch (err: unknown) {
-      console.error(
-        "Failed to delete all notifications:",
-        handleAxiosError(err, "Failed to delete all notifications"),
+      const errorMsg = handleAxiosError(
+        err,
+        "Failed to delete all notifications",
       );
-      setErrorMessage("Failed to delete all notifications");
+      console.error("Failed to delete all notifications:", errorMsg);
+      setErrorMessage(errorMsg);
     } finally {
       setIsDeleting(false);
     }

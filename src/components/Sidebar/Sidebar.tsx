@@ -90,7 +90,7 @@ const Sidebar = () => {
               className={isActive("/calendar") ? "active" : ""}
               onClick={() => handleNavigate("/calendar")}>
               <i className="bi bi-calendar3"></i>
-              <span>Calendar</span>
+              <span>Schedules</span>
             </li>
 
             <li

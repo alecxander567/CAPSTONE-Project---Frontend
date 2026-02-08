@@ -1,16 +1,24 @@
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 
+export type EventInput = Omit<
+  Event,
+  "id" | "created_by" | "created_at" | "status"
+>;
+
+export type EventStatus = "upcoming" | "ongoing" | "done";
+
 export interface Event {
   id: number;
   title: string;
-  description: string;
-  event_date: string;
+  description?: string | null;
+  event_date: string; 
   start_time: string;
   end_time: string;
   location: string;
   created_by: number;
   created_at: string;
+  status: EventStatus;
 }
 
 interface UseEventsResult {
@@ -18,13 +26,10 @@ interface UseEventsResult {
   loading: boolean;
   error: string | null;
   totalEvents: number;
-  addEvent: (
-    data: Omit<Event, "id" | "created_by" | "created_at">,
-  ) => Promise<void>;
-  editEvent: (
-    id: number,
-    data: Omit<Event, "id" | "created_by" | "created_at">,
-  ) => Promise<void>;
+
+  addEvent: (data: EventInput) => Promise<void>;
+  editEvent: (id: number, data: EventInput) => Promise<void>;
+
   deleteEvent: (id: number) => Promise<void>;
   getEventById: (id: number) => Promise<Event>;
   refetch: () => Promise<void>;
@@ -57,9 +62,7 @@ export const useEvents = (): UseEventsResult => {
     fetchEvents();
   }, [fetchEvents]);
 
-  const addEvent = async (
-    data: Omit<Event, "id" | "created_by" | "created_at">,
-  ) => {
+  const addEvent = async (data: EventInput) => {
     try {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("User not authenticated");
@@ -80,10 +83,7 @@ export const useEvents = (): UseEventsResult => {
     }
   };
 
-  const editEvent = async (
-    id: number,
-    data: Omit<Event, "id" | "created_by" | "created_at">,
-  ) => {
+  const editEvent = async (id: number, data: EventInput) => {
     try {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("User not authenticated");

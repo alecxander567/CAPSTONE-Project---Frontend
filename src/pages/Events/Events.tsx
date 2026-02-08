@@ -36,6 +36,19 @@ function Events() {
   const [successMessage, setSuccessMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
 
+  const getStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case "ongoing":
+        return "badge bg-warning";
+      case "upcoming":
+        return "badge bg-secondary";
+      case "done":
+        return "badge bg-success";
+      default:
+        return "badge bg-dark";
+    }
+  };
+
   useEffect(() => {
     if (location.state?.fromAttendance) {
       refetch();
@@ -229,6 +242,12 @@ function Events() {
                       <div className="detail-row">
                         <i className="bi bi-geo-alt"></i>
                         <span>{event.location}</span>
+                      </div>
+                      <div className="detail-row">
+                        <span
+                          className={`event-status-badge ${getStatusBadgeClass(event.status)}`}>
+                          {event.status.toUpperCase()}
+                        </span>
                       </div>
                     </div>
                   </div>

@@ -15,14 +15,35 @@ import {
 } from "recharts";
 
 function Dashboard() {
-  const { programs } = usePrograms();
-  const { totalEvents } = useEvents();
+  const {
+    programs,
+    loading: programsLoading,
+    error: programsError,
+  } = usePrograms();
+  const { events, totalEvents } = useEvents();
+
+  const programColors = [
+    "#0d6efd", 
+    "#6f42c1", 
+    "#d63384", 
+    "#fd7e14", 
+    "#20c997", 
+    "#ffc107", 
+    "#dc3545", 
+    "#198754", 
+  ];
 
   const totalPrograms = programs.length;
-  const totalStudents = programs.reduce(
-    (sum, prog) => sum + (prog.studentList?.length || 0),
-    0,
-  );
+  const totalStudents = programs.reduce((sum, prog) => sum + prog.students, 0);
+
+  const programsWithPercentage = programs.map((prog, idx) => ({
+    program: prog.name,
+    code: prog.code,
+    count: prog.students,
+    percent:
+      totalStudents > 0 ? Math.round((prog.students / totalStudents) * 100) : 0,
+    color: programColors[idx % programColors.length],
+  }));
 
   const mockEventData = [
     { event: "Orientation", students: 120 },
@@ -33,14 +54,6 @@ function Dashboard() {
     { event: "Tech Talk", students: 95 },
   ];
 
-  const mockProgramAttendance = [
-    { program: "Computer Science", percent: 95, color: "#4d94ff" },
-    { program: "IT", percent: 85, color: "#0dcaf0" },
-    { program: "Business Administration", percent: 75, color: "#ff6b6b" },
-    { program: "Education", percent: 65, color: "#fcd34d" },
-    { program: "Engineering", percent: 50, color: "#34d399" },
-  ];
-
   const weeklyTrend = [
     { eventName: "Lightning Workshop", attendance: 85 },
     { eventName: "Web Dev Bootcamp", attendance: 92 },
@@ -48,6 +61,64 @@ function Dashboard() {
     { eventName: "Cybersecurity 101", attendance: 95 },
     { eventName: "Cloud Computing Intro", attendance: 88 },
   ];
+
+  const generateCalendar = () => {
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    const firstDay = new Date(currentYear, currentMonth, 1);
+    const lastDay = new Date(currentYear, currentMonth + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+
+    const calendarDays = [];
+
+    const prevMonthLastDay = new Date(currentYear, currentMonth, 0).getDate();
+    for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+      calendarDays.push({
+        day: prevMonthLastDay - i,
+        isCurrentMonth: false,
+        isToday: false,
+        hasEvent: false,
+      });
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      const hasEvent = events.some((event) =>
+        event.event_date.startsWith(dateStr),
+      );
+
+      calendarDays.push({
+        day,
+        isCurrentMonth: true,
+        isToday: day === today.getDate(),
+        hasEvent,
+      });
+    }
+
+    const remainingDays = 35 - calendarDays.length;
+    for (let day = 1; day <= remainingDays; day++) {
+      calendarDays.push({
+        day,
+        isCurrentMonth: false,
+        isToday: false,
+        hasEvent: false,
+      });
+    }
+
+    return calendarDays;
+  };
+
+  const getCurrentMonthYear = () => {
+    const today = new Date();
+    return today.toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
+    });
+  };
+
+  const calendarDays = generateCalendar();
 
   return (
     <div className="dashboard-layout">
@@ -228,68 +299,135 @@ function Dashboard() {
 
           {/* Lower Grid (Progress & Next Event) */}
           <div className="dashboard-lower-grid">
-            {/* Program Attendance Card */}
+            {/* Program Participation Card */}
             <div className="lower-card fade-up delay-6">
               <h4 className="card-title">
                 <i className="bi bi-pie-chart-fill text-primary me-2"></i>
                 Program Participation
               </h4>
-              <div className="progress-bars">
-                {mockProgramAttendance.map((prog, idx) => (
-                  <div key={idx} className="progress-item">
-                    <div className="progress-header">
-                      <span className="program-name">{prog.program}</span>
-                      <span
-                        className="program-percent"
-                        style={{ color: prog.color }}>
-                        {prog.percent}%
-                      </span>
-                    </div>
-                    <div className="progress-bar-bg">
-                      <div
-                        className="progress-bar-fill"
-                        style={{
-                          width: `${prog.percent}%`,
-                          background: `linear-gradient(90deg, ${prog.color}, ${prog.color}dd)`,
-                          boxShadow: `0 2px 8px ${prog.color}40`,
-                        }}></div>
+
+              {programsLoading ?
+                <div className="text-center py-4">
+                  <div
+                    className="spinner-border spinner-border-sm text-primary"
+                    role="status"></div>
+                  <p className="mt-2 text-muted small">Loading programs...</p>
+                </div>
+              : programsError ?
+                <div className="alert alert-danger small" role="alert">
+                  <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                  {programsError}
+                </div>
+              : <>
+                  {/* Recent Event */}
+                  <div className="recent-event-info mb-3">
+                    <h6 className="text-muted small mb-2">RECENT EVENT</h6>
+                    {events.length === 0 ?
+                      <p className="text-muted small">No events found</p>
+                    : <div className="event-info-compact">
+                        <p
+                          className="mb-1 fw-bold"
+                          style={{ fontSize: "0.95rem" }}>
+                          {events[events.length - 1]?.title}
+                        </p>
+                        <p className="mb-0 text-muted small">
+                          <i className="bi bi-calendar-check me-1"></i>
+                          {new Date(
+                            events[events.length - 1]?.event_date,
+                          ).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })}
+                          {" • "}
+                          {events[events.length - 1]?.start_time} -{" "}
+                          {events[events.length - 1]?.end_time}
+                        </p>
+                      </div>
+                    }
+                  </div>
+
+                  {/* Mock Graph */}
+                  <div className="participation-chart">
+                    <h6 className="text-muted small mb-3">
+                      PARTICIPATION OVERVIEW
+                    </h6>
+                    <div className="progress-bars">
+                      {programsWithPercentage.map((prog, idx) => (
+                        <div key={idx} className="progress-item">
+                          <div className="progress-header">
+                            <span className="program-name">
+                              {prog.program}
+                              <span className="text-muted small ms-2">
+                                ({prog.count} students)
+                              </span>
+                            </span>
+                            <span
+                              className="program-percent"
+                              style={{ color: prog.color }}>
+                              {prog.percent}%
+                            </span>
+                          </div>
+                          <div className="progress-bar-bg">
+                            <div
+                              className="progress-bar-fill"
+                              style={{
+                                width: `${prog.percent}%`,
+                                background: `linear-gradient(90deg, ${prog.color}, ${prog.color}dd)`,
+                                boxShadow: `0 2px 8px ${prog.color}40`,
+                              }}></div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                ))}
-              </div>
+                </>
+              }
             </div>
 
-            {/* Next Event Card */}
-            <div className="lower-card event-card fade-up delay-6">
-              <div className="event-header">
-                <div className="event-icon-box">
-                  <i className="bi bi-calendar-event"></i>
-                </div>
-                <h3>Next Event: Lightning Workshop</h3>
-              </div>
+            {/* Calendar Card */}
+            <div className="lower-card fade-up delay-6">
+              <h4 className="card-title">
+                <i className="bi bi-calendar3 text-primary me-2"></i>
+                Calendar
+              </h4>
 
-              <div className="event-details">
-                <div className="detail-row">
-                  <i className="bi bi-calendar-check"></i>
-                  <span>Jan 20, 2026</span>
+              <div className="calendar-view">
+                <div className="calendar-header">
+                  <div className="calendar-month">{getCurrentMonthYear()}</div>
                 </div>
-                <div className="detail-row">
-                  <i className="bi bi-clock"></i>
-                  <span>10:00 AM - 12:00 PM</span>
+
+                <div className="calendar-grid">
+                  <div className="calendar-weekday">Sun</div>
+                  <div className="calendar-weekday">Mon</div>
+                  <div className="calendar-weekday">Tue</div>
+                  <div className="calendar-weekday">Wed</div>
+                  <div className="calendar-weekday">Thu</div>
+                  <div className="calendar-weekday">Fri</div>
+                  <div className="calendar-weekday">Sat</div>
+
+                  {calendarDays.map((dayInfo, idx) => (
+                    <div
+                      key={idx}
+                      className={`calendar-day ${!dayInfo.isCurrentMonth ? "other-month" : ""} ${dayInfo.isToday ? "today" : ""} ${dayInfo.hasEvent ? "has-event" : ""}`}>
+                      {dayInfo.day}
+                    </div>
+                  ))}
                 </div>
-                <div className="detail-row">
-                  <i className="bi bi-geo-alt"></i>
-                  <span>Room 101, Main Bldg</span>
-                </div>
-                <div className="detail-row">
-                  <i className="bi bi-people"></i>
-                  <span>150 Expected</span>
+
+                <div className="calendar-footer mt-3">
+                  <div className="calendar-legend">
+                    <span className="legend-item">
+                      <span className="legend-dot today-dot"></span>
+                      Today
+                    </span>
+                    <span className="legend-item">
+                      <span className="legend-dot event-dot"></span>
+                      Event
+                    </span>
+                  </div>
                 </div>
               </div>
-
-              <button className="btn-view-details">
-                View Details <i className="bi bi-arrow-right ms-1"></i>
-              </button>
             </div>
           </div>
         </div>

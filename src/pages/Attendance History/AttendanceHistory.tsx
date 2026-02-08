@@ -5,21 +5,31 @@ import { usePrograms } from "../../hooks/useProgram";
 import { useEvents } from "../../hooks/useEvents";
 import type { Event } from "../../hooks/useEvents";
 
-const getCurrentEvent = (events: Event[]) => {
-  const now = new Date();
+const getRecentEvent = (events: Event[]) => {
+  if (!events.length) return null;
 
-  const parsedEvents = events.map((event) => {
-    const start = new Date(`${event.event_date}T${event.start_time}`);
-    const end = new Date(`${event.event_date}T${event.end_time}`);
-    return { ...event, start, end };
-  });
-
-  const ongoing = parsedEvents.find((e) => now >= e.start && now <= e.end);
+  const ongoing = events.find((e) => e.status === "ongoing");
   if (ongoing) return ongoing;
 
-  const upcoming = parsedEvents
-    .filter((e) => e.start > now)
-    .sort((a, b) => a.start.getTime() - b.start.getTime())[0];
+  const doneEvents = events
+    .filter((e) => e.status === "done")
+    .sort(
+      (a, b) =>
+        new Date(`${b.event_date}T${b.end_time}`).getTime() -
+        new Date(`${a.event_date}T${a.end_time}`).getTime(),
+    );
+
+  if (doneEvents.length > 0) {
+    return doneEvents[0];
+  }
+
+  const upcoming = events
+    .filter((e) => e.status === "upcoming")
+    .sort(
+      (a, b) =>
+        new Date(`${a.event_date}T${a.start_time}`).getTime() -
+        new Date(`${b.event_date}T${b.start_time}`).getTime(),
+    )[0];
 
   return upcoming ?? null;
 };
@@ -30,7 +40,7 @@ function AttendanceHistory() {
   const { programs, loading: programsLoading } = usePrograms();
   const { events, loading: eventsLoading } = useEvents();
 
-  const currentEvent = getCurrentEvent(events);
+  const currentEvent = getRecentEvent(events);
 
   if (programsLoading || eventsLoading) {
     return (
@@ -94,7 +104,12 @@ function AttendanceHistory() {
 
               <p className="event-page-subtitle">
                 {currentEvent ?
-                  new Date(currentEvent.event_date).toLocaleDateString()
+                  <>
+                    {new Date(currentEvent.event_date).toLocaleDateString()} •{" "}
+                    <span className="text-capitalize">
+                      {currentEvent.status}
+                    </span>
+                  </>
                 : "—"}
               </p>
             </div>
