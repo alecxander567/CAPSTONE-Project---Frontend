@@ -2,11 +2,24 @@ import React, { useState, useEffect } from "react";
 import type { FormEvent } from "react";
 import "./AddEventsModal.css";
 
+export interface EventData {
+  title: string;
+  event_date: string;
+  description: string;
+  start_time: string;
+  end_time: string;
+  location: string;
+}
+
+export interface StoredEvent extends EventData {
+  id: number;
+}
+
 interface AddEventModalProps {
   show: boolean;
   onClose: () => void;
-  onSave: (data: any) => void;
-  initialData?: any | null;
+  onSave: (data: EventData) => void;
+  initialData?: EventData | null;
 }
 
 const AddEventModal: React.FC<AddEventModalProps> = ({
@@ -17,40 +30,42 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
 }) => {
   const [visible, setVisible] = useState(false);
   const [active, setActive] = useState(false);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [eventDate, setEventDate] = useState("");
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
-  const [location, setLocation] = useState("");
+  const [title, setTitle] = useState(initialData?.title || "");
+  const [description, setDescription] = useState(
+    initialData?.description || "",
+  );
+  const [eventDate, setEventDate] = useState(initialData?.event_date || "");
+  const [startTime, setStartTime] = useState(initialData?.start_time || "");
+  const [endTime, setEndTime] = useState(initialData?.end_time || "");
+  const [location, setLocation] = useState(initialData?.location || "");
 
   useEffect(() => {
-    if (initialData) {
-      setTitle(initialData.title || "");
-      setDescription(initialData.description || "");
-      setEventDate(initialData.event_date || "");
-      setStartTime(initialData.start_time || "");
-      setEndTime(initialData.end_time || "");
-      setLocation(initialData.location || "");
-    } else {
-      setTitle("");
-      setDescription("");
-      setEventDate("");
-      setStartTime("");
-      setEndTime("");
-      setLocation("");
-    }
+    const resetState = () => {
+      setTitle(initialData?.title || "");
+      setDescription(initialData?.description || "");
+      setEventDate(initialData?.event_date || "");
+      setStartTime(initialData?.start_time || "");
+      setEndTime(initialData?.end_time || "");
+      setLocation(initialData?.location || "");
+    };
+
+    const id = setTimeout(resetState, 0);
+    return () => clearTimeout(id);
   }, [initialData, show]);
 
   useEffect(() => {
     let timeout: number;
 
     if (show) {
-      setVisible(true);
-      timeout = window.setTimeout(() => setActive(true), 20);
+      timeout = window.setTimeout(() => {
+        setVisible(true);
+        setActive(true);
+      }, 0);
     } else {
-      setActive(false);
-      timeout = window.setTimeout(() => setVisible(false), 300);
+      timeout = window.setTimeout(() => {
+        setActive(false);
+        setVisible(false);
+      }, 0);
     }
 
     return () => clearTimeout(timeout);
@@ -58,13 +73,14 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
+
     onSave({
       title,
-      description,
-      event_date: eventDate,
-      start_time: startTime,
-      end_time: endTime,
-      location,
+      description: description || "", 
+      event_date: eventDate || "",
+      start_time: startTime || "",
+      end_time: endTime || "",
+      location: location || "",
     });
   };
 

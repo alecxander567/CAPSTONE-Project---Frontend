@@ -1,6 +1,6 @@
 import { Modal, Button, Form } from "react-bootstrap";
 import { useState } from "react";
-import { Password } from "../../hooks/Password";
+import { usePassword } from "../../hooks/Password";
 import AnimatedAlert from "../AnimatedAlert/AnimatedAlert";
 
 interface ResetPasswordModalProps {
@@ -21,7 +21,7 @@ const ResetPasswordModal = ({
   const [validationError, setValidationError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  const { resetPassword, loading, error } = Password();
+  const { resetPassword, loading, error } = usePassword();
 
   const handleReset = async () => {
     setValidationError("");

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 
 export interface Event {
@@ -25,8 +25,9 @@ interface UseEventsResult {
     id: number,
     data: Omit<Event, "id" | "created_by" | "created_at">,
   ) => Promise<void>;
-  deleteEvent: (id: number) => Promise<void>; 
+  deleteEvent: (id: number) => Promise<void>;
   getEventById: (id: number) => Promise<Event>;
+  refetch: () => Promise<void>;
 }
 
 export const useEvents = (): UseEventsResult => {
@@ -35,31 +36,26 @@ export const useEvents = (): UseEventsResult => {
   const [error, setError] = useState<string | null>(null);
   const [totalEvents, setTotalEvents] = useState<number>(0);
 
-  useEffect(() => {
-    const fetchEvents = async () => {
-      setLoading(true);
-      try {
-        const response = await axios.get<Event[]>(
-          "http://127.0.0.1:8000/events/",
-        );
-        setEvents(response.data);
-
-        const countResponse = await axios.get<{ total_events: number }>(
-          "http://127.0.0.1:8000/events/count",
-        );
-        setTotalEvents(countResponse.data.total_events);
-
-        setError(null);
-      } catch (err) {
-        console.error(err);
-        setError("Failed to fetch events.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchEvents();
+  const fetchEvents = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get<Event[]>(
+        "http://127.0.0.1:8000/events/",
+      );
+      setEvents(response.data);
+      setTotalEvents(response.data.length);
+      setError(null);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to fetch events.");
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchEvents();
+  }, [fetchEvents]);
 
   const addEvent = async (
     data: Omit<Event, "id" | "created_by" | "created_at">,
@@ -77,6 +73,7 @@ export const useEvents = (): UseEventsResult => {
       );
 
       setEvents((prev) => [...prev, response.data]);
+      setTotalEvents((prev) => prev + 1);
     } catch (err) {
       console.error(err);
       throw new Error("Failed to add event.");
@@ -118,28 +115,32 @@ export const useEvents = (): UseEventsResult => {
       });
 
       setEvents((prev) => prev.filter((event) => event.id !== id));
+      setTotalEvents((prev) => prev - 1);
     } catch (err) {
       console.error(err);
       throw new Error("Failed to delete event.");
     }
   };
 
-  const getEventById = async (id: number): Promise<Event> => {
-    try {
-      const existingEvent = events.find((e) => e.id === id);
-      if (existingEvent) {
-        return existingEvent;
-      }
+  const getEventById = useCallback(
+    async (id: number): Promise<Event> => {
+      try {
+        const existingEvent = events.find((e) => e.id === id);
+        if (existingEvent) {
+          return existingEvent;
+        }
 
-      const response = await axios.get<Event>(
-        `http://127.0.0.1:8000/events/${id}`,
-      );
-      return response.data;
-    } catch (err) {
-      console.error(err);
-      throw new Error("Failed to fetch event details.");
-    }
-  };
+        const response = await axios.get<Event>(
+          `http://127.0.0.1:8000/events/${id}`,
+        );
+        return response.data;
+      } catch (err) {
+        console.error(err);
+        throw new Error("Failed to fetch event details.");
+      }
+    },
+    [events],
+  );
 
   return {
     events,
@@ -150,5 +151,6 @@ export const useEvents = (): UseEventsResult => {
     editEvent,
     deleteEvent,
     getEventById,
+    refetch: fetchEvents,
   };
 };

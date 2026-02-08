@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Modal, Button, Form, Row, Col } from "react-bootstrap";
-import { Register } from "../../hooks/Register";
+import { useRegister } from "../../hooks/Register";
 import AnimatedAlert from "../AnimatedAlert/AnimatedAlert";
 
 interface RegisterModalProps {
@@ -20,10 +20,9 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
-  const { register, loading, error } = Register();
+  const { register, loading, error } = useRegister();
 
   const handleRegister = async () => {
-    // Basic validation
     if (!firstName.trim()) {
       return;
     }
@@ -31,7 +30,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
       return;
     }
     if (!program) {
-      // Program is required!
       return;
     }
     if (!mobilePhone.trim()) {
@@ -46,7 +44,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
       first_name: firstName.trim(),
       middle_initial: middleInitial.trim() || undefined,
       last_name: lastName.trim(),
-      program: program, // Required field
+      program: program, 
       mobile_phone: mobilePhone.trim(),
       password: password.trim(),
       role: role.toLowerCase() as "admin" | "student",

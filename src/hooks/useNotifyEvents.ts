@@ -1,11 +1,19 @@
 import { useState, useEffect, useRef } from "react";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 
 const API_BASE_URL = "http://localhost:8000";
-const POLLING_INTERVAL = 5000; 
+const POLLING_INTERVAL = 5000;
 
-const sharedNotificationsMap = new Map<number, any>();
-let sharedListeners = new Set<(notifications: any[]) => void>();
+export interface Notification {
+  id: number;
+  title: string;
+  message: string;
+  timestamp: string; 
+  is_read: boolean;
+}
+
+const sharedNotificationsMap = new Map<number, Notification>();
+const sharedListeners = new Set<(notifications: Notification[]) => void>();
 
 let isFetchingNotifications = false;
 let pollingIntervalId: number | null = null;
@@ -24,31 +32,39 @@ const fetchNotifications = async () => {
 
   try {
     const token = localStorage.getItem("token");
-    const response = await axios.get(`${API_BASE_URL}/notifications/`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await axios.get<Notification[]>(
+      `${API_BASE_URL}/notifications/`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
 
     sharedNotificationsMap.clear();
-    response.data.forEach((n: any) => {
-      sharedNotificationsMap.set(n.id, n);
-    });
+    response.data.forEach((n) => sharedNotificationsMap.set(n.id, n));
 
     notifyAllListeners();
-  } catch (err) {
-    console.error("Failed to fetch notifications:", err);
+  } catch (err: unknown) {
+    if (err instanceof AxiosError) {
+      console.error(
+        "Failed to fetch notifications:",
+        err.response?.data ?? err.message,
+      );
+    } else if (err instanceof Error) {
+      console.error("Failed to fetch notifications:", err.message);
+    } else {
+      console.error("Failed to fetch notifications:", err);
+    }
   } finally {
     isFetchingNotifications = false;
   }
 };
 
 const startPolling = () => {
-  if (pollingIntervalId !== null) return; 
+  if (pollingIntervalId !== null) return;
 
   fetchNotifications();
 
-  pollingIntervalId = window.setInterval(() => {
-    fetchNotifications();
-  }, POLLING_INTERVAL);
+  pollingIntervalId = window.setInterval(fetchNotifications, POLLING_INTERVAL);
 };
 
 const stopPolling = () => {
@@ -59,7 +75,7 @@ const stopPolling = () => {
 };
 
 export const useNotifications = () => {
-  const [notifications, setNotifications] = useState<any[]>(
+  const [notifications, setNotifications] = useState<Notification[]>(
     Array.from(sharedNotificationsMap.values()).sort((a, b) => b.id - a.id),
   );
   const [isDeleting, setIsDeleting] = useState(false);
@@ -74,10 +90,8 @@ export const useNotifications = () => {
   useEffect(() => {
     isMountedRef.current = true;
 
-    const updateLocalState = (newNotifications: any[]) => {
-      if (isMountedRef.current) {
-        setNotifications(newNotifications);
-      }
+    const updateLocalState = (newNotifications: Notification[]) => {
+      if (isMountedRef.current) setNotifications(newNotifications);
     };
     sharedListeners.add(updateLocalState);
 
@@ -94,6 +108,15 @@ export const useNotifications = () => {
     };
   }, []);
 
+  const handleAxiosError = (err: unknown, fallbackMsg: string) => {
+    if (err instanceof AxiosError) {
+      return err.response?.data ?? fallbackMsg;
+    } else if (err instanceof Error) {
+      return err.message;
+    }
+    return fallbackMsg;
+  };
+
   const markAsRead = async (notificationId: number) => {
     setMarkingIds((prev) => [...prev, notificationId]);
     try {
@@ -101,7 +124,9 @@ export const useNotifications = () => {
       await axios.patch(
         `${API_BASE_URL}/notifications/${notificationId}/read`,
         {},
-        { headers: { Authorization: `Bearer ${token}` } },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
       );
 
       const notification = sharedNotificationsMap.get(notificationId);
@@ -109,8 +134,11 @@ export const useNotifications = () => {
         notification.is_read = true;
         notifyAllListeners();
       }
-    } catch (err) {
-      console.error("Failed to mark notification as read:", err);
+    } catch (err: unknown) {
+      console.error(
+        "Failed to mark notification as read:",
+        handleAxiosError(err, "Failed to mark notification as read"),
+      );
       setErrorMessage("Failed to mark notification as read");
     } finally {
       setMarkingIds((prev) => prev.filter((id) => id !== notificationId));
@@ -130,7 +158,9 @@ export const useNotifications = () => {
           axios.patch(
             `${API_BASE_URL}/notifications/${id}/read`,
             {},
-            { headers: { Authorization: `Bearer ${token}` } },
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            },
           ),
         ),
       );
@@ -138,8 +168,11 @@ export const useNotifications = () => {
       sharedNotificationsMap.forEach((n) => (n.is_read = true));
       notifyAllListeners();
       setSuccessMessage("All notifications marked as read");
-    } catch (err) {
-      console.error("Failed to mark all as read:", err);
+    } catch (err: unknown) {
+      console.error(
+        "Failed to mark all as read:",
+        handleAxiosError(err, "Failed to mark all as read"),
+      );
       setErrorMessage("Failed to mark all as read");
     } finally {
       setIsMarkingAll(false);
@@ -157,8 +190,11 @@ export const useNotifications = () => {
       sharedNotificationsMap.delete(notificationId);
       notifyAllListeners();
       setSuccessMessage("Notification deleted successfully");
-    } catch (err) {
-      console.error("Failed to delete notification:", err);
+    } catch (err: unknown) {
+      console.error(
+        "Failed to delete notification:",
+        handleAxiosError(err, "Failed to delete notification"),
+      );
       setErrorMessage("Failed to delete notification");
     } finally {
       setDeletingIds((prev) => prev.filter((id) => id !== notificationId));
@@ -176,8 +212,11 @@ export const useNotifications = () => {
       sharedNotificationsMap.clear();
       notifyAllListeners();
       setSuccessMessage("All notifications cleared successfully");
-    } catch (err) {
-      console.error("Failed to delete all notifications:", err);
+    } catch (err: unknown) {
+      console.error(
+        "Failed to delete all notifications:",
+        handleAxiosError(err, "Failed to delete all notifications"),
+      );
       setErrorMessage("Failed to delete all notifications");
     } finally {
       setIsDeleting(false);
@@ -186,10 +225,7 @@ export const useNotifications = () => {
 
   const clearSuccessMessage = () => setSuccessMessage(null);
   const clearErrorMessage = () => setErrorMessage(null);
-
-  const refresh = async () => {
-    await fetchNotifications();
-  };
+  const refresh = async () => await fetchNotifications();
 
   return {
     notifications,

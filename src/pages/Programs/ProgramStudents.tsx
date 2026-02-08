@@ -53,12 +53,9 @@ const ProgramStudents = () => {
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(
     null,
   );
+  const [selectedFingerId, setSelectedFingerId] = useState<number | null>(null);
 
-  const {
-    enrollFingerprint,
-    isLoading,
-    error: enrollError,
-  } = useEnrollFingerprint();
+  const { enrollFingerprint, isLoading } = useEnrollFingerprint();
 
   useEffect(() => {
     const observerOptions = {
@@ -93,9 +90,11 @@ const ProgramStudents = () => {
 
   const handleEnrollClick = async (studentId: number) => {
     try {
+      const data = await enrollFingerprint(studentId);
+      if (!data) return;
       setSelectedStudentId(studentId);
+      setSelectedFingerId(data.finger_id); 
       setShowEnrollmentModal(true);
-      await enrollFingerprint(studentId);
     } catch {
       setShowEnrollmentModal(false);
     }
@@ -130,6 +129,7 @@ const ProgramStudents = () => {
         isOpen={showEnrollmentModal}
         onClose={() => setShowEnrollmentModal(false)}
         userId={selectedStudentId || 0}
+        fingerId={selectedFingerId || 0} 
         updateStatus={updateStudentStatus}
       />
 

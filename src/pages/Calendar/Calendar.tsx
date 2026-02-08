@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import { useCalendarEvents } from "../../hooks/useCalendarEvents";
+import type { CSSProperties } from "react";
 
 function Calendar() {
   const monthNames = [
@@ -26,9 +27,9 @@ function Calendar() {
     fetchCalendarEvents(year, month);
   }, [year, month, fetchCalendarEvents]);
 
-  const styles = {
+  const styles: Record<string, CSSProperties> = {
     pageWrapper: {
-      marginLeft: window.innerWidth > 991 ? "260px" : "0",
+      marginLeft: window.innerWidth > 991 ? 260 : 0, 
       minHeight: "100vh",
       width: window.innerWidth > 991 ? "calc(100% - 260px)" : "100%",
       transition: "margin-left 0.3s ease",
@@ -40,7 +41,7 @@ function Calendar() {
       color: "#fff",
       padding: "3rem 2rem",
       overflow: "hidden",
-      marginBottom: "0",
+      marginBottom: 0,
       paddingBottom: "60px",
     },
     wave: {
@@ -59,15 +60,15 @@ function Calendar() {
       display: "flex",
       alignItems: "center",
       gap: "1.5rem",
-      maxWidth: "1400px",
+      maxWidth: 1400,
       margin: "0 auto",
     },
     dashboardHeaderIcon: {
       background: "rgba(255, 255, 255, 0.2)",
       backdropFilter: "blur(5px)",
-      width: "64px",
-      height: "64px",
-      borderRadius: "16px",
+      width: 64,
+      height: 64,
+      borderRadius: 16,
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
@@ -80,7 +81,7 @@ function Calendar() {
     headerTitle: {
       margin: "0 0 0.5rem 0",
       fontSize: "2rem",
-      fontWeight: "700",
+      fontWeight: 700,
       textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
     },
     headerSubtitle: {
@@ -89,47 +90,47 @@ function Calendar() {
       fontSize: "1rem",
     },
     contentWrapper: {
-      maxWidth: "1600px",
+      maxWidth: 1600,
       margin: "0 auto",
       width: "100%",
       padding: "2rem",
-      marginTop: "-40px",
+      marginTop: -40,
       position: "relative",
       zIndex: 2,
     },
     calendarControls: {
       display: "flex",
-      gap: "12px",
-      marginBottom: "30px",
+      gap: 12,
+      marginBottom: 30,
       flexWrap: "wrap",
       background: "#fff",
       padding: "1.5rem",
-      borderRadius: "16px",
+      borderRadius: 16,
       boxShadow:
         "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
     },
     selectControl: {
-      flex: "1",
-      minWidth: "200px",
-      maxWidth: "300px",
-      borderRadius: "12px",
+      flex: 1,
+      minWidth: 200,
+      maxWidth: 300,
+      borderRadius: 12,
     },
     inputControl: {
-      width: "140px",
-      borderRadius: "12px",
+      width: 140,
+      borderRadius: 12,
     },
     eventsList: {
       display: "flex",
       flexDirection: "column",
-      gap: "20px",
-      paddingBottom: "40px",
+      gap: 20,
+      paddingBottom: 40,
     },
     eventCard: {
       display: "flex",
-      gap: "20px",
+      gap: 20,
       background: "#fff",
-      borderRadius: "16px",
-      padding: "24px",
+      borderRadius: 16,
+      padding: 24,
       boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
       border: "1px solid #f0f0f0",
       borderLeft: "4px solid #0d6efd",
@@ -141,42 +142,42 @@ function Calendar() {
       flex: 1,
       display: "flex",
       flexDirection: "column",
-      gap: "8px",
+      gap: 8,
       minWidth: 0,
     },
     dateBadge: {
-      minWidth: "80px",
-      width: "80px",
-      height: "80px",
+      minWidth: 80,
+      width: 80,
+      height: 80,
       background: "linear-gradient(135deg, #e9f2ff 0%, #d4e6ff 100%)",
-      borderRadius: "14px",
+      borderRadius: 14,
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
       justifyContent: "center",
       flexShrink: 0,
       boxShadow: "0 2px 8px rgba(13, 110, 253, 0.1)",
-      gap: "2px",
-      padding: "8px",
+      gap: 2,
+      padding: 8,
     },
     day: {
-      fontSize: "28px",
+      fontSize: 28,
       fontWeight: 700,
       color: "#0d6efd",
       lineHeight: 1,
     },
     month: {
-      fontSize: "11px",
+      fontSize: 11,
       textTransform: "uppercase",
       color: "#6c757d",
       fontWeight: 600,
-      letterSpacing: "0.5px",
-      marginTop: "2px",
+      letterSpacing: 0.5,
+      marginTop: 2,
     },
     eventTitle: {
       margin: 0,
       fontWeight: 600,
-      fontSize: "18px",
+      fontSize: 18,
       color: "#212529",
       lineHeight: 1.4,
       display: "flex",
@@ -185,29 +186,29 @@ function Calendar() {
     },
     eventMeta: {
       margin: 0,
-      fontSize: "14px",
+      fontSize: 14,
       color: "#6c757d",
       display: "flex",
       alignItems: "center",
-      gap: "12px",
+      gap: 12,
       flexWrap: "wrap",
     },
     metaItem: {
       display: "flex",
       alignItems: "center",
-      gap: "6px",
+      gap: 6,
     },
     emptyState: {
       textAlign: "center",
       padding: "60px 20px",
       color: "#6c757d",
       background: "#fff",
-      borderRadius: "16px",
+      borderRadius: 16,
     },
     emptyIcon: {
       fontSize: "4rem",
       opacity: 0.5,
-      marginBottom: "16px",
+      marginBottom: 16,
     },
   };
 

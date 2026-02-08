@@ -36,7 +36,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
         password: password,
       });
 
-      setSuccessMessage(data.message);
+      setSuccessMessage(data.message || "");
 
       localStorage.setItem("role", data.role);
       localStorage.setItem("student_id_no", data.student_id_no);

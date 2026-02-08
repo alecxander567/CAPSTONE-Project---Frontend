@@ -12,7 +12,7 @@ export interface ProgramData {
   code: string;
   name: string;
   students: number;
-  studentList?: Student[]; 
+  studentList?: Student[];
 }
 
 export const usePrograms = () => {
@@ -45,9 +45,9 @@ export const usePrograms = () => {
 
         setPrograms(programsWithStudents);
         setError(null);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("Failed to fetch program data:", err);
-        setError(err.message || "Something went wrong");
+        setError("Something went wrong");
       } finally {
         setLoading(false);
       }

@@ -12,7 +12,13 @@ interface RegisterPayload {
   role: "admin" | "student";
 }
 
-export const Register = () => {
+interface ValidationError {
+  loc: (string | number)[];
+  msg: string;
+  type: string;
+}
+
+export const useRegister = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,30 +32,32 @@ export const Register = () => {
         payload,
         {
           withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
         },
       );
 
       return response.data;
-    } catch (err: any) {
-      console.error("Registration error:", err.response?.data);
+    } catch (err: unknown) {
+      let message = "Something went wrong. Please try again.";
 
-      if (err.response?.data?.detail) {
-        if (Array.isArray(err.response.data.detail)) {
-          const errors = err.response.data.detail
-            .map((e: any) => `${e.loc[e.loc.length - 1]}: ${e.msg}`)
+      if (axios.isAxiosError(err)) {
+        const detail = err.response?.data?.detail;
+
+        if (Array.isArray(detail)) {
+          message = detail
+            .map((e: ValidationError) => `${e.loc[e.loc.length - 1]}: ${e.msg}`)
             .join(", ");
-          setError(errors);
-        } else if (typeof err.response.data.detail === "string") {
-          setError(err.response.data.detail);
-        } else {
-          setError(JSON.stringify(err.response.data.detail));
+        } else if (typeof detail === "string") {
+          message = detail;
+        } else if (detail) {
+          message = JSON.stringify(detail);
         }
-      } else {
-        setError("Something went wrong. Please try again.");
+      } else if (err instanceof Error) {
+        message = err.message;
       }
+
+      console.error("Registration error:", message);
+      setError(message);
       throw err;
     } finally {
       setLoading(false);

@@ -25,9 +25,9 @@ export const useProgramStudents = (programCode: string) => {
           `http://localhost:8000/programs/${programCode}/students`,
         );
         setStudents(res.data);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error(err);
-        setError(err.response?.data?.detail || "Failed to fetch students");
+        setError("Failed to fetch students");
       } finally {
         setLoading(false);
       }

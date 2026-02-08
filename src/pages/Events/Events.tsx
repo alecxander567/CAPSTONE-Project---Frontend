@@ -1,15 +1,21 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import { useEvents } from "../../hooks/useEvents";
 import type { Event } from "../../hooks/useEvents";
 import AddEventModal from "../../components/AddEventsModal/AddEventsModal";
+import type { EventData } from "../../components/AddEventsModal/AddEventsModal";
 import DeleteEventModal from "../../components/DeleteEventModal/deleteEventModal";
 import SuccessAlert from "../../components/SuccessAlert/SuccessAlert";
 import "./Events.css";
 
+interface StoredEvent extends EventData {
+  id: number;
+}
+
 function Events() {
   const navigate = useNavigate();
+  const location = useLocation();
   const {
     events,
     totalEvents,
@@ -18,9 +24,10 @@ function Events() {
     addEvent,
     editEvent,
     deleteEvent,
+    refetch,
   } = useEvents();
   const [showModal, setShowModal] = useState(false);
-  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [editingEvent, setEditingEvent] = useState<StoredEvent | null>(null);
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingEvent, setDeletingEvent] = useState<Event | null>(null);
@@ -29,13 +36,20 @@ function Events() {
   const [successMessage, setSuccessMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
 
+  useEffect(() => {
+    if (location.state?.fromAttendance) {
+      refetch();
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location, refetch, navigate]);
+
   const handleOpenModal = () => setShowModal(true);
   const handleCloseModal = () => {
     setShowModal(false);
     setEditingEvent(null);
   };
 
-  const handleSaveEvent = async (data: any) => {
+  const handleSaveEvent = async (data: EventData) => {
     try {
       if (editingEvent) {
         await editEvent(editingEvent.id, data);
@@ -44,6 +58,7 @@ function Events() {
         await addEvent(data);
         setSuccessMessage("Event created successfully!");
       }
+
       setShowSuccess(true);
       handleCloseModal();
     } catch (err) {
@@ -53,7 +68,15 @@ function Events() {
   };
 
   const handleEditEvent = (event: Event) => {
-    setEditingEvent(event);
+    setEditingEvent({
+      id: event.id,
+      title: event.title,
+      description: event.description || "",
+      event_date: event.event_date,
+      start_time: event.start_time || "",
+      end_time: event.end_time || "",
+      location: event.location || "",
+    });
     setShowModal(true);
   };
 
@@ -173,8 +196,9 @@ function Events() {
             <div className="events-grid fade-up delay-2">
               {filteredEvents.map((event: Event) => (
                 <div key={event.id} className="event-card">
-                  {/* Card Header */}
+                  {/* Card Header with Wave Animation */}
                   <div className="event-card-header">
+                    <div className="event-header-wave"></div>
                     <div className="event-date-badge">
                       <div className="event-date-month">
                         {new Date(event.event_date).toLocaleDateString(

@@ -57,16 +57,13 @@ export const useUserProfile = () => {
       );
 
       setProfile(response.data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error fetching user profile:", err);
-      console.error("Response status:", err.response?.status);
-      console.error("Response data:", err.response?.data);
 
-      if (err.response?.status === 401) {
-        setError("Authentication failed. Please log in again.");
-      } else {
-        setError(err.response?.data?.detail || "Failed to load user profile");
-      }
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to load user profile";
+
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -80,10 +77,7 @@ export const useUserProfile = () => {
       setUpdateError(null);
 
       const token = localStorage.getItem("token");
-
-      if (!token) {
-        throw new Error("No authentication token found");
-      }
+      if (!token) throw new Error("No authentication token found");
 
       const response = await axios.put<UserProfile>(
         "http://localhost:8000/auth/profile",
@@ -98,10 +92,10 @@ export const useUserProfile = () => {
 
       setProfile(response.data);
       return response.data;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error updating profile:", err);
       const errorMessage =
-        err.response?.data?.detail || "Failed to update profile";
+        err instanceof Error ? err.message : "Failed to update profile";
       setUpdateError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -115,15 +109,12 @@ export const useUserProfile = () => {
       setUpdateError(null);
 
       const token = localStorage.getItem("token");
-
-      if (!token) {
-        throw new Error("No authentication token found");
-      }
+      if (!token) throw new Error("No authentication token found");
 
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await axios.post(
+      await axios.post(
         "http://localhost:8000/auth/profile/upload-picture",
         formData,
         {
@@ -135,10 +126,10 @@ export const useUserProfile = () => {
       );
 
       await fetchUserProfile();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error uploading profile picture:", err);
       const errorMessage =
-        err.response?.data?.detail || "Failed to upload profile picture";
+        err instanceof Error ? err.message : "Failed to upload profile picture";
       setUpdateError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -152,10 +143,7 @@ export const useUserProfile = () => {
       setUpdateError(null);
 
       const token = localStorage.getItem("token");
-
-      if (!token) {
-        throw new Error("No authentication token found");
-      }
+      if (!token) throw new Error("No authentication token found");
 
       await axios.delete("http://localhost:8000/auth/profile/delete-picture", {
         headers: {
@@ -164,10 +152,10 @@ export const useUserProfile = () => {
       });
 
       await fetchUserProfile();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error deleting profile picture:", err);
       const errorMessage =
-        err.response?.data?.detail || "Failed to delete profile picture";
+        err instanceof Error ? err.message : "Failed to delete profile picture";
       setUpdateError(errorMessage);
       throw new Error(errorMessage);
     } finally {

@@ -1,6 +1,6 @@
 import { Modal, Button, Form } from "react-bootstrap";
 import { useState } from "react";
-import { Password } from "../../hooks/Password";
+import { usePassword } from "../../hooks/Password";
 import AnimatedAlert from "../AnimatedAlert/AnimatedAlert";
 
 interface Props {
@@ -12,7 +12,7 @@ interface Props {
 const ForgotPasswordModal = ({ show, onClose, onSuccess }: Props) => {
   const [mobilePhone, setMobilePhone] = useState("");
 
-  const { forgotPassword, loading, error } = Password();
+  const { forgotPassword, loading, error } = usePassword();
 
   const handleSubmit = async () => {
     try {

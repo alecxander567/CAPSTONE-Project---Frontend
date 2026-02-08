@@ -2,9 +2,16 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import { usePrograms } from "../../hooks/useProgram";
+import type { Event as MyEvent } from "../../hooks/useEvents";
 import { useEvents } from "../../hooks/useEvents";
 import "./Attendance.css";
 import { useNavigate } from "react-router-dom";
+
+interface Event {
+  id: number;
+  title: string;
+  date: string;
+}
 
 function Attendance() {
   const navigate = useNavigate();
@@ -13,6 +20,7 @@ function Attendance() {
   const { getEventById } = useEvents();
 
   const [event, setEvent] = useState<Event | null>(null);
+
   const [loadingEvent, setLoadingEvent] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -22,8 +30,15 @@ function Attendance() {
     const fetchEvent = async () => {
       setLoadingEvent(true);
       try {
-        const data = await getEventById(Number(eventId));
-        setEvent(data);
+        const data: MyEvent = await getEventById(Number(eventId));
+
+        const mappedEvent: Event = {
+          id: data.id,
+          title: data.title,
+          date: data.event_date,
+        };
+
+        setEvent(mappedEvent);
       } catch (err) {
         console.error(err);
       } finally {
@@ -32,7 +47,8 @@ function Attendance() {
     };
 
     fetchEvent();
-  }, [eventId, getEventById]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eventId]);
 
   const filteredPrograms = programs
     .map((program) => {
@@ -63,7 +79,9 @@ function Attendance() {
 
           <button
             className="btn-back-header fade-up"
-            onClick={() => navigate("/events")}>
+            onClick={() =>
+              navigate("/events", { state: { fromAttendance: true } })
+            }>
             <i className="bi bi-arrow-left"></i>
             <span>Back to Events</span>
           </button>

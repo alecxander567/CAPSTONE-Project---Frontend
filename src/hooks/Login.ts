@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import axios from "axios"; 
 
 interface LoginPayload {
   student_id_no: string;
@@ -7,9 +7,10 @@ interface LoginPayload {
 }
 
 export interface LoginResponse {
-  message: string;
+  access_token: string;
   student_id_no: string;
   role: "admin" | "student";
+  message?: string;
 }
 
 export const useLogin = () => {
@@ -21,25 +22,26 @@ export const useLogin = () => {
     setError(null);
 
     try {
-      const response = await axios.post(
+      const { data } = await axios.post<LoginResponse>(
         "http://localhost:8000/auth/login",
         payload,
       );
 
-      const data = response.data;
-
       localStorage.setItem("token", data.access_token);
-
       localStorage.setItem("role", data.role);
       localStorage.setItem("student_id_no", data.student_id_no);
 
       return data;
-    } catch (err: any) {
-      if (err.response?.data?.detail) {
-        setError(err.response.data.detail);
-      } else {
-        setError("Something went wrong. Please try again.");
+    } catch (err: unknown) {
+      let message = "Something went wrong. Please try again.";
+
+      if (axios.isAxiosError(err)) {
+        message = err.response?.data?.detail ?? message;
+      } else if (err instanceof Error) {
+        message = err.message;
       }
+
+      setError(message);
       throw err;
     } finally {
       setLoading(false);

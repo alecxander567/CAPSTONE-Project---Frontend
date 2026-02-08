@@ -2,6 +2,7 @@ import Sidebar from "../../components/Sidebar/Sidebar";
 import { useUserProfile } from "../../hooks/useUserProfile";
 import SuccessAlert from "../../components/SuccessAlert/SuccessAlert";
 import ErrorAlert from "../../components/SuccessAlert/ErrorAlert";
+import type { ChangeEvent, FormEvent } from "react";
 
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
@@ -21,19 +22,19 @@ function Settings() {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [editError, setEditError] = useState(null);
+  const [editError, setEditError] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const [formData, setFormData] = useState({
-    first_name: "",
-    last_name: "",
-    middle_initial: "",
-    mobile_phone: "",
-    program: "",
-  });
+  const [formData, setFormData] = useState(() => ({
+    first_name: profile?.first_name || "",
+    last_name: profile?.last_name || "",
+    middle_initial: profile?.middle_initial || "",
+    mobile_phone: profile?.mobile_phone || "",
+    program: profile?.program || "",
+  }));
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -44,13 +45,17 @@ function Settings() {
 
   useEffect(() => {
     if (profile) {
-      setFormData({
-        first_name: profile.first_name || "",
-        last_name: profile.last_name || "",
-        middle_initial: profile.middle_initial || "",
-        mobile_phone: profile.mobile_phone || "",
-        program: profile.program || "",
-      });
+      const id = setTimeout(() => {
+        setFormData({
+          first_name: profile.first_name || "",
+          last_name: profile.last_name || "",
+          middle_initial: profile.middle_initial || "",
+          mobile_phone: profile.mobile_phone || "",
+          program: profile.program || "",
+        });
+      }, 0);
+
+      return () => clearTimeout(id);
     }
   }, [profile]);
 
@@ -70,7 +75,9 @@ function Settings() {
     setIsEditing(!isEditing);
   };
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -78,7 +85,7 @@ function Settings() {
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setEditError(null);
 
@@ -86,8 +93,15 @@ function Settings() {
       await updateProfile(formData);
       setIsEditing(false);
       setShowSuccess(true);
-    } catch (err) {
-      const message = err.message || "Failed to update profile";
+    } catch (err: unknown) {
+      let message = "Failed to update profile";
+
+      if (err instanceof Error) {
+        message = err.message;
+      } else if (typeof err === "object" && err !== null && "message" in err) {
+        message = (err as { message: string }).message;
+      }
+
       setEditError(message);
       setErrorMessage(message);
       setShowError(true);
@@ -124,8 +138,16 @@ function Settings() {
     try {
       await uploadProfilePicture(file);
       setShowSuccess(true);
-    } catch (err: any) {
-      setErrorMessage(err.message || "Failed to upload profile picture");
+    } catch (err: unknown) {
+      let message = "Failed to upload profile picture";
+
+      if (err instanceof Error) {
+        message = err.message;
+      } else if (typeof err === "object" && err !== null && "message" in err) {
+        message = (err as { message: string }).message;
+      }
+
+      setErrorMessage(message);
       setShowError(true);
     }
 
@@ -143,8 +165,16 @@ function Settings() {
     try {
       await deleteProfilePicture();
       setShowSuccess(true);
-    } catch (err: any) {
-      setErrorMessage(err.message || "Failed to delete profile picture");
+    } catch (err: unknown) {
+      let message = "Failed to delete profile picture";
+
+      if (err instanceof Error) {
+        message = err.message;
+      } else if (typeof err === "object" && err !== null && "message" in err) {
+        message = (err as { message: string }).message;
+      }
+
+      setErrorMessage(message);
       setShowError(true);
     }
   };
@@ -153,7 +183,7 @@ function Settings() {
     fileInputRef.current?.click();
   };
 
-  const getStatusBadgeStyle = (status) => {
+  const getStatusBadgeStyle = (status: string) => {
     const baseStyle = {
       display: "inline-flex",
       alignItems: "center",
@@ -178,7 +208,7 @@ function Settings() {
     }
   };
 
-  const formatStatus = (status) => {
+  const formatStatus = (status: string) => {
     if (!status) return "Unknown";
     return status
       .split("_")
@@ -186,11 +216,12 @@ function Settings() {
       .join(" ");
   };
 
-  const getInitials = (firstName, lastName) => {
+  const getInitials = (firstName?: string, lastName?: string) => {
     return `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase();
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "";
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
@@ -210,7 +241,7 @@ function Settings() {
 
       <ErrorAlert
         show={showError}
-        message={errorMessage}
+        message={errorMessage || ""}
         onClose={() => setShowError(false)}
       />
 

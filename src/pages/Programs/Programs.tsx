@@ -90,7 +90,7 @@ const Programs = () => {
           <div className="programs-list">
             {!loading &&
               !error &&
-              programs.map((program, index) => (
+              programs.map((program) => (
                 <div
                   key={program.code}
                   className="program-card fade-up"
