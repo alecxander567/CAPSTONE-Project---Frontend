@@ -23,6 +23,7 @@ interface ProfileUpdateData {
   middle_initial?: string;
   mobile_phone?: string;
   program?: string;
+  year_level?: number | string;
   profile_image?: string;
 }
 
@@ -40,9 +41,7 @@ export const useUserProfile = () => {
       setError(null);
 
       const token = localStorage.getItem("token");
-
       if (!token) {
-        console.error("No access token found in localStorage");
         setError("No authentication token found. Please log in again.");
         setLoading(false);
         return;
@@ -60,10 +59,8 @@ export const useUserProfile = () => {
       setProfile(response.data);
     } catch (err: unknown) {
       console.error("Error fetching user profile:", err);
-
       const errorMessage =
         err instanceof Error ? err.message : "Failed to load user profile";
-
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -80,9 +77,20 @@ export const useUserProfile = () => {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No authentication token found");
 
+      const filteredPayload = Object.fromEntries(
+        Object.entries(profileData)
+          .filter(([_, v]) => v !== undefined)
+          .map(([key, value]) => {
+            if (key === "year_level" && value !== undefined) {
+              return [key, Number(value)];
+            }
+            return [key, value];
+          }),
+      );
+
       const response = await axios.put<UserProfile>(
         "http://localhost:8000/auth/profile",
-        profileData,
+        filteredPayload,
         {
           headers: {
             Authorization: `Bearer ${token}`,
