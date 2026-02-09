@@ -26,6 +26,7 @@ const EnrollmentModal = ({
   isOpen,
   onClose,
   userId,
+  fingerId,
   updateStatus,
 }: EnrollmentModalProps) => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -37,40 +38,34 @@ const EnrollmentModal = ({
   const pollRef = useRef<number | null>(null);
   const timeoutRef = useRef<number | null>(null);
   const countdownRef = useRef<number | null>(null);
+
   const [steps, setSteps] = useState<EnrollmentStepUI[]>([
     {
       id: 1,
-      title: "Waiting for Finger",
+      title: "Place Finger",
       description: "Place your finger on the sensor...",
       icon: "bi-hand-index-thumb",
       status: "active",
     },
     {
       id: 2,
-      title: "Capturing Image",
-      description: "Processing first fingerprint image...",
-      icon: "bi-camera",
-      status: "waiting",
-    },
-    {
-      id: 3,
       title: "Remove Finger",
       description: "Lift your finger from the sensor",
       icon: "bi-arrow-up-circle",
       status: "waiting",
     },
     {
-      id: 4,
+      id: 3,
       title: "Place Again",
       description: "Place the SAME finger again...",
       icon: "bi-hand-index-thumb",
       status: "waiting",
     },
     {
-      id: 5,
-      title: "Storing",
-      description: "Saving fingerprint to database...",
-      icon: "bi-database",
+      id: 4,
+      title: "Complete",
+      description: "Saving fingerprint...",
+      icon: "bi-check-circle",
       status: "waiting",
     },
   ]);
@@ -87,16 +82,10 @@ const EnrollmentModal = ({
 
   const resetTimeout = useCallback(() => {
     clearTimers();
-
-    queueMicrotask(() => {
-      setTimeoutSeconds(10);
-    });
+    setTimeoutSeconds(10);
 
     countdownRef.current = setInterval(() => {
-      setTimeoutSeconds((prev) => {
-        if (prev <= 1) return 0;
-        return prev - 1;
-      });
+      setTimeoutSeconds((prev) => (prev <= 1 ? 0 : prev - 1));
     }, 1000);
 
     timeoutRef.current = setTimeout(() => {
@@ -106,15 +95,42 @@ const EnrollmentModal = ({
       onClose?.();
       clearTimers();
     }, 10000);
-  }, [userId, updateStatus, onClose]); 
+  }, [userId, updateStatus, onClose]);
 
-  const updateStepUI = (stepIndex: number) => {
+  const updateStepUI = (step: string) => {
+    let stepIndex = 0;
+    let failed = false;
+
+    switch (step) {
+      case "pending":
+      case "place_finger":
+        stepIndex = 0;
+        break;
+      case "remove_finger":
+        stepIndex = 1;
+        break;
+      case "place_again":
+        stepIndex = 2;
+        break;
+      case "success":
+        stepIndex = 3;
+        break;
+      case "error":
+        stepIndex = 3;
+        failed = true;
+        break;
+      default:
+        stepIndex = 0;
+        break;
+    }
+
     setCurrentStep(stepIndex);
     setSteps((prev) =>
       prev.map((s, idx) => ({
         ...s,
         status:
-          idx < stepIndex ? "completed"
+          failed ? "failed"
+          : idx < stepIndex ? "completed"
           : idx === stepIndex ? "active"
           : "waiting",
       })),
@@ -124,62 +140,43 @@ const EnrollmentModal = ({
   useEffect(() => {
     if (!isOpen) {
       clearTimers();
-
-      queueMicrotask(() => {
-        setCurrentStep(0);
-        setShowSuccess(false);
-        setShowError(false);
-        setTimeoutSeconds(10);
-        setSteps((prev) =>
-          prev.map((s, i) => ({
-            ...s,
-            status: i === 0 ? "active" : "waiting",
-          })),
-        );
-      });
-
       return;
     }
 
-    resetTimeout();
+    clearTimers();
+    setTimeoutSeconds(10);
+
+    countdownRef.current = setInterval(() => {
+      setTimeoutSeconds((prev) => (prev <= 1 ? 0 : prev - 1));
+    }, 1000);
+
+    timeoutRef.current = setTimeout(() => {
+      setErrorMessage("No fingerprint detected. Enrollment timed out.");
+      updateStatus(userId, "failed");
+      setShowError(true);
+      onClose?.();
+      clearTimers();
+    }, 10000);
 
     pollRef.current = setInterval(async () => {
       try {
-        const { data } = await axios.get(
-          `http://localhost:8000/fingerprints/enrollment-status/${userId}`,
+        const response = await axios.get(
+          `http://localhost:8000/fingerprints/get-status?finger_id=${fingerId}`,
         );
 
-        resetTimeout();
+        const { status, step } = response.data;
 
-        switch (data.step) {
-          case "waiting_first_finger":
-            updateStepUI(0);
-            break;
-          case "capturing_first":
-            updateStepUI(1);
-            break;
-          case "remove_finger":
-            updateStepUI(2);
-            break;
-          case "waiting_second_finger":
-            updateStepUI(3);
-            break;
-          case "storing":
-            updateStepUI(4);
-            break;
-        }
+        updateStepUI(step);
 
-        if (data.status === "success") {
+        if (status === "enrolled") {
           clearTimers();
           updateStatus(userId, "enrolled");
           setShowSuccess(true);
           setTimeout(() => onClose?.(), 800);
-        }
-
-        if (data.status === "failed") {
+        } else if (status === "failed") {
           clearTimers();
           updateStatus(userId, "failed");
-          setErrorMessage(data.message || "Enrollment failed");
+          setErrorMessage("Enrollment failed");
           setShowError(true);
           setTimeout(() => onClose?.(), 800);
         }
@@ -189,7 +186,7 @@ const EnrollmentModal = ({
     }, 1000);
 
     return clearTimers;
-  }, [isOpen, userId, resetTimeout, updateStatus, onClose]);
+  }, [isOpen, fingerId, userId, updateStatus, onClose]);
 
   if (!isOpen) return null;
 

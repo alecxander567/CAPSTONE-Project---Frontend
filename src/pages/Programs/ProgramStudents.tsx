@@ -29,7 +29,10 @@ const FingerprintStatusBadge = ({ status }: { status: FingerprintStatus }) => {
     failed: { label: "Failed", className: "status-failed" },
   };
 
-  const { label, className } = statusMap[status];
+  const safeStatus = status || "not_enrolled";
+  const statusInfo =
+    statusMap[safeStatus as FingerprintStatus] || statusMap.not_enrolled;
+  const { label, className } = statusInfo;
 
   return (
     <span className={`fingerprint-status ${className}`}>
@@ -91,11 +94,15 @@ const ProgramStudents = () => {
   const handleEnrollClick = async (studentId: number) => {
     try {
       const data = await enrollFingerprint(studentId);
+
       if (!data) return;
+
       setSelectedStudentId(studentId);
-      setSelectedFingerId(data.finger_id); 
+      setSelectedFingerId(data.finger_id);
+
       setShowEnrollmentModal(true);
-    } catch {
+    } catch (err) {
+      console.error("Enrollment error:", err);
       setShowEnrollmentModal(false);
     }
   };
@@ -129,7 +136,7 @@ const ProgramStudents = () => {
         isOpen={showEnrollmentModal}
         onClose={() => setShowEnrollmentModal(false)}
         userId={selectedStudentId || 0}
-        fingerId={selectedFingerId || 0} 
+        fingerId={selectedFingerId || 0}
         updateStatus={updateStudentStatus}
       />
 
