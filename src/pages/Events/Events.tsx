@@ -7,10 +7,24 @@ import AddEventModal from "../../components/AddEventsModal/AddEventsModal";
 import type { EventData } from "../../components/AddEventsModal/AddEventsModal";
 import DeleteEventModal from "../../components/DeleteEventModal/deleteEventModal";
 import SuccessAlert from "../../components/SuccessAlert/SuccessAlert";
+import ErrorAlert from "../../components/SuccessAlert/ErrorAlert";
 import "./Events.css";
 
 interface StoredEvent extends EventData {
   id: number;
+}
+
+interface AxiosError {
+  response?: {
+    status?: number;
+    data?: {
+      detail?: unknown;
+    };
+  };
+}
+
+function isAxiosError(error: unknown): error is AxiosError {
+  return typeof error === "object" && error !== null && "response" in error;
 }
 
 function Events() {
@@ -34,6 +48,10 @@ function Events() {
 
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+
+  const [showError, setShowError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
   const [searchTerm, setSearchTerm] = useState("");
 
   const getStatusBadgeClass = (status: string) => {
@@ -74,9 +92,39 @@ function Events() {
 
       setShowSuccess(true);
       handleCloseModal();
-    } catch (err) {
-      alert("Failed to save event. Check console.");
+    } catch (err: unknown) {
       console.error(err);
+
+      let message = "Failed to save event. Please try again.";
+
+      if (isAxiosError(err)) {
+        const status = err.response?.status;
+        const validationErrors = err.response?.data?.detail;
+
+        if (status === 422) {
+          if (Array.isArray(validationErrors) && validationErrors.length > 0) {
+            const firstError = validationErrors[0];
+            if (
+              typeof firstError === "object" &&
+              firstError !== null &&
+              "msg" in firstError
+            ) {
+              message = String(firstError.msg) || "Invalid input.";
+            } else {
+              message = "Invalid input.";
+            }
+          } else if (typeof validationErrors === "string") {
+            message = validationErrors;
+          } else {
+            message = "Invalid input. Please check your data.";
+          }
+        } else if (status === 403) {
+          message = "You don't have permission to perform this action.";
+        }
+      }
+
+      setErrorMessage(message);
+      setShowError(true);
     }
   };
 
@@ -106,9 +154,19 @@ function Events() {
       setSuccessMessage("Event deleted successfully!");
       setShowSuccess(true);
       setDeletingEvent(null);
-    } catch (err) {
-      alert("Failed to delete event. Check console.");
+      setShowDeleteModal(false);
+    } catch (err: unknown) {
       console.error(err);
+
+      let message = "Failed to delete event. Please try again.";
+
+      if (isAxiosError(err) && err.response?.status === 403) {
+        message = "You don't have permission to delete this event.";
+      }
+
+      setErrorMessage(message);
+      setShowError(true);
+      setShowDeleteModal(false);
     }
   };
 
@@ -304,6 +362,13 @@ function Events() {
           show={showSuccess}
           message={successMessage}
           onClose={() => setShowSuccess(false)}
+          duration={3000}
+        />
+
+        <ErrorAlert
+          show={showError}
+          message={errorMessage}
+          onClose={() => setShowError(false)}
           duration={3000}
         />
       </div>

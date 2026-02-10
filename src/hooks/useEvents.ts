@@ -12,7 +12,7 @@ export interface Event {
   id: number;
   title: string;
   description?: string | null;
-  event_date: string; 
+  event_date: string;
   start_time: string;
   end_time: string;
   location: string;
@@ -63,46 +63,36 @@ export const useEvents = (): UseEventsResult => {
   }, [fetchEvents]);
 
   const addEvent = async (data: EventInput) => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("User not authenticated");
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("User not authenticated");
 
-      const response = await axios.post<Event>(
-        "http://127.0.0.1:8000/events/",
-        data,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+    const response = await axios.post<Event>(
+      "http://127.0.0.1:8000/events/",
+      data,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
 
-      setEvents((prev) => [...prev, response.data]);
-      setTotalEvents((prev) => prev + 1);
-    } catch (err) {
-      console.error(err);
-      throw new Error("Failed to add event.");
-    }
+    setEvents((prev) => [...prev, response.data]);
+    setTotalEvents((prev) => prev + 1);
   };
 
   const editEvent = async (id: number, data: EventInput) => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("User not authenticated");
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("User not authenticated");
 
-      const response = await axios.put<Event>(
-        `http://127.0.0.1:8000/events/${id}`,
-        data,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+    const response = await axios.put<Event>(
+      `http://127.0.0.1:8000/events/${id}`,
+      data,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
 
-      setEvents((prev) =>
-        prev.map((evt) => (evt.id === id ? response.data : evt)),
-      );
-    } catch (err) {
-      console.error(err);
-      throw new Error("Failed to edit event.");
-    }
+    setEvents((prev) =>
+      prev.map((evt) => (evt.id === id ? response.data : evt)),
+    );
   };
 
   const deleteEvent = async (id: number) => {
