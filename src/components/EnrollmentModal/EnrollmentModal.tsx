@@ -1,7 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import axios from "axios";
-import SuccessAlert from "../SuccessAlert/SuccessAlert";
-import ErrorAlert from "../SuccessAlert/ErrorAlert";
 import "./EnrollmentModal.css";
 
 type FingerprintStatus = "not_enrolled" | "pending" | "enrolled" | "failed";
@@ -30,22 +28,28 @@ const EnrollmentModal = ({
   updateStatus,
 }: EnrollmentModalProps) => {
   const [currentStep, setCurrentStep] = useState(0);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [showError, setShowError] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [timeoutSeconds, setTimeoutSeconds] = useState(10);
+  const [timeoutSeconds, setTimeoutSeconds] = useState(60);
 
   const pollRef = useRef<number | null>(null);
   const timeoutRef = useRef<number | null>(null);
   const countdownRef = useRef<number | null>(null);
 
+  const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
+
   const [steps, setSteps] = useState<EnrollmentStepUI[]>([
+    {
+      id: 0,
+      title: "Waiting for ESP32",
+      description: "Connecting to fingerprint sensor...",
+      icon: "bi-hourglass-split",
+      status: "waiting",
+    },
     {
       id: 1,
       title: "Place Finger",
       description: "Place your finger on the sensor...",
       icon: "bi-hand-index-thumb",
-      status: "active",
+      status: "waiting",
     },
     {
       id: 2,
@@ -70,95 +74,126 @@ const EnrollmentModal = ({
     },
   ]);
 
-  const clearTimers = () => {
-    if (pollRef.current) clearInterval(pollRef.current);
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    if (countdownRef.current) clearInterval(countdownRef.current);
+  const clearTimers = useCallback(() => {
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    if (countdownRef.current) {
+      clearInterval(countdownRef.current);
+      countdownRef.current = null;
+    }
+  }, []);
 
-    pollRef.current = null;
-    timeoutRef.current = null;
-    countdownRef.current = null;
-  };
-
-  const resetTimeout = useCallback(() => {
-    clearTimers();
-    setTimeoutSeconds(10);
-
-    countdownRef.current = setInterval(() => {
-      setTimeoutSeconds((prev) => (prev <= 1 ? 0 : prev - 1));
-    }, 1000);
-
-    timeoutRef.current = setTimeout(() => {
-      setErrorMessage("No fingerprint detected. Enrollment timed out.");
-      updateStatus(userId, "failed");
-      setShowError(true);
-      onClose?.();
-      clearTimers();
-    }, 10000);
-  }, [userId, updateStatus, onClose]);
-
-  const updateStepUI = (step: string) => {
+  const updateStepUI = useCallback((step: string) => {
     let stepIndex = 0;
     let failed = false;
 
     switch (step) {
       case "pending":
-      case "place_finger":
         stepIndex = 0;
         break;
-      case "remove_finger":
+      case "place_finger":
         stepIndex = 1;
         break;
-      case "place_again":
+      case "remove_finger":
         stepIndex = 2;
         break;
-      case "success":
+      case "place_again":
         stepIndex = 3;
         break;
+      case "success":
+        stepIndex = 4;
+        break;
       case "error":
-        stepIndex = 3;
+        stepIndex = 4;
         failed = true;
         break;
       default:
+        console.warn("Unknown step:", step);
         stepIndex = 0;
         break;
     }
 
     setCurrentStep(stepIndex);
     setSteps((prev) =>
-      prev.map((s, idx) => ({
-        ...s,
-        status:
-          failed ? "failed"
-          : idx < stepIndex ? "completed"
-          : idx === stepIndex ? "active"
-          : "waiting",
-      })),
+      prev.map((s, idx) => {
+        let newStatus: "waiting" | "active" | "completed" | "failed";
+
+        if (failed && idx === 4) {
+          newStatus = "failed";
+        } else if (idx < stepIndex) {
+          newStatus = "completed";
+        } else if (idx === stepIndex) {
+          newStatus =
+            step === "success" ? "completed"
+            : step === "error" ? "failed"
+            : "active";
+        } else {
+          newStatus = "waiting";
+        }
+
+        console.log(`  Step ${idx}: ${newStatus}`);
+
+        return {
+          ...s,
+          status: newStatus,
+        };
+      }),
     );
-  };
+  }, []);
 
   useEffect(() => {
+    if (stepRefs.current[currentStep]) {
+      stepRefs.current[currentStep]?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
+  }, [currentStep]);
+
+  useEffect(() => {
+    console.log("🎬 Modal isOpen changed:", isOpen);
+
     if (!isOpen) {
       clearTimers();
+      setCurrentStep(0);
+      setSteps((prev) =>
+        prev.map((s) => ({
+          ...s,
+          status: "waiting",
+        })),
+      );
       return;
     }
 
     clearTimers();
-    setTimeoutSeconds(10);
+    setTimeoutSeconds(60);
+    setCurrentStep(0);
 
-    countdownRef.current = setInterval(() => {
-      setTimeoutSeconds((prev) => (prev <= 1 ? 0 : prev - 1));
+    console.log("⏱️ Starting countdown timer...");
+    countdownRef.current = window.setInterval(() => {
+      setTimeoutSeconds((prev) => {
+        const newValue = prev <= 1 ? 0 : prev - 1;
+        if (newValue <= 10 && newValue > 0) {
+          console.log("⚠️ Timeout warning:", newValue, "seconds");
+        }
+        return newValue;
+      });
     }, 1000);
 
-    timeoutRef.current = setTimeout(() => {
-      setErrorMessage("No fingerprint detected. Enrollment timed out.");
+    console.log("⏰ Setting 60-second timeout...");
+    timeoutRef.current = window.setTimeout(() => {
       updateStatus(userId, "failed");
-      setShowError(true);
       onClose?.();
       clearTimers();
-    }, 10000);
+    }, 60000);
 
-    pollRef.current = setInterval(async () => {
+    pollRef.current = window.setInterval(async () => {
       try {
         const response = await axios.get(
           `http://localhost:8000/fingerprints/get-status?finger_id=${fingerId}`,
@@ -171,91 +206,88 @@ const EnrollmentModal = ({
         if (status === "enrolled") {
           clearTimers();
           updateStatus(userId, "enrolled");
-          setShowSuccess(true);
           setTimeout(() => onClose?.(), 800);
         } else if (status === "failed") {
           clearTimers();
           updateStatus(userId, "failed");
-          setErrorMessage("Enrollment failed");
-          setShowError(true);
           setTimeout(() => onClose?.(), 800);
         }
       } catch (err) {
         console.error("Enrollment polling error:", err);
       }
-    }, 1000);
+    }, 500);
 
-    return clearTimers;
-  }, [isOpen, fingerId, userId, updateStatus, onClose]);
+    return () => {
+      console.log("Cleanup - clearing all timers");
+      clearTimers();
+    };
+  }, [
+    isOpen,
+    fingerId,
+    userId,
+    updateStatus,
+    onClose,
+    updateStepUI,
+    clearTimers,
+  ]);
 
   if (!isOpen) return null;
 
   const progress = ((currentStep + 1) / steps.length) * 100;
 
   return (
-    <>
-      <div className="enrollment-modal-overlay">
-        <div className="enrollment-modal-content">
-          <div className="enrollment-header">
-            <i className="bi bi-fingerprint enrollment-icon"></i>
-            <h2>Fingerprint Enrollment</h2>
-            <p>Please follow the steps below</p>
+    <div className="enrollment-modal-overlay">
+      <div className="enrollment-modal-content">
+        <div className="enrollment-header">
+          <i className="bi bi-fingerprint enrollment-icon"></i>
+          <h2>Fingerprint Enrollment</h2>
+          <p>Please follow the steps below</p>
 
-            {timeoutSeconds <= 5 && timeoutSeconds > 0 && (
-              <div className="timeout-warning">
-                <i className="bi bi-exclamation-triangle"></i>
-                <span>Auto-closing in {timeoutSeconds}s...</span>
-              </div>
-            )}
-          </div>
+          {timeoutSeconds <= 10 && timeoutSeconds > 0 && (
+            <div className="timeout-warning">
+              <i className="bi bi-exclamation-triangle"></i>
+              <span>Auto-closing in {timeoutSeconds}s...</span>
+            </div>
+          )}
+        </div>
 
-          <div className="progress-bar-container">
+        <div className="progress-bar-container">
+          <div
+            className="progress-bar-fill"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+
+        <div className="enrollment-steps">
+          {steps.map((step, index) => (
             <div
-              className="progress-bar-fill"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
+              key={step.id}
+              ref={(el) => (stepRefs.current[index] = el)}
+              className={`enrollment-step ${step.status}`}>
+              <div className="step-indicator">
+                {step.status === "completed" ?
+                  <i className="bi bi-check-circle-fill" />
+                : step.status === "failed" ?
+                  <i className="bi bi-x-circle-fill" />
+                : step.status === "active" ?
+                  <div className="step-spinner" />
+                : <div className="step-number">{step.id + 1}</div>}
+              </div>
 
-          <div className="enrollment-steps">
-            {steps.map((step) => (
-              <div key={step.id} className={`enrollment-step ${step.status}`}>
-                <div className="step-indicator">
-                  {step.status === "completed" ?
-                    <i className="bi bi-check-circle-fill" />
-                  : step.status === "failed" ?
-                    <i className="bi bi-x-circle-fill" />
-                  : step.status === "active" ?
-                    <div className="step-spinner" />
-                  : <div className="step-number">{step.id}</div>}
+              <div className="step-content">
+                <div className="step-icon">
+                  <i className={step.icon}></i>
                 </div>
-
-                <div className="step-content">
-                  <div className="step-icon">
-                    <i className={step.icon}></i>
-                  </div>
-                  <div className="step-text">
-                    <h4>{step.title}</h4>
-                    <p>{step.description}</p>
-                  </div>
+                <div className="step-text">
+                  <h4>{step.title}</h4>
+                  <p>{step.description}</p>
                 </div>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </div>
-
-      <SuccessAlert
-        show={showSuccess}
-        message="Fingerprint enrolled successfully!"
-        onClose={() => setShowSuccess(false)}
-      />
-
-      <ErrorAlert
-        show={showError}
-        message={errorMessage}
-        onClose={() => setShowError(false)}
-      />
-    </>
+    </div>
   );
 };
 

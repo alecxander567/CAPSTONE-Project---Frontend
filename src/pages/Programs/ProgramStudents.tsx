@@ -3,6 +3,8 @@ import Sidebar from "../../components/Sidebar/Sidebar";
 import { useProgramStudents } from "../../hooks/useProgramStudents";
 import { useEnrollFingerprint } from "../../hooks/useEnrollFingerprint";
 import EnrollmentModal from "../../components/EnrollmentModal/EnrollmentModal";
+import SuccessAlert from "../../components/SuccessAlert/SuccessAlert";
+import ErrorAlert from "../../components/SuccessAlert/ErrorAlert";
 import { useState, useEffect } from "react";
 import "./Students.css";
 
@@ -35,7 +37,7 @@ const FingerprintStatusBadge = ({ status }: { status: FingerprintStatus }) => {
   const { label, className } = statusInfo;
 
   return (
-    <span className={`fingerprint-status ${className}`}>
+    <span className={`fingerprint_status ${className}`}>
       <i className="bi bi-fingerprint"></i>
       {label}
     </span>
@@ -57,6 +59,10 @@ const ProgramStudents = () => {
     null,
   );
   const [selectedFingerId, setSelectedFingerId] = useState<number | null>(null);
+
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+  const [showErrorAlert, setShowErrorAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
 
   const { enrollFingerprint, isLoading } = useEnrollFingerprint();
 
@@ -95,15 +101,31 @@ const ProgramStudents = () => {
     try {
       const data = await enrollFingerprint(studentId);
 
-      if (!data) return;
+      if (!data) {
+        console.error("No data returned from enrollFingerprint");
+        setAlertMessage("Failed to start enrollment. Please try again.");
+        setShowErrorAlert(true);
+        return;
+      }
+
+      if (!data.finger_id) {
+        console.error("No finger_id in response:", data);
+        setAlertMessage("Invalid enrollment response. Please try again.");
+        setShowErrorAlert(true);
+        return;
+      }
 
       setSelectedStudentId(studentId);
       setSelectedFingerId(data.finger_id);
-
       setShowEnrollmentModal(true);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Enrollment error:", err);
-      setShowEnrollmentModal(false);
+      console.error("Error details:", err.response?.data || err.message);
+
+      const errorMessage =
+        err.response?.data?.detail || err.message || "Unknown error";
+      setAlertMessage(`Failed to start enrollment: ${errorMessage}`);
+      setShowErrorAlert(true);
     }
   };
 
@@ -126,6 +148,14 @@ const ProgramStudents = () => {
         s.id === studentId ? { ...s, fingerprint_status: status } : s,
       ),
     );
+
+    if (status === "enrolled") {
+      setAlertMessage("Fingerprint enrolled successfully!");
+      setShowSuccessAlert(true);
+    } else if (status === "failed") {
+      setAlertMessage("Fingerprint enrollment failed. Please try again.");
+      setShowErrorAlert(true);
+    }
   };
 
   return (
@@ -138,6 +168,18 @@ const ProgramStudents = () => {
         userId={selectedStudentId || 0}
         fingerId={selectedFingerId || 0}
         updateStatus={updateStudentStatus}
+      />
+
+      <SuccessAlert
+        show={showSuccessAlert}
+        message={alertMessage}
+        onClose={() => setShowSuccessAlert(false)}
+      />
+
+      <ErrorAlert
+        show={showErrorAlert}
+        message={alertMessage}
+        onClose={() => setShowErrorAlert(false)}
       />
 
       <main className="students-content">

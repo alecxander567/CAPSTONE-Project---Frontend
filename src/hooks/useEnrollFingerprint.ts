@@ -11,7 +11,10 @@ interface EnrollResponse {
   message: string;
   finger_id: number;
   status?: FingerprintStatus;
+  step?: string;
 }
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export const useEnrollFingerprint = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -27,8 +30,14 @@ export const useEnrollFingerprint = () => {
 
     try {
       const { data } = await axios.post<EnrollResponse>(
-        `http://localhost:8000/fingerprints/start-enrollment`,
+        `${API_BASE_URL}/fingerprints/start-enrollment`,
         { user_id: userId },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          timeout: 10000,
+        },
       );
 
       setSuccessMessage(data.message);
@@ -37,12 +46,27 @@ export const useEnrollFingerprint = () => {
       let message = "Failed to start fingerprint enrollment";
 
       if (axios.isAxiosError(err)) {
-        message = err.response?.data?.detail ?? message;
+        console.error("Axios Error Details:", {
+          message: err.message,
+          code: err.code,
+          response: err.response?.data,
+          status: err.response?.status,
+        });
+
+        if (err.code === "ERR_NETWORK" || err.message === "Network Error") {
+          message = `Cannot connect to server at ${API_BASE_URL}. Please ensure:\n1. Backend is running\n2. CORS is enabled\n3. URL is correct`;
+        } else if (err.response) {
+          message =
+            err.response.data?.detail ?? `Server error: ${err.response.status}`;
+        } else if (err.request) {
+          message = "No response from server. Check if backend is running.";
+        }
       } else if (err instanceof Error) {
         message = err.message;
       }
 
       setError(message);
+      console.error("Final error message:", message);
       throw err;
     } finally {
       setIsLoading(false);

@@ -29,9 +29,11 @@
   max-width: 600px;
   width: 90%;
   max-height: 90vh;
-  overflow-y: auto;
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
   animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 @keyframes slideUp {
@@ -48,6 +50,7 @@
 .enrollment-header {
   text-align: center;
   margin-bottom: 2rem;
+  flex-shrink: 0;
 }
 
 .enrollment-icon {
@@ -88,6 +91,7 @@
   border-radius: 10px;
   overflow: hidden;
   margin-bottom: 2rem;
+  flex-shrink: 0;
 }
 
 .progress-bar-fill {
@@ -101,6 +105,34 @@
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 0.5rem;
+  padding-left: 0.5rem;
+  margin-right: -0.5rem;
+  margin-left: -0.5rem;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e0 #f7fafc;
+}
+
+.enrollment-steps::-webkit-scrollbar {
+  width: 6px;
+}
+
+.enrollment-steps::-webkit-scrollbar-track {
+  background: #f7fafc;
+  border-radius: 10px;
+}
+
+.enrollment-steps::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 10px;
+}
+
+.enrollment-steps::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
 }
 
 .enrollment-step {
@@ -112,6 +144,8 @@
   background: #f7fafc;
   border: 2px solid transparent;
   transition: all 0.3s ease;
+  scroll-margin-top: 1rem;
+  scroll-margin-bottom: 1rem;
 }
 
 .enrollment-step.waiting {
@@ -295,14 +329,14 @@
   border-radius: 8px;
   color: #ffc107;
   font-size: 0.9rem;
-  animation: pulse 1s ease-in-out infinite;
+  animation: warningPulse 1s ease-in-out infinite;
 }
 
 .timeout-warning i {
   font-size: 1.1rem;
 }
 
-@keyframes pulse {
+@keyframes warningPulse {
   0%,
   100% {
     opacity: 1;
