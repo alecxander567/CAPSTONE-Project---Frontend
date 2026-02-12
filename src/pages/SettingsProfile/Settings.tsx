@@ -46,7 +46,10 @@ function Settings() {
     last_name: profile?.last_name || "",
     middle_initial: profile?.middle_initial || "",
     mobile_phone: profile?.mobile_phone || "",
-    program: profile?.program || "",
+    program:
+      typeof profile?.program === "object" ?
+        profile?.program?.code
+      : profile?.program || "",
     year_level: profile?.year_level || "",
   }));
 
@@ -65,8 +68,11 @@ function Settings() {
           last_name: profile.last_name || "",
           middle_initial: profile.middle_initial || "",
           mobile_phone: profile.mobile_phone || "",
-          program: profile.program || "",
-          year_level: profile.year_level || "", 
+          program:
+            typeof profile.program === "object" ?
+              (profile.program as any)?.code
+            : profile.program || "",
+          year_level: profile.year_level || "",
         });
       }, 0);
 
@@ -82,8 +88,11 @@ function Settings() {
           last_name: profile.last_name || "",
           middle_initial: profile.middle_initial || "",
           mobile_phone: profile.mobile_phone || "",
-          program: profile.program || "",
-          year_level: profile.year_level || "", 
+          program:
+            typeof profile.program === "object" ?
+              (profile.program as any)?.code
+            : profile.program || "",
+          year_level: profile.year_level || "",
         });
       }
       setEditError(null);

@@ -9,11 +9,16 @@ export interface Student {
 }
 
 export interface ProgramData {
+  id?: number;
   code: string;
   name: string;
-  students: number;
+  students?: number;
   studentList?: Student[];
 }
+
+const getAuthHeaders = () => ({
+  Authorization: `Bearer ${localStorage.getItem("token")}`,
+});
 
 export const usePrograms = () => {
   const [programs, setPrograms] = useState<ProgramData[]>([]);
@@ -57,4 +62,83 @@ export const usePrograms = () => {
   }, []);
 
   return { programs, loading, error };
+};
+
+export const useAddProgram = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const addProgram = async (code: string, name: string) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { data } = await axios.post<ProgramData>(
+        "http://localhost:8000/programs/",
+        { code, name },
+        { withCredentials: true, headers: getAuthHeaders() },
+      );
+      return data;
+    } catch (err: any) {
+      const message = err.response?.data?.detail ?? "Something went wrong";
+      setError(message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { addProgram, loading, error };
+};
+
+export const useEditProgram = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const editProgram = async (id: number, code: string, name: string) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { data } = await axios.put<ProgramData>(
+        `http://localhost:8000/programs/${id}`,
+        { code, name },
+        { withCredentials: true, headers: getAuthHeaders() },
+      );
+      return data;
+    } catch (err: any) {
+      const message = err.response?.data?.detail ?? "Something went wrong";
+      setError(message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { editProgram, loading, error };
+};
+
+export const useDeleteProgram = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const deleteProgram = async (id: number) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      await axios.delete(`http://localhost:8000/programs/${id}`, {
+        withCredentials: true,
+        headers: getAuthHeaders(),
+      });
+    } catch (err: any) {
+      const message = err.response?.data?.detail ?? "Something went wrong";
+      setError(message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { deleteProgram, loading, error };
 };

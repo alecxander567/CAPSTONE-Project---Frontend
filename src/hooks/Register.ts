@@ -1,12 +1,13 @@
 import { useState } from "react";
 import axios from "axios";
 
-interface RegisterPayload {
+export interface RegisterPayload {
   student_id_no?: string;
   first_name: string;
   middle_initial?: string;
   last_name: string;
-  program: string;
+  program_id?: number; 
+  year_level?: string; 
   mobile_phone: string;
   password: string;
   role: "admin" | "student";

@@ -7,7 +7,7 @@ interface UserProfile {
   first_name: string;
   last_name: string;
   middle_initial?: string;
-  program: string;
+  program: string | { code: string; name: string; id: number };
   year_level?: string;
   role: string;
   mobile_phone: string;

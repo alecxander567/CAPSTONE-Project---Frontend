@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import { Modal, Button, Form, Row, Col } from "react-bootstrap";
 import { useRegister } from "../../hooks/Register";
+import type { RegisterPayload } from "../../hooks/Register";
+import { usePrograms } from "../../hooks/useProgram";
+import type { ProgramData } from "../../hooks/useProgram";
+
 import AnimatedAlert from "../AnimatedAlert/AnimatedAlert";
 
 interface RegisterModalProps {
@@ -13,50 +17,49 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
   const [firstName, setFirstName] = useState("");
   const [middleInitial, setMiddleInitial] = useState("");
   const [lastName, setLastName] = useState("");
-  const [program, setProgram] = useState("");
+  const [programId, setProgramId] = useState<number | "">("");
   const [role, setRole] = useState<"ADMIN" | "STUDENT">("STUDENT");
   const [mobilePhone, setMobilePhone] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
-  const [yearLevel, setYearLevel] = useState("");
+  const [yearLevel, setYearLevel] = useState<string>("");
+  const [localError, setLocalError] = useState("");
 
   const { register, loading, error } = useRegister();
+  const {
+    programs,
+    loading: programsLoading,
+    error: programsError,
+  } = usePrograms();
 
   const handleRegister = async () => {
-    if (!firstName.trim()) {
-      return;
-    }
-    if (!lastName.trim()) {
-      return;
-    }
-    if (!program) {
-      return;
-    }
-    if (!mobilePhone.trim()) {
-      return;
-    }
-    if (!password.trim()) {
-      return;
+    setLocalError("");
+
+    if (!firstName.trim()) return setLocalError("First name is required");
+    if (!lastName.trim()) return setLocalError("Last name is required");
+    if (!mobilePhone.trim()) return setLocalError("Mobile phone is required");
+    if (!password.trim()) return setLocalError("Password is required");
+
+    if (role === "STUDENT") {
+      if (!programId) return setLocalError("Program is required");
+      if (!yearLevel) return setLocalError("Year level is required");
     }
 
-    const payload = {
+    const payload: RegisterPayload = {
       student_id_no: studentId.trim() || undefined,
       first_name: firstName.trim(),
       middle_initial: middleInitial.trim() || undefined,
       last_name: lastName.trim(),
-      program: program,
-      year_level: yearLevel,
+      program_id: role === "STUDENT" ? (programId as number) : undefined,
+      year_level: role === "STUDENT" ? yearLevel : undefined,
       mobile_phone: mobilePhone.trim(),
       password: password.trim(),
       role: role.toLowerCase() as "admin" | "student",
     };
 
-    console.log("Sending registration payload:", payload);
-
     try {
       await register(payload);
-
       setSuccessMessage("Registration successful!");
       setTimeout(() => {
         setSuccessMessage("");
@@ -161,65 +164,8 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
             </Col>
           </Row>
 
-          {/* Program and Role */}
+          {/* Role */}
           <Row className="g-3 mb-3">
-            <Col md={7}>
-              <Form.Group>
-                <Form.Label className="fw-semibold small text-secondary">
-                  <i className="bi bi-mortarboard me-2"></i>Program *
-                </Form.Label>
-                <Form.Select
-                  value={program}
-                  onChange={(e) => setProgram(e.target.value)}
-                  className="py-2 border-2"
-                  style={{ fontSize: "0.95rem" }}
-                  required>
-                  <option value="">Select your program</option>
-                  <option value="BSED">
-                    Bachelor of Secondary Education (BSED)
-                  </option>
-                  <option value="BSBA">
-                    Bachelor of Science in Business Administration (BSBA)
-                  </option>
-                  <option value="BSIT">
-                    Bachelor of Science in Information Technology (BSIT)
-                  </option>
-                  <option value="BSCRIM">
-                    Bachelor of Science in Criminology (BSCRIM)
-                  </option>
-                  <option value="BPED">
-                    Bachelor of Physical Education (BPED)
-                  </option>
-                  <option value="BEED">
-                    Bachelor of Elementary Education (BEED)
-                  </option>
-                  <option value="BHumServ">
-                    Bachelor of Human Services (BHumServ)
-                  </option>
-                </Form.Select>
-              </Form.Group>
-            </Col>
-
-            <Col md={5}>
-              <Form.Group>
-                <Form.Label className="fw-semibold small text-secondary">
-                  <i className="bi bi-building me-2"></i>Year Level *
-                </Form.Label>
-                <Form.Select
-                  value={yearLevel}
-                  onChange={(e) => setYearLevel(e.target.value)}
-                  className="py-2 border-2"
-                  style={{ fontSize: "0.95rem" }}
-                  required>
-                  <option value="">Select your year level</option>
-                  <option value="1st year">1st Year</option>
-                  <option value="2nd year">2nd Year</option>
-                  <option value="3rd year">3rd Year</option>
-                  <option value="4th year">4th Year</option>
-                </Form.Select>
-              </Form.Group>
-            </Col>
-
             <Col md={5}>
               <Form.Group>
                 <Form.Label className="fw-semibold small text-secondary">
@@ -227,9 +173,13 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
                 </Form.Label>
                 <Form.Select
                   value={role}
-                  onChange={(e) =>
-                    setRole(e.target.value as "ADMIN" | "STUDENT")
-                  }
+                  onChange={(e) => {
+                    setRole(e.target.value as "ADMIN" | "STUDENT");
+                    if (e.target.value === "ADMIN") {
+                      setProgramId("");
+                      setYearLevel("");
+                    }
+                  }}
                   className="py-2 border-2"
                   style={{ fontSize: "0.95rem" }}>
                   <option value="STUDENT">Student</option>
@@ -238,6 +188,60 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
               </Form.Group>
             </Col>
           </Row>
+
+          {/* Program and Year Level — only for students */}
+          {role === "STUDENT" && (
+            <Row className="g-3 mb-3">
+              <Col md={7}>
+                <Form.Group>
+                  <Form.Label className="fw-semibold small text-secondary">
+                    <i className="bi bi-mortarboard me-2"></i>Program *
+                  </Form.Label>
+                  <Form.Select
+                    value={programId}
+                    onChange={(e) => setProgramId(Number(e.target.value))}
+                    className="py-2 border-2"
+                    style={{ fontSize: "0.95rem" }}
+                    required>
+                    <option value="">Select your program</option>
+                    {programs
+                      .filter((prog: ProgramData) => prog.code !== "OSA")
+                      .map((prog: ProgramData) => (
+                        <option key={prog.id} value={prog.id}>
+                          {prog.name} ({prog.code})
+                        </option>
+                      ))}
+                  </Form.Select>
+                  {programsLoading && (
+                    <p className="small text-muted mt-1">Loading programs...</p>
+                  )}
+                  {programsError && (
+                    <p className="small text-danger mt-1">{programsError}</p>
+                  )}
+                </Form.Group>
+              </Col>
+
+              <Col md={5}>
+                <Form.Group>
+                  <Form.Label className="fw-semibold small text-secondary">
+                    <i className="bi bi-building me-2"></i>Year Level *
+                  </Form.Label>
+                  <Form.Select
+                    value={yearLevel}
+                    onChange={(e) => setYearLevel(e.target.value)}
+                    className="py-2 border-2"
+                    style={{ fontSize: "0.95rem" }}
+                    required>
+                    <option value="">Select your year level</option>
+                    <option value="1st year">1st Year</option>
+                    <option value="2nd year">2nd Year</option>
+                    <option value="3rd year">3rd Year</option>
+                    <option value="4th year">4th Year</option>
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+            </Row>
+          )}
 
           {/* Mobile Phone */}
           <Form.Group className="mb-3">
@@ -289,12 +293,11 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
           </Form.Group>
         </Form>
 
-        {/* Alerts */}
+        {localError && <AnimatedAlert type="error" message={localError} />}
+        {error && <AnimatedAlert type="error" message={error} />}
         {successMessage && (
           <AnimatedAlert type="success" message={successMessage} />
         )}
-
-        {error && <AnimatedAlert type="error" message={error} />}
       </Modal.Body>
 
       <Modal.Footer className="border-0 pt-0 px-4 pb-4">
