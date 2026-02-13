@@ -282,9 +282,14 @@ const ProgramStudents = () => {
                         <button
                           className="btn btn-primary"
                           onClick={() => handleEnrollClick(student.id)}
-                          disabled={isLoading}>
+                          disabled={
+                            isLoading ||
+                            student.fingerprint_status === "enrolled"
+                          }>
                           <i className="bi bi-fingerprint"></i>
-                          Enroll
+                          {student.fingerprint_status === "enrolled" ?
+                            "Enrolled"
+                          : "Enroll"}
                         </button>
                         <button
                           className="action-btn delete-btn"
