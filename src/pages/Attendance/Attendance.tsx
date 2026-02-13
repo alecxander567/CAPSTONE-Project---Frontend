@@ -32,16 +32,34 @@ function Attendance() {
     stopAttendance,
     loading: attendanceLoading,
   } = useAttendance();
-  const [attendanceActive, setAttendanceActive] = useState(false);
+
+  // Initialize attendanceActive from localStorage
+  const [attendanceActive, setAttendanceActive] = useState(() => {
+    const saved = localStorage.getItem("attendanceActive");
+    return saved === "true";
+  });
 
   const [event, setEvent] = useState<Event | null>(null);
-
   const [loadingEvent, setLoadingEvent] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Initialize studentStatus from localStorage
   const [studentStatus, setStudentStatus] = useState<Record<string, string>>(
-    {},
+    () => {
+      const saved = localStorage.getItem("studentStatus");
+      return saved ? JSON.parse(saved) : {};
+    },
   );
+
+  // Save attendanceActive to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("attendanceActive", attendanceActive.toString());
+  }, [attendanceActive]);
+
+  // Save studentStatus to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("studentStatus", JSON.stringify(studentStatus));
+  }, [studentStatus]);
 
   useEffect(() => {
     if (!eventId) return;
