@@ -37,7 +37,7 @@
   max-width: 1600px;
   margin: 0 auto;
   width: 100%;
-  padding-top: 0; 
+  padding-top: 0;
 }
 
 .dashboard-header {
@@ -46,7 +46,7 @@
   color: #fff;
   padding: 3rem 2rem;
   overflow: hidden;
-  margin-bottom: -2rem; 
+  margin-bottom: -2rem;
   padding-bottom: 3rem;
 }
 
@@ -80,7 +80,6 @@
   font-size: 2rem;
 }
 
-
 .attendance-header-section {
   display: flex;
   justify-content: space-between;
@@ -88,7 +87,7 @@
   gap: 1.5rem;
   flex-wrap: wrap;
   padding-top: 1rem;
-  margin-bottom: 2rem; 
+  margin-bottom: 2rem;
 }
 
 .header-text-group {
@@ -100,7 +99,7 @@
   font-size: 2rem;
   font-weight: 700;
   color: #1e293b;
-  margin: 0 0 0.5rem 0; 
+  margin: 0 0 0.5rem 0;
   display: flex;
   align-items: center;
 }
@@ -108,14 +107,22 @@
 .event-page-subtitle {
   font-size: 1rem;
   color: #64748b;
-  margin: 0; 
+  margin: 0;
+}
+
+/* Updated controls layout */
+.attendance-controls-right {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: flex-end;
+  flex-shrink: 0;
 }
 
 .student-search-container {
   position: relative;
   width: 100%;
   max-width: 350px;
-  flex-shrink: 0;
 }
 
 .student-search-container .search-icon {
@@ -142,6 +149,54 @@
   outline: none;
   border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.btn-attendance-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px; 
+  font-weight: 600;
+  font-size: 0.95rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  min-width: 180px;
+  color: white;
+}
+
+.btn-start {
+  background: linear-gradient(
+    135deg,
+    #0d6efd,
+    #0a58ca
+  ); 
+}
+
+.btn-start:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.btn-stop {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+}
+
+.btn-stop:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+.btn-attendance-action:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-attendance-action i {
+  font-size: 1.1rem;
 }
 
 .program-table-card {
@@ -272,15 +327,24 @@
   .attendance-header-section {
     flex-direction: column;
     align-items: stretch;
-    padding-top: 0; 
+    padding-top: 0;
   }
 
   .header-text-group {
     min-width: 100%;
   }
 
+  .attendance-controls-right {
+    width: 100%;
+    align-items: stretch;
+  }
+
   .student-search-container {
     max-width: 100%;
+  }
+
+  .btn-attendance-action {
+    width: 100%;
   }
 
   .program-table-header {

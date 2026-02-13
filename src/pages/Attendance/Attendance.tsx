@@ -6,6 +6,7 @@ import type { Event as MyEvent } from "../../hooks/useEvents";
 import { useEvents } from "../../hooks/useEvents";
 import "./Attendance.css";
 import { useNavigate } from "react-router-dom";
+import { useAttendance } from "../../hooks/useAttendance";
 
 interface Event {
   id: number;
@@ -13,16 +14,34 @@ interface Event {
   date: string;
 }
 
+interface StudentWithStatus {
+  id: number;
+  student_id_no: string;
+  first_name: string;
+  last_name: string;
+  status?: string;
+}
+
 function Attendance() {
   const navigate = useNavigate();
   const { programs, loading: loadingPrograms, error } = usePrograms();
   const { eventId } = useParams();
   const { getEventById } = useEvents();
+  const {
+    startAttendance,
+    stopAttendance,
+    loading: attendanceLoading,
+  } = useAttendance();
+  const [attendanceActive, setAttendanceActive] = useState(false);
 
   const [event, setEvent] = useState<Event | null>(null);
 
   const [loadingEvent, setLoadingEvent] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const [studentStatus, setStudentStatus] = useState<Record<string, string>>(
+    {},
+  );
 
   useEffect(() => {
     if (!eventId) return;
@@ -47,8 +66,7 @@ function Attendance() {
     };
 
     fetchEvent();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [eventId]);
+  }, [eventId, getEventById]);
 
   const filteredPrograms = programs
     .map((program) => {
@@ -68,12 +86,50 @@ function Attendance() {
         (program.studentList && program.studentList.length > 0),
     );
 
+  useEffect(() => {
+    const statusMap: Record<string, string> = {};
+    programs.forEach((program) => {
+      (program.studentList || []).forEach((student) => {
+        if (!studentStatus[student.student_id_no]) {
+          statusMap[student.student_id_no] = "Not Marked";
+        }
+      });
+    });
+
+    if (Object.keys(statusMap).length > 0) {
+      setStudentStatus((prev) => ({ ...prev, ...statusMap }));
+    }
+  }, [programs, studentStatus]);
+
+  useEffect(() => {
+    if (!attendanceActive) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch("http://localhost:8000/attendance/updates");
+        const data: { student_id_no: string; status: string }[] =
+          await res.json();
+
+        setStudentStatus((prevStatus) => {
+          const updatedStatus = { ...prevStatus };
+          data.forEach((item) => {
+            updatedStatus[item.student_id_no] = item.status;
+          });
+          return updatedStatus;
+        });
+      } catch (err) {
+        console.error("Failed to fetch attendance updates:", err);
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [attendanceActive]);
+
   return (
     <div className="attendance-layout">
       <Sidebar />
 
       <div className="content-area">
-        {/* Dashboard Header */}
         <header className="dashboard-header">
           <div className="wave"></div>
 
@@ -115,15 +171,48 @@ function Attendance() {
               </p>
             </div>
 
-            <div className="student-search-container">
-              <i className="bi bi-search search-icon"></i>
-              <input
-                type="text"
-                className="student-search-input"
-                placeholder="Search student or ID..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+            <div className="attendance-controls-right">
+              <div className="student-search-container">
+                <i className="bi bi-search search-icon"></i>
+                <input
+                  type="text"
+                  className="student-search-input"
+                  placeholder="Search student or ID..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+
+              {!attendanceActive ?
+                <button
+                  className="btn-attendance-action btn-start"
+                  disabled={attendanceLoading}
+                  onClick={async () => {
+                    try {
+                      await startAttendance();
+                      setAttendanceActive(true);
+                    } catch (err) {
+                      console.error(err);
+                    }
+                  }}>
+                  <i className="bi bi-play-circle me-2"></i>
+                  Start Attendance
+                </button>
+              : <button
+                  className="btn-attendance-action btn-stop"
+                  disabled={attendanceLoading}
+                  onClick={async () => {
+                    try {
+                      await stopAttendance();
+                      setAttendanceActive(false);
+                    } catch (err) {
+                      console.error(err);
+                    }
+                  }}>
+                  <i className="bi bi-stop-circle me-2"></i>
+                  Stop Attendance
+                </button>
+              }
             </div>
           </div>
 
@@ -147,7 +236,6 @@ function Attendance() {
 
                   return (
                     <div key={program.code} className="program-table-card mb-5">
-                      {/* Program Header */}
                       <div className="program-table-header">
                         <div className="d-flex align-items-center gap-3">
                           <span className="badge-program-code-large">
@@ -204,15 +292,25 @@ function Attendance() {
                                     </div>
                                   </td>
                                   <td className="text-center">
-                                    <span className="badge bg-light text-secondary border">
-                                      Not Marked
+                                    <span
+                                      className={`badge ${
+                                        (
+                                          studentStatus[
+                                            student.student_id_no
+                                          ]?.toLowerCase() === "present"
+                                        ) ?
+                                          "bg-success"
+                                        : "bg-light text-secondary border"
+                                      }`}>
+                                      {studentStatus[student.student_id_no] ||
+                                        "Not Marked"}
                                     </span>
                                   </td>
                                 </tr>
                               ))
                             : <tr>
                                 <td
-                                  colSpan={5}
+                                  colSpan={4}
                                   className="text-center py-4 text-muted">
                                   No students found in this program.
                                 </td>
