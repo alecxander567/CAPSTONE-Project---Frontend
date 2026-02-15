@@ -12,6 +12,7 @@ interface Event {
   id: number;
   title: string;
   date: string;
+  program_id?: number | null; 
 }
 
 interface StudentWithStatus {
@@ -60,6 +61,7 @@ function Attendance() {
           id: data.id,
           title: data.title,
           date: data.event_date,
+          program_id: data.program_id ?? null, 
         };
 
         setEvent(mappedEvent);
@@ -84,7 +86,12 @@ function Attendance() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const filteredPrograms = programs
+  const programsToShow =
+    event?.program_id ?
+      programs.filter((p) => p.id === event.program_id)
+    : programs;
+
+  const filteredPrograms = programsToShow
     .map((program) => {
       if (!searchQuery.trim()) return program;
       const filteredStudents = (program.studentList || []).filter((student) => {
@@ -137,16 +144,13 @@ function Attendance() {
         const data: { student_id_no: string; status: string; time?: string }[] =
           await res.json();
 
-        if (data.length > 0) {
-          return;
+        if (data.length === 0) {
+          return; 
         }
 
         setStudentStatus((prevStatus) => {
           const updatedStatus = { ...prevStatus };
           data.forEach((item) => {
-            if (prevStatus[item.student_id_no] !== item.status) {
-              return;
-            }
             updatedStatus[item.student_id_no] = item.status;
           });
           return updatedStatus;
@@ -155,14 +159,16 @@ function Attendance() {
         setStudentTime((prevTime) => {
           const updatedTime = { ...prevTime };
           data.forEach((item) => {
-            if (item.time) updatedTime[item.student_id_no] = item.time;
+            if (item.time) {
+              updatedTime[item.student_id_no] = item.time;
+            }
           });
           return updatedTime;
         });
       } catch (err) {
         console.error("Failed to fetch attendance updates:", err);
       }
-    }, 3000);
+    }, 3000); 
 
     return () => {
       clearInterval(interval);
@@ -180,7 +186,6 @@ function Attendance() {
           <button
             className="btn-back-header fade-up"
             onClick={async () => {
-              // Stop attendance before navigating away
               if (attendanceActive) {
                 try {
                   await stopAttendance();
@@ -220,7 +225,12 @@ function Attendance() {
                 }
               </h2>
               <p className="event-page-subtitle">
-                View student lists by program below.
+                {event?.program_id ?
+                  <span className="badge bg-primary bg-opacity-10 text-primary">
+                    <i className="bi bi-diagram-3 me-1"></i>
+                    Program-specific event
+                  </span>
+                : "View student lists by program below."}
               </p>
             </div>
 

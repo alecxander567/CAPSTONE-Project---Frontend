@@ -137,6 +137,7 @@ function Events() {
       start_time: event.start_time || "",
       end_time: event.end_time || "",
       location: event.location || "",
+      program_id: event.program_id ?? null,
     });
     setShowModal(true);
   };
@@ -199,10 +200,9 @@ function Events() {
 
         <div className="content-wrapper p-4">
           <div className="events-header-controls fade-up delay-1 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center flex-wrap gap-3">
-            {/* Title and Total Events */}
             <div>
               <h2 className="events-section-title mb-1">
-                <i className="bi bi-calendar-event me-2 text-primary"></i>{" "}
+                <i className="bi bi-calendar-event me-2 text-primary"></i>
                 Upcoming Events
               </h2>
               <p className="text-muted mb-2 mb-md-0">
@@ -232,7 +232,6 @@ function Events() {
             </div>
           </div>
 
-          {/* Loading & Error States */}
           {loading && (
             <div className="text-center py-5">
               <div className="spinner-border text-primary" role="status"></div>
@@ -249,7 +248,6 @@ function Events() {
             </div>
           )}
 
-          {/* Empty State */}
           {events.length === 0 && !loading && !error && (
             <div className="empty-state text-center py-5">
               <div className="empty-state-icon mb-3">
@@ -262,12 +260,10 @@ function Events() {
             </div>
           )}
 
-          {/* Events Grid */}
           {filteredEvents.length > 0 && !loading && (
             <div className="events-grid fade-up delay-2">
               {filteredEvents.map((event: Event) => (
                 <div key={event.id} className="event-card">
-                  {/* Card Header with Wave Animation */}
                   <div className="event-card-header">
                     <div className="event-header-wave"></div>
                     <div className="event-date-badge">
@@ -285,7 +281,6 @@ function Events() {
                     <h5 className="event-card-title">{event.title}</h5>
                   </div>
 
-                  {/* Card Body */}
                   <div className="event-card-body">
                     <p className="event-description">
                       {event.description || "No description provided."}
@@ -301,6 +296,15 @@ function Events() {
                         <i className="bi bi-geo-alt"></i>
                         <span>{event.location}</span>
                       </div>
+                      {/* Show program restriction badge if set */}
+                      {event.program_id && (
+                        <div className="detail-row">
+                          <i className="bi bi-diagram-3"></i>
+                          <span className="badge bg-primary bg-opacity-10 text-primary">
+                            Program-specific
+                          </span>
+                        </div>
+                      )}
                       <div className="detail-row">
                         <span
                           className={`event-status-badge ${getStatusBadgeClass(event.status)}`}>
@@ -310,7 +314,6 @@ function Events() {
                     </div>
                   </div>
 
-                  {/* Card Footer */}
                   <div className="event-card-footer">
                     <button
                       className="btn-action btn-view"
@@ -337,7 +340,6 @@ function Events() {
           )}
         </div>
 
-        {/* Modals */}
         <AddEventModal
           show={showModal}
           onClose={() => {

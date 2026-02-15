@@ -74,7 +74,6 @@
   font-size: 2rem;
 }
 
-/* Header text styles - matching Calendar component */
 .attendance-header-content h1 {
   margin: 0 0 0.5rem 0;
   font-size: 2rem;
@@ -91,9 +90,8 @@
 .attendance-header-section {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 1.5rem;
-  flex-wrap: wrap;
   padding-top: 1.5rem;
   margin-bottom: 2rem;
 }
@@ -115,8 +113,7 @@
 
 .student-search-container {
   position: relative;
-  width: 100%;
-  max-width: 350px;
+  width: 220px;
   flex-shrink: 0;
 }
 

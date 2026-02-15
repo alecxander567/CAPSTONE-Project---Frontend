@@ -1,6 +1,9 @@
 import Sidebar from "../../components/Sidebar/Sidebar";
 import { usePrograms } from "../../hooks/useProgram";
 import { useEvents } from "../../hooks/useEvents";
+import { useDeviceStatus } from "../../hooks/useDeviceStatus";
+import { useAttendancePerEvent } from "../../hooks/useAttendancePerEvent";
+import { useAttendancePerProgram } from "../../hooks/useAttendancePerProgram";
 import "./Dashboard.css";
 import {
   BarChart,
@@ -21,46 +24,25 @@ function Dashboard() {
     error: programsError,
   } = usePrograms();
   const { events, totalEvents } = useEvents();
+  const { connected } = useDeviceStatus();
+  const { data: eventAttendanceData, loading: chartLoading } =
+    useAttendancePerEvent();
+  const { data: programAttendanceData, loading: programAttendanceLoading } =
+    useAttendancePerProgram();
 
   const programColors = [
-    "#0d6efd", 
-    "#6f42c1", 
-    "#d63384", 
-    "#fd7e14", 
-    "#20c997", 
-    "#ffc107", 
-    "#dc3545", 
-    "#198754", 
+    "#0d6efd",
+    "#6f42c1",
+    "#d63384",
+    "#fd7e14",
+    "#20c997",
+    "#ffc107",
+    "#dc3545",
+    "#198754",
   ];
 
   const totalPrograms = programs.length;
   const totalStudents = programs.reduce((sum, prog) => sum + prog.students, 0);
-
-  const programsWithPercentage = programs.map((prog, idx) => ({
-    program: prog.name,
-    code: prog.code,
-    count: prog.students,
-    percent:
-      totalStudents > 0 ? Math.round((prog.students / totalStudents) * 100) : 0,
-    color: programColors[idx % programColors.length],
-  }));
-
-  const mockEventData = [
-    { event: "Orientation", students: 120 },
-    { event: "Workshop A", students: 85 },
-    { event: "Workshop B", students: 150 },
-    { event: "Seminar", students: 60 },
-    { event: "Sports Meet", students: 200 },
-    { event: "Tech Talk", students: 95 },
-  ];
-
-  const weeklyTrend = [
-    { eventName: "Lightning Workshop", attendance: 85 },
-    { eventName: "Web Dev Bootcamp", attendance: 92 },
-    { eventName: "AI Seminar", attendance: 78 },
-    { eventName: "Cybersecurity 101", attendance: 95 },
-    { eventName: "Cloud Computing Intro", attendance: 88 },
-  ];
 
   const generateCalendar = () => {
     const today = new Date();
@@ -116,6 +98,10 @@ function Dashboard() {
       month: "long",
       year: "numeric",
     });
+  };
+
+  const handlePrintAnalytics = () => {
+    // TODO: implement print analytics
   };
 
   const calendarDays = generateCalendar();
@@ -178,7 +164,9 @@ function Dashboard() {
               </div>
               <div className="stat-info">
                 <h4>Connection</h4>
-                <span className="status online">Online</span>
+                <span className={`status ${connected ? "online" : "offline"}`}>
+                  {connected ? "Online" : "Offline"}
+                </span>
               </div>
             </div>
           </div>
@@ -193,7 +181,7 @@ function Dashboard() {
               <div className="chart-container">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
-                    data={mockEventData}
+                    data={eventAttendanceData}
                     margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
                     barSize={40}>
                     <defs>
@@ -254,7 +242,7 @@ function Dashboard() {
               <div className="chart-container">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart
-                    data={weeklyTrend}
+                    data={eventAttendanceData}
                     margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
                     <defs>
                       <linearGradient
@@ -277,7 +265,7 @@ function Dashboard() {
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
                     <XAxis
-                      dataKey="eventName"
+                      dataKey="event"
                       tick={{ fontSize: 12, fill: "#666" }}
                     />
                     <YAxis tick={{ fontSize: 12, fill: "#666" }} />
@@ -286,7 +274,7 @@ function Dashboard() {
                     />
                     <Area
                       type="monotone"
-                      dataKey="attendance"
+                      dataKey="students"
                       stroke="#0dcaf0"
                       strokeWidth={3}
                       fill="url(#areaGradient)"
@@ -297,7 +285,7 @@ function Dashboard() {
             </div>
           </div>
 
-          {/* Lower Grid (Progress & Next Event) */}
+          {/* Lower Grid (Progress & Calendar) */}
           <div className="dashboard-lower-grid">
             {/* Program Participation Card */}
             <div className="lower-card fade-up delay-6">
@@ -347,87 +335,125 @@ function Dashboard() {
                     }
                   </div>
 
-                  {/* Mock Graph */}
+                  {/* Program Attendance Progress Bars */}
                   <div className="participation-chart">
                     <h6 className="text-muted small mb-3">
                       PARTICIPATION OVERVIEW
                     </h6>
-                    <div className="progress-bars">
-                      {programsWithPercentage.map((prog, idx) => (
-                        <div key={idx} className="progress-item">
-                          <div className="progress-header">
-                            <span className="program-name">
-                              {prog.program}
-                              <span className="text-muted small ms-2">
-                                ({prog.count} students)
-                              </span>
-                            </span>
-                            <span
-                              className="program-percent"
-                              style={{ color: prog.color }}>
-                              {prog.percent}%
-                            </span>
-                          </div>
-                          <div className="progress-bar-bg">
-                            <div
-                              className="progress-bar-fill"
-                              style={{
-                                width: `${prog.percent}%`,
-                                background: `linear-gradient(90deg, ${prog.color}, ${prog.color}dd)`,
-                                boxShadow: `0 2px 8px ${prog.color}40`,
-                              }}></div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                    {programAttendanceLoading ?
+                      <div className="text-center py-2">
+                        <div
+                          className="spinner-border spinner-border-sm text-primary"
+                          role="status"
+                        />
+                      </div>
+                    : <div className="progress-bars">
+                        {(() => {
+                          const total = programAttendanceData.reduce(
+                            (sum, p) => sum + p.students,
+                            0,
+                          );
+                          return programAttendanceData.map((prog, idx) => {
+                            const percent =
+                              total > 0 ?
+                                Math.round((prog.students / total) * 100)
+                              : 0;
+                            const color =
+                              programColors[idx % programColors.length];
+                            return (
+                              <div key={idx} className="progress-item">
+                                <div className="progress-header">
+                                  <span className="program-name">
+                                    {prog.program}
+                                    <span className="text-muted small ms-2">
+                                      ({prog.students} present)
+                                    </span>
+                                  </span>
+                                  <span
+                                    className="program-percent"
+                                    style={{ color }}>
+                                    {percent}%
+                                  </span>
+                                </div>
+                                <div className="progress-bar-bg">
+                                  <div
+                                    className="progress-bar-fill"
+                                    style={{
+                                      width: `${percent}%`,
+                                      background: `linear-gradient(90deg, ${color}, ${color}dd)`,
+                                      boxShadow: `0 2px 8px ${color}40`,
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                    }
                   </div>
                 </>
               }
             </div>
 
-            {/* Calendar Card */}
-            <div className="lower-card fade-up delay-6">
-              <h4 className="card-title">
-                <i className="bi bi-calendar3 text-primary me-2"></i>
-                Calendar
-              </h4>
+            {/* Calendar column: card + button stacked */}
+            <div
+              className="fade-up delay-6"
+              style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              {/* Calendar Card */}
+              <div className="lower-card">
+                <h4 className="card-title">
+                  <i className="bi bi-calendar3 text-primary me-2"></i>
+                  Calendar
+                </h4>
 
-              <div className="calendar-view">
-                <div className="calendar-header">
-                  <div className="calendar-month">{getCurrentMonthYear()}</div>
-                </div>
-
-                <div className="calendar-grid">
-                  <div className="calendar-weekday">Sun</div>
-                  <div className="calendar-weekday">Mon</div>
-                  <div className="calendar-weekday">Tue</div>
-                  <div className="calendar-weekday">Wed</div>
-                  <div className="calendar-weekday">Thu</div>
-                  <div className="calendar-weekday">Fri</div>
-                  <div className="calendar-weekday">Sat</div>
-
-                  {calendarDays.map((dayInfo, idx) => (
-                    <div
-                      key={idx}
-                      className={`calendar-day ${!dayInfo.isCurrentMonth ? "other-month" : ""} ${dayInfo.isToday ? "today" : ""} ${dayInfo.hasEvent ? "has-event" : ""}`}>
-                      {dayInfo.day}
+                <div className="calendar-view">
+                  <div className="calendar-header">
+                    <div className="calendar-month">
+                      {getCurrentMonthYear()}
                     </div>
-                  ))}
-                </div>
+                  </div>
 
-                <div className="calendar-footer mt-3">
-                  <div className="calendar-legend">
-                    <span className="legend-item">
-                      <span className="legend-dot today-dot"></span>
-                      Today
-                    </span>
-                    <span className="legend-item">
-                      <span className="legend-dot event-dot"></span>
-                      Event
-                    </span>
+                  <div className="calendar-grid">
+                    <div className="calendar-weekday">Sun</div>
+                    <div className="calendar-weekday">Mon</div>
+                    <div className="calendar-weekday">Tue</div>
+                    <div className="calendar-weekday">Wed</div>
+                    <div className="calendar-weekday">Thu</div>
+                    <div className="calendar-weekday">Fri</div>
+                    <div className="calendar-weekday">Sat</div>
+
+                    {calendarDays.map((dayInfo, idx) => (
+                      <div
+                        key={idx}
+                        className={`calendar-day ${!dayInfo.isCurrentMonth ? "other-month" : ""} ${dayInfo.isToday ? "today" : ""} ${dayInfo.hasEvent ? "has-event" : ""}`}>
+                        {dayInfo.day}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="calendar-footer mt-3">
+                    <div className="calendar-legend">
+                      <span className="legend-item">
+                        <span className="legend-dot today-dot"></span>
+                        Today
+                      </span>
+                      <span className="legend-item">
+                        <span className="legend-dot event-dot"></span>
+                        Event
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
+
+              {/* Print Analytics Button */}
+              <button
+                className="btn btn-print-analytics w-100"
+                onClick={handlePrintAnalytics}>
+                <i className="bi bi-printer-fill me-2"></i>
+                Print Analytics
+              </button>
             </div>
           </div>
         </div>

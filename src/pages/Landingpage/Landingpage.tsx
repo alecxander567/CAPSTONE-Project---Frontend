@@ -357,33 +357,6 @@ function Landingpage() {
               </Card>
             </Col>
           </Row>
-
-          {/* Help Card */}
-          <Row className="mt-4">
-            <Col lg={12}>
-              <Card className="border-0 shadow-sm bg-light">
-                <Card.Body className="p-4">
-                  <Row className="align-items-center">
-                    <Col md={8}>
-                      <h5 className="fw-bold mb-2">Need Additional Help?</h5>
-                      <p className="text-muted small mb-0">
-                        Can't find what you're looking for? Check out our FAQ
-                        section or contact our support team for assistance.
-                      </p>
-                    </Col>
-                    <Col md={4} className="text-md-end mt-3 mt-md-0">
-                      <Button variant="primary" className="me-2">
-                        <i className="bi bi-question-circle me-2"></i>FAQ
-                      </Button>
-                      <Button variant="outline-primary">
-                        <i className="bi bi-headset me-2"></i>Support
-                      </Button>
-                    </Col>
-                  </Row>
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
         </Container>
       </section>
 
@@ -397,59 +370,113 @@ function Landingpage() {
               </div>
               <h2 className="fw-bold mb-3">Get In Touch</h2>
               <p className="lead text-muted">
-                Have questions? We'd love to hear from you
+                Have questions? Our team is here to help you
               </p>
             </Col>
           </Row>
           <Row className="g-4">
-            <Col lg={4} className="fade-up fade-delay-1">
+            {/* Software Concerns - Alec Xander Espaldon */}
+            <Col lg={6} xl={3} className="fade-up fade-delay-1">
               <Card className="h-100 border-0 shadow-sm text-center hover-lift">
                 <Card.Body className="p-4">
                   <div className="mb-3">
-                    <i className="bi bi-geo-alt-fill text-primary fs-3"></i>
+                    <i className="bi bi-code-slash text-primary fs-3"></i>
                   </div>
-                  <h5 className="fw-bold mb-3">Visit Us</h5>
-                  <p className="text-muted small mb-0">
-                    123 University Avenue
-                    <br />
-                    Cotabato City, ARMM 9600
-                    <br />
-                    Philippines
+                  <h5 className="fw-bold mb-2">Software</h5>
+                  <p className="text-muted small mb-3">
+                    System & Application Issues
                   </p>
+                  <div className="text-start">
+                    <p className="mb-2 fw-semibold text-dark">
+                      Alec Xander Espaldon
+                    </p>
+                    <p className="text-muted small mb-1">
+                      <i className="bi bi-envelope me-2"></i>
+                      alecxanderespaldon21@gmail.com
+                    </p>
+                    <p className="text-muted small mb-0">
+                      <i className="bi bi-phone me-2"></i>
+                      +63 933 298 1179
+                    </p>
+                  </div>
                 </Card.Body>
               </Card>
             </Col>
-            <Col lg={4} className="fade-up fade-delay-2">
+
+            {/* Hardware Concerns - William Clyde Ceballos */}
+            <Col lg={6} xl={3} className="fade-up fade-delay-2">
               <Card className="h-100 border-0 shadow-sm text-center hover-lift">
                 <Card.Body className="p-4">
                   <div className="mb-3">
-                    <i className="bi bi-telephone-fill text-success fs-3"></i>
+                    <i className="bi bi-cpu text-success fs-3"></i>
                   </div>
-                  <h5 className="fw-bold mb-3">Call Us</h5>
-                  <p className="text-muted small mb-0">
-                    Office: +63 (64) 421-xxxx
-                    <br />
-                    Mobile: +63 912 345 6789
-                    <br />
-                    Mon-Fri, 8:00 AM - 5:00 PM
+                  <h5 className="fw-bold mb-2">Hardware</h5>
+                  <p className="text-muted small mb-3">
+                    Device & Sensor Support
                   </p>
+                  <div className="text-start">
+                    <p className="mb-2 fw-semibold text-dark">
+                      William Clyde Ceballos
+                    </p>
+                    <p className="text-muted small mb-1">
+                      <i className="bi bi-envelope me-2"></i>
+                      williamceballos@gmail.com
+                    </p>
+                    <p className="text-muted small mb-0">
+                      <i className="bi bi-phone me-2"></i>
+                      +63 XXX XXX XXXX
+                    </p>
+                  </div>
                 </Card.Body>
               </Card>
             </Col>
-            <Col lg={4} className="fade-up fade-delay-3">
+
+            {/* Documentation - Edrian Rosales */}
+            <Col lg={6} xl={3} className="fade-up fade-delay-3">
               <Card className="h-100 border-0 shadow-sm text-center hover-lift">
                 <Card.Body className="p-4">
                   <div className="mb-3">
-                    <i className="bi bi-envelope-fill text-info fs-3"></i>
+                    <i className="bi bi-file-text text-info fs-3"></i>
                   </div>
-                  <h5 className="fw-bold mb-3">Email Us</h5>
-                  <p className="text-muted small mb-0">
-                    General: info@arasystem.edu
-                    <br />
-                    Support: support@arasystem.edu
-                    <br />
-                    Technical: tech@arasystem.edu
+                  <h5 className="fw-bold mb-2">Documentation</h5>
+                  <p className="text-muted small mb-3">Guides & Review</p>
+                  <div className="text-start">
+                    <p className="mb-2 fw-semibold text-dark">Edrian Rosales</p>
+                    <p className="text-muted small mb-1">
+                      <i className="bi bi-envelope me-2"></i>
+                      edrianrosales@gmail.com
+                    </p>
+                    <p className="text-muted small mb-0">
+                      <i className="bi bi-phone me-2"></i>
+                      +63 XXX XXX XXXX
+                    </p>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+
+            {/* UI/UX Concerns - DJ Taguno */}
+            <Col lg={6} xl={3} className="fade-up fade-delay-4">
+              <Card className="h-100 border-0 shadow-sm text-center hover-lift">
+                <Card.Body className="p-4">
+                  <div className="mb-3">
+                    <i className="bi bi-palette text-warning fs-3"></i>
+                  </div>
+                  <h5 className="fw-bold mb-2">UI/UX Design</h5>
+                  <p className="text-muted small mb-3">
+                    Interface & Experience
                   </p>
+                  <div className="text-start">
+                    <p className="mb-2 fw-semibold text-dark">DJ Taguno</p>
+                    <p className="text-muted small mb-1">
+                      <i className="bi bi-envelope me-2"></i>
+                      djtaguno@gmail.com
+                    </p>
+                    <p className="text-muted small mb-0">
+                      <i className="bi bi-phone me-2"></i>
+                      +63 XXX XXX XXXX
+                    </p>
+                  </div>
                 </Card.Body>
               </Card>
             </Col>
@@ -472,9 +499,9 @@ function Landingpage() {
       {/* ------------------- FOOTER ------------------- */}
       <footer className="bg-dark text-white py-4 mt-auto fade-section">
         <Container>
-          <Row className="g-4">
-            <Col lg={4}>
-              <div className="d-flex align-items-center mb-3">
+          <Row className="g-4 justify-content-center">
+            <Col lg={6} className="text-center">
+              <div className="d-flex align-items-center justify-content-center mb-3">
                 <img
                   src={logo}
                   alt="Logo"
@@ -487,84 +514,6 @@ function Landingpage() {
               <p className="small text-white-50">
                 Innovative biometric attendance management for modern
                 educational institutions.
-              </p>
-            </Col>
-            <Col lg={2} md={6}>
-              <h6 className="fw-bold mb-3">Quick Links</h6>
-              <ul className="list-unstyled small">
-                <li className="mb-2">
-                  <a
-                    href="#about"
-                    className="text-white-50 text-decoration-none">
-                    About
-                  </a>
-                </li>
-                <li className="mb-2">
-                  <a
-                    href="#features"
-                    className="text-white-50 text-decoration-none">
-                    Features
-                  </a>
-                </li>
-                <li className="mb-2">
-                  <a
-                    href="#documentation"
-                    className="text-white-50 text-decoration-none">
-                    Documentation
-                  </a>
-                </li>
-                <li className="mb-2">
-                  <a
-                    href="#contact"
-                    className="text-white-50 text-decoration-none">
-                    Contact
-                  </a>
-                </li>
-              </ul>
-            </Col>
-            <Col lg={2} md={6}>
-              <h6 className="fw-bold mb-3">Support</h6>
-              <ul className="list-unstyled small">
-                <li className="mb-2">
-                  <a href="#" className="text-white-50 text-decoration-none">
-                    Help Center
-                  </a>
-                </li>
-                <li className="mb-2">
-                  <a href="#" className="text-white-50 text-decoration-none">
-                    FAQ
-                  </a>
-                </li>
-                <li className="mb-2">
-                  <a href="#" className="text-white-50 text-decoration-none">
-                    Privacy Policy
-                  </a>
-                </li>
-                <li className="mb-2">
-                  <a href="#" className="text-white-50 text-decoration-none">
-                    Terms of Service
-                  </a>
-                </li>
-              </ul>
-            </Col>
-            <Col lg={4}>
-              <h6 className="fw-bold mb-3">Connect With Us</h6>
-              <div className="d-flex gap-3 mb-3">
-                <a href="#" className="text-white-50 fs-4">
-                  <i className="bi bi-facebook"></i>
-                </a>
-                <a href="#" className="text-white-50 fs-4">
-                  <i className="bi bi-twitter"></i>
-                </a>
-                <a href="#" className="text-white-50 fs-4">
-                  <i className="bi bi-instagram"></i>
-                </a>
-                <a href="#" className="text-white-50 fs-4">
-                  <i className="bi bi-linkedin"></i>
-                </a>
-              </div>
-              <p className="small text-white-50 mb-0">
-                Stay updated with our latest features and updates.
               </p>
             </Col>
           </Row>

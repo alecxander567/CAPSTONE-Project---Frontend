@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import type { FormEvent } from "react";
+import axios from "axios";
 import "./AddEventsModal.css";
 
 export interface EventData {
@@ -9,10 +10,17 @@ export interface EventData {
   start_time: string;
   end_time: string;
   location: string;
+  program_id: number | null; 
 }
 
 export interface StoredEvent extends EventData {
   id: number;
+}
+
+interface Program {
+  id: number;
+  name: string;
+  code: string;
 }
 
 interface AddEventModalProps {
@@ -38,6 +46,18 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
   const [startTime, setStartTime] = useState(initialData?.start_time || "");
   const [endTime, setEndTime] = useState(initialData?.end_time || "");
   const [location, setLocation] = useState(initialData?.location || "");
+  const [programId, setProgramId] = useState<number | null>(
+    initialData?.program_id ?? null,
+  );
+
+  const [programs, setPrograms] = useState<Program[]>([]);
+
+  useEffect(() => {
+    axios
+      .get<Program[]>("http://127.0.0.1:8000/programs/")
+      .then((res) => setPrograms(res.data))
+      .catch(console.error);
+  }, []);
 
   useEffect(() => {
     const resetState = () => {
@@ -47,6 +67,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
       setStartTime(initialData?.start_time || "");
       setEndTime(initialData?.end_time || "");
       setLocation(initialData?.location || "");
+      setProgramId(initialData?.program_id ?? null);
     };
 
     const id = setTimeout(resetState, 0);
@@ -76,11 +97,12 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
 
     onSave({
       title,
-      description: description || "", 
+      description: description || "",
       event_date: eventDate || "",
       start_time: startTime || "",
       end_time: endTime || "",
       location: location || "",
+      program_id: programId,
     });
   };
 
@@ -207,6 +229,34 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                     required
                   />
                 </div>
+              </div>
+
+              {/* Program restriction — optional */}
+              <div className="form-group-enhanced">
+                <label className="form-label-enhanced">
+                  <i className="bi bi-diagram-3"></i>
+                  Program
+                  <span
+                    className="text-muted ms-2"
+                    style={{ fontSize: "0.8rem", fontWeight: 400 }}>
+                    (leave blank for all programs)
+                  </span>
+                </label>
+                <select
+                  className="form-control form-control-enhanced"
+                  value={programId ?? ""}
+                  onChange={(e) =>
+                    setProgramId(
+                      e.target.value === "" ? null : Number(e.target.value),
+                    )
+                  }>
+                  <option value="">All Programs</option>
+                  {programs.map((prog) => (
+                    <option key={prog.id} value={prog.id}>
+                      {prog.name} ({prog.code})
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 

@@ -1,11 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 
-export type EventInput = Omit<
-  Event,
-  "id" | "created_by" | "created_at" | "status"
->;
-
 export type EventStatus = "upcoming" | "ongoing" | "done";
 
 export interface Event {
@@ -19,17 +14,21 @@ export interface Event {
   created_by: number;
   created_at: string;
   status: EventStatus;
+  program_id?: number | null; 
 }
+
+export type EventInput = Omit<
+  Event,
+  "id" | "created_by" | "created_at" | "status"
+>;
 
 interface UseEventsResult {
   events: Event[];
   loading: boolean;
   error: string | null;
   totalEvents: number;
-
   addEvent: (data: EventInput) => Promise<void>;
   editEvent: (id: number, data: EventInput) => Promise<void>;
-
   deleteEvent: (id: number) => Promise<void>;
   getEventById: (id: number) => Promise<Event>;
   refetch: () => Promise<void>;
@@ -69,9 +68,7 @@ export const useEvents = (): UseEventsResult => {
     const response = await axios.post<Event>(
       "http://127.0.0.1:8000/events/",
       data,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
 
     setEvents((prev) => [...prev, response.data]);
@@ -85,9 +82,7 @@ export const useEvents = (): UseEventsResult => {
     const response = await axios.put<Event>(
       `http://127.0.0.1:8000/events/${id}`,
       data,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
 
     setEvents((prev) =>
@@ -116,9 +111,7 @@ export const useEvents = (): UseEventsResult => {
     async (id: number): Promise<Event> => {
       try {
         const existingEvent = events.find((e) => e.id === id);
-        if (existingEvent) {
-          return existingEvent;
-        }
+        if (existingEvent) return existingEvent;
 
         const response = await axios.get<Event>(
           `http://127.0.0.1:8000/events/${id}`,
