@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import { usePrograms } from "../../hooks/useProgram";
@@ -40,6 +40,13 @@ function Attendance() {
   const [studentStatus, setStudentStatus] = useState<Record<string, string>>(
     {},
   );
+  const [studentTime, setStudentTime] = useState<Record<string, string>>({});
+
+  const attendanceActiveRef = useRef(false);
+
+  useEffect(() => {
+    attendanceActiveRef.current = attendanceActive;
+  }, [attendanceActive]);
 
   useEffect(() => {
     if (!eventId) return;
@@ -66,6 +73,17 @@ function Attendance() {
     fetchEvent();
   }, [eventId, getEventById]);
 
+  useEffect(() => {
+    return () => {
+      if (attendanceActiveRef.current) {
+        stopAttendance().catch((err) =>
+          console.error("Failed to stop attendance on unmount:", err),
+        );
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const filteredPrograms = programs
     .map((program) => {
       if (!searchQuery.trim()) return program;
@@ -85,42 +103,70 @@ function Attendance() {
     );
 
   useEffect(() => {
-    const statusMap: Record<string, string> = {};
-    programs.forEach((program) => {
-      (program.studentList || []).forEach((student) => {
-        if (!studentStatus[student.student_id_no]) {
-          statusMap[student.student_id_no] = "Not Marked";
-        }
-      });
-    });
+    if (programs.length === 0) return;
 
-    if (Object.keys(statusMap).length > 0) {
-      setStudentStatus((prev) => ({ ...prev, ...statusMap }));
-    }
-  }, [programs, studentStatus]);
+    setStudentStatus((prevStatus) => {
+      const statusMap: Record<string, string> = { ...prevStatus };
+
+      programs.forEach((program) => {
+        (program.studentList || []).forEach((student) => {
+          if (!statusMap[student.student_id_no]) {
+            statusMap[student.student_id_no] = "Not Marked";
+          }
+        });
+      });
+
+      return statusMap;
+    });
+  }, [programs]);
 
   useEffect(() => {
-    if (!attendanceActive) return;
+    if (!attendanceActive) {
+      return;
+    }
 
     const interval = setInterval(async () => {
       try {
         const res = await fetch("http://localhost:8000/attendance/updates");
-        const data: { student_id_no: string; status: string }[] =
+
+        if (!res.ok) {
+          console.error(`HTTP Error: ${res.status} ${res.statusText}`);
+          return;
+        }
+
+        const data: { student_id_no: string; status: string; time?: string }[] =
           await res.json();
+
+        if (data.length > 0) {
+          return;
+        }
 
         setStudentStatus((prevStatus) => {
           const updatedStatus = { ...prevStatus };
           data.forEach((item) => {
+            if (prevStatus[item.student_id_no] !== item.status) {
+              return;
+            }
             updatedStatus[item.student_id_no] = item.status;
           });
           return updatedStatus;
+        });
+
+        setStudentTime((prevTime) => {
+          const updatedTime = { ...prevTime };
+          data.forEach((item) => {
+            if (item.time) updatedTime[item.student_id_no] = item.time;
+          });
+          return updatedTime;
         });
       } catch (err) {
         console.error("Failed to fetch attendance updates:", err);
       }
     }, 3000);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+    };
   }, [attendanceActive]);
 
   return (
@@ -133,9 +179,18 @@ function Attendance() {
 
           <button
             className="btn-back-header fade-up"
-            onClick={() =>
-              navigate("/events", { state: { fromAttendance: true } })
-            }>
+            onClick={async () => {
+              // Stop attendance before navigating away
+              if (attendanceActive) {
+                try {
+                  await stopAttendance();
+                  setAttendanceActive(false);
+                } catch (err) {
+                  console.error("Failed to stop attendance:", err);
+                }
+              }
+              navigate("/events", { state: { fromAttendance: true } });
+            }}>
             <i className="bi bi-arrow-left"></i>
             <span>Back to Events</span>
           </button>
@@ -190,7 +245,7 @@ function Attendance() {
                       await startAttendance();
                       setAttendanceActive(true);
                     } catch (err) {
-                      console.error(err);
+                      console.error("Failed to start attendance:", err);
                     }
                   }}>
                   <i className="bi bi-play-circle me-2"></i>
@@ -204,7 +259,7 @@ function Attendance() {
                       await stopAttendance();
                       setAttendanceActive(false);
                     } catch (err) {
-                      console.error(err);
+                      console.error("Failed to stop attendance:", err);
                     }
                   }}>
                   <i className="bi bi-stop-circle me-2"></i>
@@ -266,6 +321,12 @@ function Attendance() {
                                 style={{ width: "150px" }}>
                                 Status
                               </th>
+                              <th
+                                scope="col"
+                                className="text-center"
+                                style={{ width: "180px" }}>
+                                Time
+                              </th>
                             </tr>
                           </thead>
                           <tbody>
@@ -304,11 +365,18 @@ function Attendance() {
                                         "Not Marked"}
                                     </span>
                                   </td>
+                                  <td className="text-center text-muted small">
+                                    {studentTime[student.student_id_no] ?
+                                      new Date(
+                                        studentTime[student.student_id_no],
+                                      ).toLocaleString()
+                                    : <span className="text-secondary">—</span>}
+                                  </td>
                                 </tr>
                               ))
                             : <tr>
                                 <td
-                                  colSpan={4}
+                                  colSpan={5}
                                   className="text-center py-4 text-muted">
                                   No students found in this program.
                                 </td>

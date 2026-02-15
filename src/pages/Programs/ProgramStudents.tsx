@@ -3,9 +3,11 @@ import Sidebar from "../../components/Sidebar/Sidebar";
 import { useProgramStudents } from "../../hooks/useProgramStudents";
 import { useEnrollFingerprint } from "../../hooks/useEnrollFingerprint";
 import EnrollmentModal from "../../components/EnrollmentModal/EnrollmentModal";
+import DeleteFingerprintModal from "../../components/DeleteFingerprintModal/DeleteFingerprintModal";
 import SuccessAlert from "../../components/SuccessAlert/SuccessAlert";
 import ErrorAlert from "../../components/SuccessAlert/ErrorAlert";
 import { useState, useEffect } from "react";
+import axios from "axios";
 import "./Students.css";
 
 interface Student {
@@ -19,6 +21,8 @@ interface Student {
 }
 
 type FingerprintStatus = "not_enrolled" | "pending" | "enrolled" | "failed";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const FingerprintStatusBadge = ({ status }: { status: FingerprintStatus }) => {
   const statusMap: Record<
@@ -55,14 +59,20 @@ const ProgramStudents = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showEnrollmentModal, setShowEnrollmentModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(
     null,
   );
+  const [selectedStudentName, setSelectedStudentName] = useState<string>("");
   const [selectedFingerId, setSelectedFingerId] = useState<number | null>(null);
 
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [showErrorAlert, setShowErrorAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
+
+  const [unenrollingStudentId, setUnenrollingStudentId] = useState<
+    number | null
+  >(null);
 
   const { enrollFingerprint, isLoading } = useEnrollFingerprint();
 
@@ -129,9 +139,64 @@ const ProgramStudents = () => {
     }
   };
 
-  const handleDeleteStudent = (studentId: number) => {
-    if (window.confirm("Are you sure you want to delete this student?")) {
-      console.log("Delete student:", studentId);
+  const handleUnenrollClick = (student: Student) => {
+    setSelectedStudentId(student.id);
+    setSelectedStudentName(`${student.first_name} ${student.last_name}`);
+    setShowDeleteModal(true);
+  };
+
+  const confirmUnenroll = async () => {
+    if (!selectedStudentId) return;
+
+    setUnenrollingStudentId(selectedStudentId);
+
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/fingerprints/unenroll-fingerprint/${selectedStudentId}`,
+        {},
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          timeout: 10000,
+        },
+      );
+
+      if (response.status === 200) {
+        setStudents((prev: Student[]) =>
+          prev.map((s) =>
+            s.id === selectedStudentId ?
+              { ...s, fingerprint_status: "not_enrolled" }
+            : s,
+          ),
+        );
+
+        setAlertMessage("Fingerprint unenrolled successfully!");
+        setShowSuccessAlert(true);
+      }
+    } catch (err: any) {
+      console.error("Unenrollment error:", err);
+
+      let errorMessage = "Failed to unenroll fingerprint";
+
+      if (axios.isAxiosError(err)) {
+        if (err.response) {
+          errorMessage =
+            err.response.data?.detail || `Server error: ${err.response.status}`;
+        } else if (err.request) {
+          errorMessage =
+            "No response from server. Check if backend is running.";
+        } else {
+          errorMessage = err.message;
+        }
+      }
+
+      setAlertMessage(errorMessage);
+      setShowErrorAlert(true);
+    } finally {
+      setUnenrollingStudentId(null);
+      setSelectedStudentId(null);
+      setSelectedStudentName("");
     }
   };
 
@@ -168,6 +233,13 @@ const ProgramStudents = () => {
         userId={selectedStudentId || 0}
         fingerId={selectedFingerId || 0}
         updateStatus={updateStudentStatus}
+      />
+
+      <DeleteFingerprintModal
+        show={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={confirmUnenroll}
+        studentName={selectedStudentName}
       />
 
       <SuccessAlert
@@ -279,25 +351,27 @@ const ProgramStudents = () => {
                         </div>
                       </div>
                       <div className="student-actions">
-                        <button
-                          className="btn btn-primary"
-                          onClick={() => handleEnrollClick(student.id)}
-                          disabled={
-                            isLoading ||
-                            student.fingerprint_status === "enrolled"
-                          }>
-                          <i className="bi bi-fingerprint"></i>
-                          {student.fingerprint_status === "enrolled" ?
-                            "Enrolled"
-                          : "Enroll"}
-                        </button>
-                        <button
-                          className="action-btn delete-btn"
-                          onClick={() => handleDeleteStudent(student.id)}
-                          title="Delete Student">
-                          <i className="bi bi-trash"></i>
-                          <span>Delete</span>
-                        </button>
+                        {student.fingerprint_status === "enrolled" ?
+                          <button
+                            className="action-btn delete-btn"
+                            onClick={() => handleUnenrollClick(student)}
+                            disabled={unenrollingStudentId === student.id}
+                            title="Unenroll Fingerprint">
+                            <i className="bi bi-fingerprint"></i>
+                            <span>
+                              {unenrollingStudentId === student.id ?
+                                "Unenrolling..."
+                              : "Unenroll"}
+                            </span>
+                          </button>
+                        : <button
+                            className="btn btn-primary"
+                            onClick={() => handleEnrollClick(student.id)}
+                            disabled={isLoading}>
+                            <i className="bi bi-fingerprint"></i>
+                            Enroll
+                          </button>
+                        }
                       </div>
                     </div>
                   ))}
