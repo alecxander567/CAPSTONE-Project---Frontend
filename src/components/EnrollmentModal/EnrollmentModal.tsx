@@ -2,6 +2,8 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import axios from "axios";
 import "./EnrollmentModal.css";
 
+const API_BASE_URL = "http://192.168.1.99:8000";
+
 type FingerprintStatus = "not_enrolled" | "pending" | "enrolled" | "failed";
 
 interface EnrollmentModalProps {
@@ -196,7 +198,7 @@ const EnrollmentModal = ({
     pollRef.current = window.setInterval(async () => {
       try {
         const response = await axios.get(
-          `http://localhost:8000/fingerprints/get-status?finger_id=${fingerId}`,
+          `${API_BASE_URL}/fingerprints/get-status?finger_id=${fingerId}`,
         );
 
         const { status, step } = response.data;

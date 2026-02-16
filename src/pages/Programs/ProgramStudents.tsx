@@ -22,7 +22,7 @@ interface Student {
 
 type FingerprintStatus = "not_enrolled" | "pending" | "enrolled" | "failed";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_BASE_URL = "http://192.168.1.99:8000";
 
 const FingerprintStatusBadge = ({ status }: { status: FingerprintStatus }) => {
   const statusMap: Record<
@@ -130,8 +130,6 @@ const ProgramStudents = () => {
       setShowEnrollmentModal(true);
     } catch (err: any) {
       console.error("Enrollment error:", err);
-      console.error("Error details:", err.response?.data || err.message);
-
       const errorMessage =
         err.response?.data?.detail || err.message || "Unknown error";
       setAlertMessage(`Failed to start enrollment: ${errorMessage}`);
@@ -155,9 +153,7 @@ const ProgramStudents = () => {
         `${API_BASE_URL}/fingerprints/unenroll-fingerprint/${selectedStudentId}`,
         {},
         {
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           timeout: 10000,
         },
       );
@@ -170,7 +166,6 @@ const ProgramStudents = () => {
             : s,
           ),
         );
-
         setAlertMessage("Fingerprint unenrolled successfully!");
         setShowSuccessAlert(true);
       }
@@ -178,7 +173,6 @@ const ProgramStudents = () => {
       console.error("Unenrollment error:", err);
 
       let errorMessage = "Failed to unenroll fingerprint";
-
       if (axios.isAxiosError(err)) {
         if (err.response) {
           errorMessage =

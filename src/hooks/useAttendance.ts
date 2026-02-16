@@ -1,7 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 
-const API_URL = "http://localhost:8000/fingerprints";
+const API_URL = "http://192.168.1.99:8000/fingerprints";
 
 export const useAttendance = () => {
   const [loading, setLoading] = useState(false);
@@ -13,8 +13,12 @@ export const useAttendance = () => {
 
     try {
       const res = await axios.post(`${API_URL}/start-attendance`);
+
+      const modeCheck = await axios.get(`${API_URL}/device-mode`);
+
       return res.data;
     } catch (err: any) {
+      console.error("Failed to start attendance:", err);
       setError(err.response?.data?.detail || "Failed to start attendance");
       throw err;
     } finally {
@@ -30,6 +34,7 @@ export const useAttendance = () => {
       const res = await axios.post(`${API_URL}/stop-attendance`);
       return res.data;
     } catch (err: any) {
+      console.error("Failed to stop attendance:", err);
       setError(err.response?.data?.detail || "Failed to stop attendance");
       throw err;
     } finally {

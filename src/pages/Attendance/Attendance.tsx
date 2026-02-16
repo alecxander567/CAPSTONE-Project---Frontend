@@ -12,7 +12,7 @@ interface Event {
   id: number;
   title: string;
   date: string;
-  program_id?: number | null; 
+  program_id?: number | null;
 }
 
 interface StudentWithStatus {
@@ -61,7 +61,7 @@ function Attendance() {
           id: data.id,
           title: data.title,
           date: data.event_date,
-          program_id: data.program_id ?? null, 
+          program_id: data.program_id ?? null,
         };
 
         setEvent(mappedEvent);
@@ -134,7 +134,8 @@ function Attendance() {
 
     const interval = setInterval(async () => {
       try {
-        const res = await fetch("http://localhost:8000/attendance/updates");
+        // UPDATED URL to match ESP32
+        const res = await fetch("http://192.168.1.99:8000/attendance/updates");
 
         if (!res.ok) {
           console.error(`HTTP Error: ${res.status} ${res.statusText}`);
@@ -145,8 +146,10 @@ function Attendance() {
           await res.json();
 
         if (data.length === 0) {
-          return; 
+          return;
         }
+
+        console.log("📊 Attendance updates received:", data); // Add logging
 
         setStudentStatus((prevStatus) => {
           const updatedStatus = { ...prevStatus };
@@ -168,7 +171,7 @@ function Attendance() {
       } catch (err) {
         console.error("Failed to fetch attendance updates:", err);
       }
-    }, 3000); 
+    }, 3000);
 
     return () => {
       clearInterval(interval);

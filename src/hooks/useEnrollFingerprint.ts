@@ -14,7 +14,7 @@ interface EnrollResponse {
   step?: string;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://192.168.1.99:8000";
 
 export const useEnrollFingerprint = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -51,6 +51,7 @@ export const useEnrollFingerprint = () => {
           code: err.code,
           response: err.response?.data,
           status: err.response?.status,
+          url: err.config?.url,
         });
 
         if (err.code === "ERR_NETWORK" || err.message === "Network Error") {
