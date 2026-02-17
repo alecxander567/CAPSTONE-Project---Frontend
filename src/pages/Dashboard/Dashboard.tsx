@@ -101,7 +101,7 @@ function Dashboard() {
   };
 
   const handlePrintAnalytics = () => {
-    // TODO: implement print analytics
+    window.print();
   };
 
   const calendarDays = generateCalendar();
@@ -125,7 +125,21 @@ function Dashboard() {
           </div>
         </header>
 
-        <div className="dashboard-content">
+        <div className="dashboard-content" id="print-analytics">
+          {/* Print Header (Only visible when printing) */}
+          <div className="print-header">
+            <h2>ARA Biometric Attendance System</h2>
+            <h4>Analytics Report</h4>
+            <p>
+              Printed on:{" "}
+              {new Date().toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </p>
+            <hr />
+          </div>
           {/* Stats Cards */}
           <div className="stats-grid">
             <div className="stat-card fade-up delay-1">
@@ -170,7 +184,6 @@ function Dashboard() {
               </div>
             </div>
           </div>
-
           {/* Charts Row */}
           <div className="charts-row">
             {/* Bar Chart */}
@@ -179,7 +192,7 @@ function Dashboard() {
                 <i className="bi bi-bar-chart-fill"></i> Attendance Comparison
               </h3>
               <div className="chart-container">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height={300}>
                   <BarChart
                     data={eventAttendanceData}
                     margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
@@ -237,7 +250,8 @@ function Dashboard() {
             {/* Area Chart */}
             <div className="analytics-chart fade-up delay-5">
               <h3 className="chart-title">
-                <i className="bi bi-graph-up-arrow"></i> Weekly Trend
+                <i className="bi bi-graph-up-arrow"></i> Attendance Graph Per
+                Event
               </h3>
               <div className="chart-container">
                 <ResponsiveContainer width="100%" height="100%">
@@ -284,7 +298,6 @@ function Dashboard() {
               </div>
             </div>
           </div>
-
           {/* Lower Grid (Progress & Calendar) */}
           <div className="dashboard-lower-grid">
             {/* Program Participation Card */}
@@ -349,11 +362,17 @@ function Dashboard() {
                       </div>
                     : <div className="progress-bars">
                         {(() => {
-                          const total = programAttendanceData.reduce(
+                          const filteredPrograms = programAttendanceData.filter(
+                            (prog) =>
+                              !prog.program.toLowerCase().includes("osa"),
+                          );
+
+                          const total = filteredPrograms.reduce(
                             (sum, p) => sum + p.students,
                             0,
                           );
-                          return programAttendanceData.map((prog, idx) => {
+
+                          return filteredPrograms.map((prog, idx) => {
                             const percent =
                               total > 0 ?
                                 Math.round((prog.students / total) * 100)
