@@ -4,6 +4,7 @@ import { useProgramStudents } from "../../hooks/useProgramStudents";
 import { useEnrollFingerprint } from "../../hooks/useEnrollFingerprint";
 import EnrollmentModal from "../../components/EnrollmentModal/EnrollmentModal";
 import DeleteFingerprintModal from "../../components/DeleteFingerprintModal/DeleteFingerprintModal";
+import RecognitionModal from "../../components/RecognitionModal/RecognitionModal";
 import SuccessAlert from "../../components/SuccessAlert/SuccessAlert";
 import ErrorAlert from "../../components/SuccessAlert/ErrorAlert";
 import { useState, useEffect } from "react";
@@ -16,8 +17,9 @@ interface Student {
   first_name: string;
   last_name: string;
   program: string;
-  email: string;
+  year_level: string | null;
   fingerprint_status: "not_enrolled" | "pending" | "enrolled" | "failed";
+  finger_id: number | null;
 }
 
 type FingerprintStatus = "not_enrolled" | "pending" | "enrolled" | "failed";
@@ -70,6 +72,9 @@ const ProgramStudents = () => {
   const [showErrorAlert, setShowErrorAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
 
+  const [recognitionModalOpen, setRecognitionModalOpen] = useState(false);
+  const [currentStudent, setCurrentStudent] = useState<any>(null);
+
   const [unenrollingStudentId, setUnenrollingStudentId] = useState<
     number | null
   >(null);
@@ -102,8 +107,7 @@ const ProgramStudents = () => {
     return (
       student.first_name.toLowerCase().includes(query) ||
       student.last_name.toLowerCase().includes(query) ||
-      student.student_id_no.toLowerCase().includes(query) ||
-      student.email.toLowerCase().includes(query)
+      student.student_id_no.toLowerCase().includes(query)
     );
   });
 
@@ -135,6 +139,19 @@ const ProgramStudents = () => {
       setAlertMessage(`Failed to start enrollment: ${errorMessage}`);
       setShowErrorAlert(true);
     }
+  };
+
+  const handleRecognizeClick = (student) => {
+    setCurrentStudent(student);
+    setRecognitionModalOpen(true);
+  };
+
+  const handleRecognitionResult = (studentId: number, success: boolean) => {
+    setAlertMessage(
+      success ? "Fingerprint recognized!" : "Recognition failed.",
+    );
+    if (success) setShowSuccessAlert(true);
+    else setShowErrorAlert(true);
   };
 
   const handleUnenrollClick = (student: Student) => {
@@ -227,6 +244,17 @@ const ProgramStudents = () => {
         userId={selectedStudentId || 0}
         fingerId={selectedFingerId || 0}
         updateStatus={updateStudentStatus}
+      />
+
+      <RecognitionModal
+        isOpen={recognitionModalOpen}
+        onClose={() => {
+          setRecognitionModalOpen(false);
+          setCurrentStudent(null);
+        }}
+        userId={currentStudent?.id}
+        fingerId={currentStudent?.finger_id}
+        onRecognized={handleRecognitionResult}
       />
 
       <DeleteFingerprintModal
@@ -339,25 +367,35 @@ const ProgramStudents = () => {
                             {student.student_id_no}
                           </span>
                           <span className="detail-item">
-                            <i className="bi bi-envelope"></i>
-                            {student.email}
+                            <i className="bi bi-calendar3"></i>
+                            {student.year_level ?? "No year level"}
                           </span>
                         </div>
                       </div>
                       <div className="student-actions">
                         {student.fingerprint_status === "enrolled" ?
-                          <button
-                            className="action-btn delete-btn"
-                            onClick={() => handleUnenrollClick(student)}
-                            disabled={unenrollingStudentId === student.id}
-                            title="Unenroll Fingerprint">
-                            <i className="bi bi-fingerprint"></i>
-                            <span>
-                              {unenrollingStudentId === student.id ?
-                                "Unenrolling..."
-                              : "Unenroll"}
-                            </span>
-                          </button>
+                          <>
+                            <button
+                              className="btn-recognize action-btn mb-2"
+                              onClick={() => handleRecognizeClick(student)}
+                              title="Test Fingerprint Recognition">
+                              <i className="bi bi-search"></i>
+                              Recognize
+                            </button>
+
+                            <button
+                              className="action-btn delete-btn"
+                              onClick={() => handleUnenrollClick(student)}
+                              disabled={unenrollingStudentId === student.id}
+                              title="Unenroll Fingerprint">
+                              <i className="bi bi-fingerprint"></i>
+                              <span>
+                                {unenrollingStudentId === student.id ?
+                                  "Unenrolling..."
+                                : "Unenroll"}
+                              </span>
+                            </button>
+                          </>
                         : <button
                             className="btn btn-primary"
                             onClick={() => handleEnrollClick(student.id)}

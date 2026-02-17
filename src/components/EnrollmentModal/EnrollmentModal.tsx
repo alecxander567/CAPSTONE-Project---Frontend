@@ -182,13 +182,12 @@ const EnrollmentModal = ({
       setTimeoutSeconds((prev) => {
         const newValue = prev <= 1 ? 0 : prev - 1;
         if (newValue <= 10 && newValue > 0) {
-          console.log("⚠️ Timeout warning:", newValue, "seconds");
+          return;
         }
         return newValue;
       });
     }, 1000);
 
-    console.log("⏰ Setting 60-second timeout...");
     timeoutRef.current = window.setTimeout(() => {
       updateStatus(userId, "failed");
       onClose?.();

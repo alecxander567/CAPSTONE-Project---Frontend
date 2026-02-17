@@ -599,3 +599,35 @@
 .fade-delay-4 {
   transition-delay: 0.4s;
 }
+
+.student-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.btn-recognize {
+  background: #0f52ba;
+  color: white;
+}
+
+.btn-recognize:hover {
+  background: #0a1aff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(15, 82, 186, 0.3);
+}
+
+.students-grid {
+  align-items: stretch;
+}
+
+.student-card {
+  height: 100%;
+  justify-content: space-between;
+}
+
+.student-info {
+  flex: 1;
+}
