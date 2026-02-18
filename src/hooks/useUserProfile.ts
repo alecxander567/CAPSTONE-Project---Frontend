@@ -48,7 +48,7 @@ export const useUserProfile = () => {
       }
 
       const response = await axios.get<UserProfile>(
-        "http://localhost:8000/auth/profile",
+        `${import.meta.env.VITE_API_URL}/auth/profile`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -89,7 +89,7 @@ export const useUserProfile = () => {
       );
 
       const response = await axios.put<UserProfile>(
-        "http://localhost:8000/auth/profile",
+        `${import.meta.env.VITE_API_URL}/auth/profile`,
         filteredPayload,
         {
           headers: {
@@ -124,7 +124,7 @@ export const useUserProfile = () => {
       formData.append("file", file);
 
       await axios.post(
-        "http://localhost:8000/auth/profile/upload-picture",
+        `${import.meta.env.VITE_API_URL}/auth/profile/upload-picture`,
         formData,
         {
           headers: {
@@ -154,11 +154,14 @@ export const useUserProfile = () => {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No authentication token found");
 
-      await axios.delete("http://localhost:8000/auth/profile/delete-picture", {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      await axios.delete(
+        `${import.meta.env.VITE_API_URL}/auth/profile/delete-picture`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
 
       await fetchUserProfile();
     } catch (err: unknown) {

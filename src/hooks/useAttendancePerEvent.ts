@@ -8,7 +8,7 @@ export function useAttendancePerEvent() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:8000/attendance/per-event")
+      .get(`${import.meta.env.VITE_API_URL}/attendance/per-event`)
       .then((res) => setData(res.data))
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));

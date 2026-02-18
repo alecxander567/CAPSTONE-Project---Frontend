@@ -14,7 +14,7 @@ export interface Event {
   created_by: number;
   created_at: string;
   status: EventStatus;
-  program_id?: number | null; 
+  program_id?: number | null;
 }
 
 export type EventInput = Omit<
@@ -44,7 +44,7 @@ export const useEvents = (): UseEventsResult => {
     setLoading(true);
     try {
       const response = await axios.get<Event[]>(
-        "http://127.0.0.1:8000/events/",
+        `${import.meta.env.VITE_API_URL}/events/`,
       );
       setEvents(response.data);
       setTotalEvents(response.data.length);
@@ -66,7 +66,7 @@ export const useEvents = (): UseEventsResult => {
     if (!token) throw new Error("User not authenticated");
 
     const response = await axios.post<Event>(
-      "http://127.0.0.1:8000/events/",
+      `${import.meta.env.VITE_API_URL}/events/`,
       data,
       { headers: { Authorization: `Bearer ${token}` } },
     );
@@ -80,7 +80,7 @@ export const useEvents = (): UseEventsResult => {
     if (!token) throw new Error("User not authenticated");
 
     const response = await axios.put<Event>(
-      `http://127.0.0.1:8000/events/${id}`,
+      `${import.meta.env.VITE_API_URL}/events/${id}`,
       data,
       { headers: { Authorization: `Bearer ${token}` } },
     );
@@ -95,7 +95,7 @@ export const useEvents = (): UseEventsResult => {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("User not authenticated");
 
-      await axios.delete(`http://127.0.0.1:8000/events/${id}`, {
+      await axios.delete(`${import.meta.env.VITE_API_URL}/events/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -114,7 +114,7 @@ export const useEvents = (): UseEventsResult => {
         if (existingEvent) return existingEvent;
 
         const response = await axios.get<Event>(
-          `http://127.0.0.1:8000/events/${id}`,
+          `${import.meta.env.VITE_API_URL}/events/${id}`,
         );
         return response.data;
       } catch (err) {

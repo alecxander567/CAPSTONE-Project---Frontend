@@ -4,6 +4,7 @@ import { useRegister } from "../../hooks/Register";
 import type { RegisterPayload } from "../../hooks/Register";
 import { usePrograms } from "../../hooks/useProgram";
 import type { ProgramData } from "../../hooks/useProgram";
+import { useAdminExists } from "../../hooks/useAdminExist";
 
 import AnimatedAlert from "../AnimatedAlert/AnimatedAlert";
 
@@ -32,6 +33,8 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
     loading: programsLoading,
     error: programsError,
   } = usePrograms();
+
+  const adminExists = useAdminExists();
 
   const handleRegister = async () => {
     setLocalError("");
@@ -175,15 +178,9 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
                   value={role}
                   onChange={(e) => {
                     setRole(e.target.value as "ADMIN" | "STUDENT");
-                    if (e.target.value === "ADMIN") {
-                      setProgramId("");
-                      setYearLevel("");
-                    }
-                  }}
-                  className="py-2 border-2"
-                  style={{ fontSize: "0.95rem" }}>
+                  }}>
                   <option value="STUDENT">Student</option>
-                  <option value="ADMIN">Administrator</option>
+                  {!adminExists && <option value="ADMIN">Administrator</option>}
                 </Form.Select>
               </Form.Group>
             </Col>

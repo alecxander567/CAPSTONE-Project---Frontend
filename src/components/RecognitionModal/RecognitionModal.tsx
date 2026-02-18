@@ -1,8 +1,8 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import axios from "axios";
-import "../EnrollmentModal/EnrollmentModal.css"; 
+import "../EnrollmentModal/EnrollmentModal.css";
 
-const API_BASE_URL = "http://192.168.1.99:8000";
+const API_BASE_URL = `${import.meta.env.VITE_API_URL}`;
 
 interface RecognitionModalProps {
   isOpen: boolean;
@@ -113,12 +113,12 @@ const RecognitionModal = ({
 
     if (!userId) return;
 
-    let targetFingerId: number | null = null; 
+    let targetFingerId: number | null = null;
 
     axios
       .post(`${API_BASE_URL}/fingerprints/start-recognition/${userId}`)
       .then((res) => {
-        targetFingerId = res.data.target_finger_id; 
+        targetFingerId = res.data.target_finger_id;
 
         updateStepUI("place_finger");
 

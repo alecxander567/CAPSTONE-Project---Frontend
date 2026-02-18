@@ -37,7 +37,7 @@ export const usePassword = () => {
     setError(null);
 
     try {
-      await axios.post("http://localhost:8000/auth/reset-password", {
+      await axios.post(`${import.meta.env.VITE_API_URL}/auth/reset-password`, {
         token,
         new_password: newPassword,
       });

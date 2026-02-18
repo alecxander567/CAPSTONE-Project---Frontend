@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios"; 
+import axios from "axios";
 
 interface LoginPayload {
   student_id_no: string;
@@ -23,7 +23,7 @@ export const useLogin = () => {
 
     try {
       const { data } = await axios.post<LoginResponse>(
-        "http://localhost:8000/auth/login",
+        `${import.meta.env.VITE_API_URL}/auth/login`,
         payload,
       );
 

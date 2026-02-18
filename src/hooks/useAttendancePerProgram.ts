@@ -14,7 +14,7 @@ export function useAttendancePerProgram() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:8000/attendance/per-program")
+      .get(`${import.meta.env.VITE_API_URL}/attendance/per-program`)
       .then((res) => setData(res.data))
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));

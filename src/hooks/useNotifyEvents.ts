@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import axios, { AxiosError } from "axios";
 
-const API_BASE_URL = "http://localhost:8000";
+const API_BASE_URL = `${import.meta.env.VITE_API_URL}`;
 const POLLING_INTERVAL = 5000;
 
 export interface Notification {
@@ -124,7 +124,7 @@ export const useNotifications = () => {
 
       await axios.patch(
         `${API_BASE_URL}/notifications/${notificationId}/read`,
-        null, 
+        null,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -162,16 +162,12 @@ export const useNotifications = () => {
 
       await Promise.all(
         unreadIds.map((id) =>
-          axios.patch(
-            `${API_BASE_URL}/notifications/${id}/read`,
-            null, 
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
+          axios.patch(`${API_BASE_URL}/notifications/${id}/read`, null, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
             },
-          ),
+          }),
         ),
       );
 

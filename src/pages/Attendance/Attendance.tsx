@@ -135,7 +135,9 @@ function Attendance() {
     const interval = setInterval(async () => {
       try {
         // UPDATED URL to match ESP32
-        const res = await fetch("http://192.168.1.99:8000/attendance/updates");
+        const res = await fetch(
+          `${import.meta.env.VITE_API_URL}/attendance/updates`,
+        );
 
         if (!res.ok) {
           console.error(`HTTP Error: ${res.status} ${res.statusText}`);
@@ -148,8 +150,6 @@ function Attendance() {
         if (data.length === 0) {
           return;
         }
-
-        console.log("📊 Attendance updates received:", data); // Add logging
 
         setStudentStatus((prevStatus) => {
           const updatedStatus = { ...prevStatus };
@@ -328,6 +328,9 @@ function Attendance() {
                                 ID Number
                               </th>
                               <th scope="col">Student Name</th>
+                              <th scope="col" style={{ width: "120px" }}>
+                                Year Level
+                              </th>
                               <th
                                 scope="col"
                                 className="text-center"
@@ -362,6 +365,13 @@ function Attendance() {
                                         {student.first_name}
                                       </span>
                                     </div>
+                                  </td>
+                                  <td className="text-center">
+                                    {student.year_level ?
+                                      <span className="badge bg-secondary bg-opacity-10 text-secondary border">
+                                        {student.year_level}
+                                      </span>
+                                    : <span className="text-muted">—</span>}
                                   </td>
                                   <td className="text-center">
                                     <span

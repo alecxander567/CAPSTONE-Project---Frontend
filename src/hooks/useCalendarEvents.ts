@@ -25,7 +25,7 @@ export const useCalendarEvents = () => {
         setError(null);
 
         const response = await axios.get<{ events: CalendarEvent[] }>(
-          `http://127.0.0.1:8000/events/calendar`,
+          `${import.meta.env.VITE_API_URL}/events/calendar`,
           { params: { year, month } },
         );
 
@@ -39,7 +39,7 @@ export const useCalendarEvents = () => {
       }
     },
     [],
-  ); 
+  );
 
   return { events, loading, error, fetchCalendarEvents };
 };

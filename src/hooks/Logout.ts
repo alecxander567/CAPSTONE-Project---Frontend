@@ -6,7 +6,7 @@ export const useLogout = () => {
 
   const logout = async () => {
     try {
-      await axios.post("http://localhost:8000/auth/logout");
+      await axios.post(`${import.meta.env.VITE_API_URL}/auth/logout`);
 
       localStorage.removeItem("student_id_no");
 

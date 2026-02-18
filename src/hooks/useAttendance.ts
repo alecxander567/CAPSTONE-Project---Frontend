@@ -1,7 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 
-const API_URL = "http://192.168.1.99:8000/fingerprints";
+const API_URL = `${import.meta.env.VITE_API_URL}/fingerprints`;
 
 export const useAttendance = () => {
   const [loading, setLoading] = useState(false);

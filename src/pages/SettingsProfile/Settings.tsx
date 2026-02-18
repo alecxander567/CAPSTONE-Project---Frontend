@@ -254,6 +254,8 @@ function Settings() {
     });
   };
 
+  const isAdmin = profile?.role?.toUpperCase() === "ADMIN";
+
   return (
     <>
       <Sidebar />
@@ -824,7 +826,6 @@ function Settings() {
           }
 
           /* ─── Settings Page Media Queries ─── */
-          /* Tablet (992px and below) */
           @media (max-width: 992px) {
             .settings-page-wrapper {
               margin-left: 0;
@@ -832,7 +833,6 @@ function Settings() {
             }
           }
 
-          /* Tablet Portrait (768px and below) */
           @media (max-width: 768px) {
             .settings-dashboard-header {
               padding: 2rem 1.5rem;
@@ -876,7 +876,6 @@ function Settings() {
             }
           }
 
-          /* Mobile (576px and below) */
           @media (max-width: 576px) {
             .settings-page-wrapper {
               padding-top: 60px;
@@ -950,7 +949,6 @@ function Settings() {
               font-size: 1rem;
             }
 
-            /* Delete Modal Mobile */
             .modal-dialog {
               margin: 0.5rem;
             }
@@ -998,7 +996,6 @@ function Settings() {
             }
           }
 
-          /* Extra Small (400px and below) */
           @media (max-width: 400px) {
             .settings-dashboard-header {
               padding: 1.5rem 1rem;
@@ -1178,7 +1175,7 @@ function Settings() {
                         <span className="settings-role-badge">
                           <i className="bi bi-person-badge"></i>
                           {profile.role.charAt(0).toUpperCase() +
-                            profile.role.slice(1)}
+                            profile.role.slice(1).toLowerCase()}
                         </span>
                         <span style={getStatusBadgeStyle(profile.status)}>
                           <i className="bi bi-fingerprint"></i>
@@ -1250,11 +1247,13 @@ function Settings() {
                 )}
 
                 <div className="settings-profile-grid">
-                  {profile.student_id_no && (
+                  {!isAdmin && (
                     <div className="settings-profile-field">
-                      <label className="settings-field-label">Student ID</label>
+                      <label className="settings-field-label">
+                        Account No.
+                      </label>
                       <div className="settings-field-value">
-                        <i className="bi bi-card-heading settings-field-icon"></i>
+                        <i className="bi bi-hash settings-field-icon"></i>
                         {profile.student_id_no}
                       </div>
                     </div>
@@ -1304,32 +1303,35 @@ function Settings() {
                     }
                   </div>
 
-                  <div className="settings-profile-field">
-                    <label
-                      className="settings-field-label"
-                      htmlFor="year_level">
-                      Year Level
-                    </label>
-                    {isEditing ?
-                      <select
-                        name="year_level"
-                        id="year_level"
-                        className="settings-form-select"
-                        value={formData.year_level}
-                        onChange={handleInputChange}>
-                        <option value="">Select Year Level</option>
-                        <option value="1">1st Year</option>
-                        <option value="2">2nd Year</option>
-                        <option value="3">3rd Year</option>
-                        <option value="4">4th Year</option>
-                      </select>
-                    : <div className="settings-field-value">
-                        {formData.year_level ?
-                          `${formData.year_level}${getSuffix(formData.year_level)} Year`
-                        : "-"}
-                      </div>
-                    }
-                  </div>
+                  {/* ✅ Year Level — students only */}
+                  {!isAdmin && (
+                    <div className="settings-profile-field">
+                      <label
+                        className="settings-field-label"
+                        htmlFor="year_level">
+                        Year Level
+                      </label>
+                      {isEditing ?
+                        <select
+                          name="year_level"
+                          id="year_level"
+                          className="settings-form-select"
+                          value={formData.year_level}
+                          onChange={handleInputChange}>
+                          <option value="">Select Year Level</option>
+                          <option value="1">1st Year</option>
+                          <option value="2">2nd Year</option>
+                          <option value="3">3rd Year</option>
+                          <option value="4">4th Year</option>
+                        </select>
+                      : <div className="settings-field-value">
+                          {formData.year_level ?
+                            `${formData.year_level}${getSuffix(formData.year_level)} Year`
+                          : "-"}
+                        </div>
+                      }
+                    </div>
+                  )}
 
                   <div className="settings-profile-field">
                     <label

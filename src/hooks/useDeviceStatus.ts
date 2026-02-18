@@ -6,7 +6,9 @@ export const useDeviceStatus = () => {
   useEffect(() => {
     const fetchStatus = async () => {
       try {
-        const res = await fetch("http://localhost:8000/device/status");
+        const res = await fetch(
+          `${import.meta.env.VITE_API_URL}/device/status`,
+        );
         const data = await res.json();
         setConnected(data.connected);
       } catch (error) {
@@ -16,7 +18,7 @@ export const useDeviceStatus = () => {
 
     fetchStatus();
 
-    const interval = setInterval(fetchStatus, 5000); 
+    const interval = setInterval(fetchStatus, 5000);
 
     return () => clearInterval(interval);
   }, []);

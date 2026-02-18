@@ -14,7 +14,8 @@ interface EnrollResponse {
   step?: string;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://192.168.1.99:8000";
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL}`;
 
 export const useEnrollFingerprint = () => {
   const [isLoading, setIsLoading] = useState(false);

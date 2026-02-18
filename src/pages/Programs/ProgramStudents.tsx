@@ -24,7 +24,7 @@ interface Student {
 
 type FingerprintStatus = "not_enrolled" | "pending" | "enrolled" | "failed";
 
-const API_BASE_URL = "http://192.168.1.99:8000";
+const API_BASE_URL = `${import.meta.env.VITE_API_URL}`;
 
 const FingerprintStatusBadge = ({ status }: { status: FingerprintStatus }) => {
   const statusMap: Record<

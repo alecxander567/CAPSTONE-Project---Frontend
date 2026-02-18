@@ -68,7 +68,7 @@ function AttendanceHistory() {
     setLoadingAttendance(true);
     axios
       .get<AttendanceRecord[]>(
-        `http://127.0.0.1:8000/attendance/by-event/${selectedEventId}`,
+        `${import.meta.env.VITE_API_URL}/attendance/by-event/${selectedEventId}`,
       )
       .then((res) => setAttendanceRecords(res.data))
       .catch(console.error)

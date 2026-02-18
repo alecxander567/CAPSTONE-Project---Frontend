@@ -6,8 +6,8 @@ export interface RegisterPayload {
   first_name: string;
   middle_initial?: string;
   last_name: string;
-  program_id?: number; 
-  year_level?: string; 
+  program_id?: number;
+  year_level?: string;
   mobile_phone: string;
   password: string;
   role: "admin" | "student";
@@ -29,7 +29,7 @@ export const useRegister = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:8000/auth/register",
+        `${import.meta.env.VITE_API_URL}/auth/register`,
         payload,
         {
           withCredentials: true,

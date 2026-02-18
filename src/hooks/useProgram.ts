@@ -6,6 +6,7 @@ export interface Student {
   first_name: string;
   last_name: string;
   student_id_no: string;
+  year_level?: number | string;
 }
 
 export interface ProgramData {
@@ -30,7 +31,7 @@ export const usePrograms = () => {
       setLoading(true);
       try {
         const { data } = await axios.get<ProgramData[]>(
-          "http://localhost:8000/programs/counts",
+          `${import.meta.env.VITE_API_URL}/programs/counts`,
           { withCredentials: true },
         );
 
@@ -38,7 +39,7 @@ export const usePrograms = () => {
           data.map(async (prog) => {
             try {
               const { data: students } = await axios.get<Student[]>(
-                `http://localhost:8000/programs/${prog.code}/students`,
+                `${import.meta.env.VITE_API_URL}/programs/${prog.code}/students`,
                 { withCredentials: true },
               );
               return { ...prog, studentList: students };
@@ -74,7 +75,7 @@ export const useAddProgram = () => {
 
     try {
       const { data } = await axios.post<ProgramData>(
-        "http://localhost:8000/programs/",
+        `${import.meta.env.VITE_API_URL}/programs/`,
         { code, name },
         { withCredentials: true, headers: getAuthHeaders() },
       );
@@ -101,7 +102,7 @@ export const useEditProgram = () => {
 
     try {
       const { data } = await axios.put<ProgramData>(
-        `http://localhost:8000/programs/${id}`,
+        `${import.meta.env.VITE_API_URL}/programs/${id}`,
         { code, name },
         { withCredentials: true, headers: getAuthHeaders() },
       );
@@ -127,7 +128,7 @@ export const useDeleteProgram = () => {
     setError(null);
 
     try {
-      await axios.delete(`http://localhost:8000/programs/${id}`, {
+      await axios.delete(`${import.meta.env.VITE_API_URL}/programs/${id}`, {
         withCredentials: true,
         headers: getAuthHeaders(),
       });

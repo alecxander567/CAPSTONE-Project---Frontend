@@ -10,7 +10,7 @@ export interface EventData {
   start_time: string;
   end_time: string;
   location: string;
-  program_id: number | null; 
+  program_id: number | null;
 }
 
 export interface StoredEvent extends EventData {
@@ -54,7 +54,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
 
   useEffect(() => {
     axios
-      .get<Program[]>("http://127.0.0.1:8000/programs/")
+      .get<Program[]>(`${import.meta.env.VITE_API_URL}/programs/`)
       .then((res) => setPrograms(res.data))
       .catch(console.error);
   }, []);
