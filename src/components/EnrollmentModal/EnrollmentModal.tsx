@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import axios from "axios";
 import "./EnrollmentModal.css";
 
-const API_BASE_URL = "http://192.168.1.99:8000";
+const API_BASE_URL = `${import.meta.env.VITE_API_URL}`;
 
 type FingerprintStatus = "not_enrolled" | "pending" | "enrolled" | "failed";
 
