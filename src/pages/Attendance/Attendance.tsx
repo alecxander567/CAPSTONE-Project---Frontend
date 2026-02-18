@@ -134,7 +134,6 @@ function Attendance() {
 
     const interval = setInterval(async () => {
       try {
-        // UPDATED URL to match ESP32
         const res = await fetch(
           `${import.meta.env.VITE_API_URL}/attendance/updates`,
         );
@@ -337,12 +336,6 @@ function Attendance() {
                                 style={{ width: "150px" }}>
                                 Status
                               </th>
-                              <th
-                                scope="col"
-                                className="text-center"
-                                style={{ width: "180px" }}>
-                                Time
-                              </th>
                             </tr>
                           </thead>
                           <tbody>
@@ -387,13 +380,6 @@ function Attendance() {
                                       {studentStatus[student.student_id_no] ||
                                         "Not Marked"}
                                     </span>
-                                  </td>
-                                  <td className="text-center text-muted small">
-                                    {studentTime[student.student_id_no] ?
-                                      new Date(
-                                        studentTime[student.student_id_no],
-                                      ).toLocaleString()
-                                    : <span className="text-secondary">—</span>}
                                   </td>
                                 </tr>
                               ))
