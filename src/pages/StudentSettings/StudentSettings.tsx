@@ -1,4 +1,4 @@
-import StudentSidebar from "../../components/StudentSidebar/StudentSidebar";
+import StudentSidebar from "../../components/Studentsidebar/StudentSidebar";
 import { useUserProfile } from "../../hooks/useUserProfile";
 import SuccessAlert from "../../components/SuccessAlert/SuccessAlert";
 import ErrorAlert from "../../components/SuccessAlert/ErrorAlert";
@@ -27,19 +27,6 @@ function StudentSettings() {
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-
-  const getSuffix = (year: string) => {
-    switch (year) {
-      case "1":
-        return "st";
-      case "2":
-        return "nd";
-      case "3":
-        return "rd";
-      default:
-        return "th";
-    }
-  };
 
   const [formData, setFormData] = useState(() => ({
     first_name: profile?.first_name || "",
@@ -208,6 +195,9 @@ function StudentSettings() {
         day: "numeric",
       })
     : "";
+
+  const formatYearLevel = (year: string) =>
+    year.charAt(0).toUpperCase() + year.slice(1);
 
   return (
     <>
@@ -432,7 +422,7 @@ function StudentSettings() {
                       style={{ position: "relative", display: "inline-block" }}>
                       {profile.profile_image ?
                         <img
-                          src={`${import.meta.env.VITE_API_URL}/${profile.profile_image}`}
+                          src={`http://localhost:8000/${profile.profile_image}`}
                           alt="Profile"
                           style={{
                             width: "100px",
@@ -472,10 +462,12 @@ function StudentSettings() {
                         {uploading ?
                           <span
                             className="spinner-border spinner-border-sm"
-                            style={{ width: "14px", height: "14px" }}></span>
+                            style={{ width: "14px", height: "14px" }}
+                          />
                         : <i
                             className="bi bi-camera-fill"
-                            style={{ fontSize: "14px" }}></i>
+                            style={{ fontSize: "14px" }}
+                          />
                         }
                       </button>
                       <input
@@ -545,7 +537,8 @@ function StudentSettings() {
                           <>
                             <span
                               className="spinner-border spinner-border-sm"
-                              role="status"></span>
+                              role="status"
+                            />
                             Saving...
                           </>
                         : <>
@@ -637,8 +630,9 @@ function StudentSettings() {
                         <option value="4">4th Year</option>
                       </select>
                     : <div className="settings-field-value">
+                        {/* Fix: backend returns "3rd year" already, just capitalise first letter */}
                         {formData.year_level ?
-                          `${formData.year_level}${getSuffix(formData.year_level)} Year`
+                          formatYearLevel(formData.year_level)
                         : "—"}
                       </div>
                     }
