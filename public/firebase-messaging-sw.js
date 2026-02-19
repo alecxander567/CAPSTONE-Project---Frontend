@@ -21,5 +21,14 @@ messaging.onBackgroundMessage((payload) => {
   self.registration.showNotification(title, {
     body,
     icon: "/favicon.ico",
+    badge: "/notification-badge.png",
+    vibrate: [200, 100, 200],
+    requireInteraction: false,
+    tag: "event-notification",
   });
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  event.waitUntil(clients.openWindow("/notifications"));
 });

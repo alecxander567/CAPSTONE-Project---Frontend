@@ -23,13 +23,6 @@ import StudentCalendar from "./pages/StudentCalendar/StudentCalendar";
 import StudentAttendanceHistory from "./pages/StudentAttendanceHistory/StudentAttendanceHistory";
 import StudentSettings from "./pages/StudentSettings/StudentSettings";
 
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker
-    .register("/sw.js")
-    .then(() => console.log("Service Worker registered"))
-    .catch(console.error);
-}
-
 function App() {
   useEffect(() => {
     registerSW();
