@@ -2,7 +2,7 @@ import StudentSidebar from "../../components/StudentSidebar/StudentSidebar";
 import { useEvents } from "../../hooks/useEvents";
 import { useAttendancePerProgram } from "../../hooks/useAttendancePerProgram";
 import { useUserProfile } from "../../hooks/useUserProfile";
-import { requestDeviceToken, listenMessages } from "./firebase";
+import { requestDeviceToken, listenMessages } from "../../firebase";
 import { useEffect } from "react";
 
 function getUpcomingEvent(events: any[]) {

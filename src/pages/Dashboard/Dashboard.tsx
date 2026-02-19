@@ -5,7 +5,7 @@ import { useEvents } from "../../hooks/useEvents";
 import { useDeviceStatus } from "../../hooks/useDeviceStatus";
 import { useAttendancePerEvent } from "../../hooks/useAttendancePerEvent";
 import { useAttendancePerProgram } from "../../hooks/useAttendancePerProgram";
-import { requestDeviceToken, listenMessages } from "./firebase";
+import { requestDeviceToken, listenMessages } from "../../firebase";
 import "./Dashboard.css";
 import {
   BarChart,
