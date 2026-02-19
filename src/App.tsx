@@ -1,6 +1,4 @@
-import { useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
-import { registerSW } from "./serviceWorker";
 import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
 
 // Admin pages
@@ -24,10 +22,6 @@ import StudentAttendanceHistory from "./pages/StudentAttendanceHistory/StudentAt
 import StudentSettings from "./pages/StudentSettings/StudentSettings";
 
 function App() {
-  useEffect(() => {
-    registerSW();
-  }, []);
-
   return (
     <Routes>
       {/* Public */}
