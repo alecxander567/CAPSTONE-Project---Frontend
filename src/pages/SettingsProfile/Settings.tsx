@@ -55,9 +55,7 @@ function Settings() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token && !loading) {
-      navigate("/login");
-    }
+    if (!token && !loading) navigate("/login");
   }, [loading, navigate]);
 
   useEffect(() => {
@@ -75,26 +73,23 @@ function Settings() {
           year_level: profile.year_level || "",
         });
       }, 0);
-
       return () => clearTimeout(id);
     }
   }, [profile]);
 
   const handleEditToggle = () => {
-    if (isEditing) {
-      if (profile) {
-        setFormData({
-          first_name: profile.first_name || "",
-          last_name: profile.last_name || "",
-          middle_initial: profile.middle_initial || "",
-          mobile_phone: profile.mobile_phone || "",
-          program:
-            typeof profile.program === "object" ?
-              (profile.program as any)?.code
-            : profile.program || "",
-          year_level: profile.year_level || "",
-        });
-      }
+    if (isEditing && profile) {
+      setFormData({
+        first_name: profile.first_name || "",
+        last_name: profile.last_name || "",
+        middle_initial: profile.middle_initial || "",
+        mobile_phone: profile.mobile_phone || "",
+        program:
+          typeof profile.program === "object" ?
+            (profile.program as any)?.code
+          : profile.program || "",
+        year_level: profile.year_level || "",
+      });
       setEditError(null);
     }
     setIsEditing(!isEditing);
@@ -104,29 +99,23 @@ function Settings() {
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setEditError(null);
-
     try {
       await updateProfile(formData);
       setIsEditing(false);
       setShowSuccess(true);
     } catch (err: unknown) {
       let message = "Failed to update profile";
-
       if (err instanceof Error) {
         message = err.message;
       } else if (typeof err === "object" && err !== null && "message" in err) {
         message = (err as { message: string }).message;
       }
-
       setEditError(message);
       setErrorMessage(message);
       setShowError(true);
@@ -165,25 +154,19 @@ function Settings() {
       setShowSuccess(true);
     } catch (err: unknown) {
       let message = "Failed to upload profile picture";
-
       if (err instanceof Error) {
         message = err.message;
       } else if (typeof err === "object" && err !== null && "message" in err) {
         message = (err as { message: string }).message;
       }
-
       setErrorMessage(message);
       setShowError(true);
     }
 
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleDeletePicture = () => {
-    setShowDeleteModal(true);
-  };
+  const handleDeletePicture = () => setShowDeleteModal(true);
 
   const handleConfirmDelete = async () => {
     setShowDeleteModal(false);
@@ -192,21 +175,17 @@ function Settings() {
       setShowSuccess(true);
     } catch (err: unknown) {
       let message = "Failed to delete profile picture";
-
       if (err instanceof Error) {
         message = err.message;
       } else if (typeof err === "object" && err !== null && "message" in err) {
         message = (err as { message: string }).message;
       }
-
       setErrorMessage(message);
       setShowError(true);
     }
   };
 
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
-  };
+  const handleUploadClick = () => fileInputRef.current?.click();
 
   const getStatusBadgeStyle = (status: string) => {
     const baseStyle = {
@@ -219,7 +198,6 @@ function Settings() {
       fontWeight: "600",
       whiteSpace: "nowrap",
     };
-
     switch (status) {
       case "enrolled":
         return { ...baseStyle, background: "#d1f4e0", color: "#0f5132" };
@@ -237,13 +215,12 @@ function Settings() {
     if (!status) return "Unknown";
     return status
       .split("_")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
       .join(" ");
   };
 
-  const getInitials = (firstName?: string, lastName?: string) => {
-    return `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase();
-  };
+  const getInitials = (firstName?: string, lastName?: string) =>
+    `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase();
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return "";
@@ -272,7 +249,7 @@ function Settings() {
         onClose={() => setShowError(false)}
       />
 
-      {/* Custom Delete Confirmation Modal */}
+      {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div
           className="modal fade show"
@@ -282,7 +259,6 @@ function Settings() {
           style={{ display: "block" }}>
           <div className="modal-dialog modal-dialog-centered" role="document">
             <div className="modal-content modal-content-delete">
-              {/* Modal Header */}
               <div className="modal-header modal-header-delete">
                 <div
                   style={{
@@ -325,7 +301,6 @@ function Settings() {
                 />
               </div>
 
-              {/* Modal Body */}
               <div className="modal-body modal-body-delete">
                 <div className="delete-warning-icon">
                   <i className="bi bi-exclamation-lg"></i>
@@ -344,21 +319,18 @@ function Settings() {
                 </p>
               </div>
 
-              {/* Modal Footer */}
               <div className="modal-footer modal-footer-delete justify-content-center">
                 <button
                   type="button"
                   className="btn btn-cancel-delete"
                   onClick={() => setShowDeleteModal(false)}>
-                  <i className="bi bi-x-lg me-1"></i>
-                  Cancel
+                  <i className="bi bi-x-lg me-1"></i>Cancel
                 </button>
                 <button
                   type="button"
                   className="btn btn-confirm-delete text-white"
                   onClick={handleConfirmDelete}>
-                  <i className="bi bi-trash-fill me-1"></i>
-                  Remove Picture
+                  <i className="bi bi-trash-fill me-1"></i>Remove Picture
                 </button>
               </div>
             </div>
@@ -366,7 +338,6 @@ function Settings() {
         </div>
       )}
 
-      {/* Modal Backdrop */}
       {showDeleteModal && (
         <div
           className="modal-backdrop fade show"
@@ -377,12 +348,8 @@ function Settings() {
       <style>
         {`
           @keyframes wave {
-            from {
-              transform: rotate(0deg);
-            }
-            to {
-              transform: rotate(360deg);
-            }
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
           }
 
           .settings-page-wrapper {
@@ -437,10 +404,7 @@ function Settings() {
             flex-shrink: 0;
           }
 
-          .settings-header-text {
-            position: relative;
-            z-index: 1;
-          }
+          .settings-header-text { position: relative; z-index: 1; }
 
           .settings-header-title {
             margin: 0 0 0.5rem 0;
@@ -449,11 +413,7 @@ function Settings() {
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
           }
 
-          .settings-header-subtitle {
-            margin: 0;
-            opacity: 0.95;
-            font-size: 1rem;
-          }
+          .settings-header-subtitle { margin: 0; opacity: 0.95; font-size: 1rem; }
 
           .settings-content-wrapper {
             max-width: 1600px;
@@ -469,7 +429,7 @@ function Settings() {
             background: #fff;
             border-radius: 16px;
             padding: 2rem;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
             margin-bottom: 2rem;
           }
 
@@ -505,10 +465,7 @@ function Settings() {
             flex-shrink: 0;
           }
 
-          .settings-profile-header-text {
-            flex: 1;
-            min-width: 0;
-          }
+          .settings-profile-header-text { flex: 1; min-width: 0; }
 
           .settings-profile-name {
             margin: 0 0 0.5rem 0;
@@ -555,50 +512,19 @@ function Settings() {
             white-space: nowrap;
           }
 
-          .settings-btn-edit {
-            background: linear-gradient(135deg, #0a1aff 0%, #00b4d8 100%);
-            color: #fff;
-          }
+          .settings-btn-edit { background: linear-gradient(135deg, #0a1aff 0%, #00b4d8 100%); color: #fff; }
+          .settings-btn-edit:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(13,110,253,0.3); }
 
-          .settings-btn-edit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
-          }
+          .settings-btn-cancel { border: 2px solid #dee2e6; background: #fff; color: #6c757d; }
+          .settings-btn-cancel:hover { background: #f8f9fa; border-color: #adb5bd; }
 
-          .settings-btn-cancel {
-            border: 2px solid #dee2e6;
-            background: #fff;
-            color: #6c757d;
-          }
-
-          .settings-btn-cancel:hover {
-            background: #f8f9fa;
-            border-color: #adb5bd;
-          }
-
-          .settings-btn-save {
-            background: linear-gradient(135deg, #198754 0%, #20c997 100%);
-            color: #fff;
-          }
-
-          .settings-btn-save:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
-          }
+          .settings-btn-save { background: linear-gradient(135deg, #198754 0%, #20c997 100%); color: #fff; }
+          .settings-btn-save:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(25,135,84,0.3); }
 
           .settings-btn-save:disabled,
-          .settings-btn-cancel:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none !important;
-          }
+          .settings-btn-cancel:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
 
-          .settings-button-group {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-            flex-wrap: wrap;
-          }
+          .settings-button-group { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
 
           .settings-profile-grid {
             display: grid;
@@ -607,11 +533,7 @@ function Settings() {
             margin-bottom: 1.5rem;
           }
 
-          .settings-profile-field {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-          }
+          .settings-profile-field { display: flex; flex-direction: column; gap: 0.5rem; }
 
           .settings-field-label {
             font-size: 0.875rem;
@@ -631,11 +553,7 @@ function Settings() {
             word-break: break-word;
           }
 
-          .settings-field-icon {
-            font-size: 1.25rem;
-            color: #0d6efd;
-            flex-shrink: 0;
-          }
+          .settings-field-icon { font-size: 1.25rem; color: #0d6efd; flex-shrink: 0; }
 
           .settings-form-input,
           .settings-form-select {
@@ -650,27 +568,13 @@ function Settings() {
           }
 
           .settings-form-input:focus,
-          .settings-form-select:focus {
-            outline: none;
-            border-color: #0d6efd;
-          }
+          .settings-form-select:focus { outline: none; border-color: #0d6efd; }
 
-          .settings-loading-container {
-            text-align: center;
-            padding: 3rem 0;
-          }
+          .settings-loading-container { text-align: center; padding: 3rem 0; }
+          .settings-edit-error { margin-bottom: 1.5rem; }
 
-          .settings-edit-error {
-            margin-bottom: 1.5rem;
-          }
-
-          /* ─── Delete Modal Styles ─── */
-          .modal-content-delete {
-            border-radius: 20px;
-            border: none;
-            box-shadow: 0 20px 60px rgba(220, 53, 69, 0.25);
-            overflow: hidden;
-          }
+          /* ─── Delete Modal ─── */
+          .modal-content-delete { border-radius: 20px; border: none; box-shadow: 0 20px 60px rgba(220,53,69,0.25); overflow: hidden; }
 
           .modal-header-delete {
             background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
@@ -686,26 +590,17 @@ function Settings() {
             position: absolute;
             width: 200%;
             height: 200%;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255,255,255,0.1);
             border-radius: 45%;
             top: -100%;
             left: -50%;
-            animation: deleteModalWave 15s linear infinite;
-          }
-
-          @keyframes deleteModalWave {
-            from {
-              transform: rotate(0deg);
-            }
-            to {
-              transform: rotate(360deg);
-            }
+            animation: wave 15s linear infinite;
           }
 
           .modal-icon-delete {
             width: 50px;
             height: 50px;
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255,255,255,0.2);
             backdrop-filter: blur(10px);
             border-radius: 12px;
             display: flex;
@@ -717,12 +612,8 @@ function Settings() {
           }
 
           @keyframes pulse-warning {
-            0%, 100% {
-              transform: scale(1);
-            }
-            50% {
-              transform: scale(1.05);
-            }
+            0%, 100% { transform: scale(1); }
+            50%       { transform: scale(1.05); }
           }
 
           .modal-body-delete {
@@ -742,25 +633,16 @@ function Settings() {
             justify-content: center;
             font-size: 2.5rem;
             color: white;
-            box-shadow: 0 8px 24px rgba(220, 53, 69, 0.3);
+            box-shadow: 0 8px 24px rgba(220,53,69,0.3);
             animation: bounce-warning 1s ease-in-out;
           }
 
           @keyframes bounce-warning {
-            0%, 100% {
-              transform: translateY(0);
-            }
-            50% {
-              transform: translateY(-10px);
-            }
+            0%, 100% { transform: translateY(0); }
+            50%       { transform: translateY(-10px); }
           }
 
-          .delete-question {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 1.25rem;
-          }
+          .delete-question { font-size: 1.25rem; font-weight: 600; color: #2c3e50; margin-bottom: 1.25rem; }
 
           .event-title-display {
             display: inline-flex;
@@ -774,13 +656,7 @@ function Settings() {
             font-size: 1rem;
           }
 
-          .delete-warning-text {
-            color: #6c757d;
-            font-size: 0.95rem;
-            line-height: 1.6;
-            max-width: 400px;
-            margin: 0 auto;
-          }
+          .delete-warning-text { color: #6c757d; font-size: 0.95rem; line-height: 1.6; max-width: 400px; margin: 0 auto; }
 
           .modal-footer-delete {
             padding: 1.5rem 2rem;
@@ -801,12 +677,7 @@ function Settings() {
             cursor: pointer;
           }
 
-          .btn-cancel-delete:hover {
-            background: #6c757d;
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
-          }
+          .btn-cancel-delete:hover { background: #6c757d; color: white; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(108,117,125,0.3); }
 
           .btn-confirm-delete {
             padding: 0.625rem 1.5rem;
@@ -819,240 +690,65 @@ function Settings() {
             cursor: pointer;
           }
 
-          .btn-confirm-delete:hover {
-            background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 16px rgba(220, 53, 69, 0.4);
-          }
+          .btn-confirm-delete:hover { background: linear-gradient(135deg, #c82333 0%, #bd2130 100%); transform: translateY(-2px); box-shadow: 0 4px 16px rgba(220,53,69,0.4); }
 
-          /* ─── Settings Page Media Queries ─── */
-          @media (max-width: 992px) {
-            .settings-page-wrapper {
-              margin-left: 0;
-              width: 100%;
-            }
-          }
+          /* ─── Responsive ─── */
+          @media (max-width: 992px) { .settings-page-wrapper { margin-left: 0; width: 100%; } }
 
           @media (max-width: 768px) {
-            .settings-dashboard-header {
-              padding: 2rem 1.5rem;
-              padding-bottom: 50px;
-            }
-
-            .settings-content-wrapper {
-              padding: 1.5rem;
-              margin-top: -30px;
-            }
-
-            .settings-header-title {
-              font-size: 1.75rem;
-            }
-
-            .settings-profile-card {
-              padding: 1.5rem;
-            }
-
-            .settings-avatar-circle {
-              width: 80px;
-              height: 80px;
-              font-size: 2rem;
-            }
-
-            .settings-profile-name {
-              font-size: 1.5rem;
-            }
-
-            .settings-profile-header {
-              flex-direction: column;
-              align-items: flex-start;
-            }
-
-            .settings-button-group {
-              width: 100%;
-            }
-
-            .settings-profile-grid {
-              grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            }
+            .settings-dashboard-header { padding: 2rem 1.5rem; padding-bottom: 50px; }
+            .settings-content-wrapper { padding: 1.5rem; margin-top: -30px; }
+            .settings-header-title { font-size: 1.75rem; }
+            .settings-profile-card { padding: 1.5rem; }
+            .settings-avatar-circle { width: 80px; height: 80px; font-size: 2rem; }
+            .settings-profile-name { font-size: 1.5rem; }
+            .settings-profile-header { flex-direction: column; align-items: flex-start; }
+            .settings-button-group { width: 100%; }
+            .settings-profile-grid { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
           }
 
           @media (max-width: 576px) {
-            .settings-page-wrapper {
-              padding-top: 60px;
-            }
-
-            .settings-content-wrapper {
-              padding: 1rem;
-            }
-
-            .settings-header-content {
-              flex-direction: column;
-              text-align: center;
-            }
-
-            .settings-header-text {
-              text-align: center;
-            }
-
-            .settings-header-title {
-              font-size: 1.5rem;
-            }
-
-            .settings-profile-card {
-              padding: 1rem;
-            }
-
-            .settings-profile-header {
-              text-align: center;
-            }
-
-            .settings-profile-header-left {
-              flex-direction: column;
-              width: 100%;
-            }
-
-            .settings-profile-header-text {
-              text-align: center;
-            }
-
-            .settings-profile-role {
-              justify-content: center;
-            }
-
-            .settings-profile-grid {
-              grid-template-columns: 1fr;
-            }
-
-            .settings-button-group {
-              flex-direction: column;
-              width: 100%;
-            }
-
-            .settings-btn-edit,
-            .settings-btn-save,
-            .settings-btn-cancel {
-              width: 100%;
-              justify-content: center;
-            }
-
-            .settings-avatar-circle {
-              width: 70px;
-              height: 70px;
-              font-size: 1.75rem;
-            }
-
-            .settings-profile-name {
-              font-size: 1.25rem;
-            }
-
-            .settings-field-value {
-              font-size: 1rem;
-            }
-
-            .modal-dialog {
-              margin: 0.5rem;
-            }
-
-            .modal-header-delete {
-              padding: 1.5rem 1.5rem 1.25rem;
-            }
-
-            .modal-icon-delete {
-              width: 45px;
-              height: 45px;
-              font-size: 1.25rem;
-            }
-
-            .modal-title {
-              font-size: 1.25rem;
-            }
-
-            .modal-subtitle {
-              font-size: 0.8rem;
-            }
-
-            .modal-body-delete {
-              padding: 2rem 1.5rem;
-            }
-
-            .delete-warning-icon {
-              width: 70px;
-              height: 70px;
-              font-size: 2rem;
-            }
-
-            .delete-question {
-              font-size: 1.1rem;
-            }
-
-            .modal-footer-delete {
-              padding: 1.25rem 1.5rem;
-              flex-direction: column;
-            }
-
-            .btn-cancel-delete,
-            .btn-confirm-delete {
-              width: 100%;
-            }
+            .settings-page-wrapper { padding-top: 60px; }
+            .settings-content-wrapper { padding: 1rem; }
+            .settings-header-content { flex-direction: column; text-align: center; }
+            .settings-header-text { text-align: center; }
+            .settings-header-title { font-size: 1.5rem; }
+            .settings-profile-card { padding: 1rem; }
+            .settings-profile-header { text-align: center; }
+            .settings-profile-header-left { flex-direction: column; width: 100%; }
+            .settings-profile-header-text { text-align: center; }
+            .settings-profile-role { justify-content: center; }
+            .settings-profile-grid { grid-template-columns: 1fr; }
+            .settings-button-group { flex-direction: column; width: 100%; }
+            .settings-btn-edit, .settings-btn-save, .settings-btn-cancel { width: 100%; justify-content: center; }
+            .settings-avatar-circle { width: 70px; height: 70px; font-size: 1.75rem; }
+            .settings-profile-name { font-size: 1.25rem; }
+            .settings-field-value { font-size: 1rem; }
+            .modal-dialog { margin: 0.5rem; }
+            .modal-header-delete { padding: 1.5rem 1.5rem 1.25rem; }
+            .modal-icon-delete { width: 45px; height: 45px; font-size: 1.25rem; }
+            .modal-title { font-size: 1.25rem; }
+            .modal-subtitle { font-size: 0.8rem; }
+            .modal-body-delete { padding: 2rem 1.5rem; }
+            .delete-warning-icon { width: 70px; height: 70px; font-size: 2rem; }
+            .delete-question { font-size: 1.1rem; }
+            .modal-footer-delete { padding: 1.25rem 1.5rem; flex-direction: column; }
+            .btn-cancel-delete, .btn-confirm-delete { width: 100%; }
           }
 
           @media (max-width: 400px) {
-            .settings-dashboard-header {
-              padding: 1.5rem 1rem;
-              padding-bottom: 40px;
-            }
-
-            .settings-header-icon {
-              width: 48px;
-              height: 48px;
-              font-size: 1.5rem;
-            }
-
-            .settings-header-title {
-              font-size: 1.25rem;
-            }
-
-            .settings-header-subtitle {
-              font-size: 0.875rem;
-            }
-
-            .settings-profile-card {
-              padding: 0.75rem;
-            }
-
-            .settings-avatar-circle {
-              width: 60px;
-              height: 60px;
-              font-size: 1.5rem;
-            }
-
-            .settings-profile-name {
-              font-size: 1.1rem;
-            }
-
-            .settings-role-badge {
-              font-size: 0.75rem;
-              padding: 0.25rem 0.5rem;
-            }
-
-            .settings-btn {
-              padding: 0.625rem 1rem;
-              font-size: 0.875rem;
-            }
-
-            .settings-field-label {
-              font-size: 0.75rem;
-            }
-
-            .settings-field-value {
-              font-size: 0.9rem;
-            }
-
-            .settings-form-input,
-            .settings-form-select {
-              padding: 0.625rem;
-              font-size: 0.875rem;
-            }
+            .settings-dashboard-header { padding: 1.5rem 1rem; padding-bottom: 40px; }
+            .settings-header-icon { width: 48px; height: 48px; font-size: 1.5rem; }
+            .settings-header-title { font-size: 1.25rem; }
+            .settings-header-subtitle { font-size: 0.875rem; }
+            .settings-profile-card { padding: 0.75rem; }
+            .settings-avatar-circle { width: 60px; height: 60px; font-size: 1.5rem; }
+            .settings-profile-name { font-size: 1.1rem; }
+            .settings-role-badge { font-size: 0.75rem; padding: 0.25rem 0.5rem; }
+            .settings-btn { padding: 0.625rem 1rem; font-size: 0.875rem; }
+            .settings-field-label { font-size: 0.75rem; }
+            .settings-field-value { font-size: 0.9rem; }
+            .settings-form-input, .settings-form-select { padding: 0.625rem; font-size: 0.875rem; }
           }
         `}
       </style>
@@ -1093,75 +789,84 @@ function Settings() {
               <div className="settings-profile-card">
                 <div className="settings-profile-header">
                   <div className="settings-profile-header-left">
-                    {/* Profile Picture with Upload */}
-                    <div
-                      style={{ position: "relative", display: "inline-block" }}>
-                      {profile.profile_image ?
-                        <img
-                          src={`http://localhost:8000/${profile.profile_image}`}
-                          alt="Profile"
-                          style={{
-                            width: "100px",
-                            height: "100px",
-                            objectFit: "cover",
-                            borderRadius: "50%",
-                            border: "3px solid #fff",
-                            boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-                          }}
-                        />
-                      : <div className="settings-avatar-circle">
-                          {getInitials(profile.first_name, profile.last_name)}
-                        </div>
-                      }
-
-                      {/* Camera button overlay */}
-                      <button
-                        type="button"
-                        onClick={handleUploadClick}
-                        disabled={uploading}
+                    {/* ── Avatar: photo upload for students, initials only for admin ── */}
+                    {!isAdmin ?
+                      <div
                         style={{
-                          position: "absolute",
-                          bottom: "0",
-                          right: "0",
-                          width: "32px",
-                          height: "32px",
-                          borderRadius: "50%",
-                          background:
-                            "linear-gradient(135deg, #0a1aff 0%, #00b4d8 100%)",
-                          border: "3px solid white",
-                          color: "white",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          cursor: "pointer",
-                          transition: "transform 0.2s",
-                          boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
-                        }}
-                        onMouseEnter={(e) =>
-                          (e.currentTarget.style.transform = "scale(1.1)")
+                          position: "relative",
+                          display: "inline-block",
+                        }}>
+                        {profile.profile_image ?
+                          <img
+                            src={`http://localhost:8000/${profile.profile_image}`}
+                            alt="Profile"
+                            style={{
+                              width: "100px",
+                              height: "100px",
+                              objectFit: "cover",
+                              borderRadius: "50%",
+                              border: "3px solid #fff",
+                              boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                            }}
+                          />
+                        : <div className="settings-avatar-circle">
+                            {getInitials(profile.first_name, profile.last_name)}
+                          </div>
                         }
-                        onMouseLeave={(e) =>
-                          (e.currentTarget.style.transform = "scale(1)")
-                        }>
-                        {uploading ?
-                          <span
-                            className="spinner-border spinner-border-sm"
-                            style={{ width: "14px", height: "14px" }}></span>
-                        : <i
-                            className="bi bi-camera-fill"
-                            style={{ fontSize: "14px" }}></i>
-                        }
-                      </button>
 
-                      {/* Hidden file input */}
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
-                        onChange={handleFileSelect}
-                        style={{ display: "none" }}
-                      />
-                    </div>
+                        {/* Camera button */}
+                        <button
+                          type="button"
+                          onClick={handleUploadClick}
+                          disabled={uploading}
+                          style={{
+                            position: "absolute",
+                            bottom: "0",
+                            right: "0",
+                            width: "32px",
+                            height: "32px",
+                            borderRadius: "50%",
+                            background:
+                              "linear-gradient(135deg, #0a1aff 0%, #00b4d8 100%)",
+                            border: "3px solid white",
+                            color: "white",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            cursor: "pointer",
+                            transition: "transform 0.2s",
+                            boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                          }}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.transform = "scale(1.1)")
+                          }
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.transform = "scale(1)")
+                          }>
+                          {uploading ?
+                            <span
+                              className="spinner-border spinner-border-sm"
+                              style={{ width: "14px", height: "14px" }}
+                            />
+                          : <i
+                              className="bi bi-camera-fill"
+                              style={{ fontSize: "14px" }}
+                            />
+                          }
+                        </button>
+
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                          onChange={handleFileSelect}
+                          style={{ display: "none" }}
+                        />
+                      </div>
+                    : <div className="settings-avatar-circle">
+                        {getInitials(profile.first_name, profile.last_name)}
+                      </div>
+                    }
 
                     <div className="settings-profile-header-text">
                       <h2 className="settings-profile-name">
@@ -1183,8 +888,8 @@ function Settings() {
                         </span>
                       </div>
 
-                      {/* Delete picture button */}
-                      {profile.profile_image && (
+                      {/* Remove Picture button — students only */}
+                      {!isAdmin && profile.profile_image && (
                         <button
                           type="button"
                           onClick={handleDeletePicture}
@@ -1215,8 +920,7 @@ function Settings() {
                         className="settings-btn settings-btn-cancel"
                         onClick={handleEditToggle}
                         disabled={updating}>
-                        <i className="bi bi-x-lg"></i>
-                        Cancel
+                        <i className="bi bi-x-lg"></i>Cancel
                       </button>
                       <button
                         type="submit"
@@ -1226,12 +930,12 @@ function Settings() {
                           <>
                             <span
                               className="spinner-border spinner-border-sm"
-                              role="status"></span>
+                              role="status"
+                            />
                             Saving...
                           </>
                         : <>
-                            <i className="bi bi-check-lg"></i>
-                            Save Changes
+                            <i className="bi bi-check-lg"></i>Save Changes
                           </>
                         }
                       </button>
@@ -1303,7 +1007,6 @@ function Settings() {
                     }
                   </div>
 
-                  {/* ✅ Year Level — students only */}
                   {!isAdmin && (
                     <div className="settings-profile-field">
                       <label
