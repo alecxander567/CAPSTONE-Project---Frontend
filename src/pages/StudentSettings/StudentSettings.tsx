@@ -196,9 +196,22 @@ function StudentSettings() {
       })
     : "";
 
-  // Capitalises first letter of the backend-formatted string e.g. "3rd year" → "3rd Year"
-  const formatYearLevel = (year: string) =>
-    year.charAt(0).toUpperCase() + year.slice(1);
+  // Handles both raw numbers ("1", "2", "3", "4") from the select
+  // and backend-formatted strings ("1st year", "2nd year", etc.)
+  const formatYearLevel = (year: string) => {
+    if (isNaN(Number(year))) {
+      // Already a formatted string from the backend e.g. "3rd year" → "3rd Year"
+      return year.charAt(0).toUpperCase() + year.slice(1);
+    }
+    // Raw number from the dropdown before saving
+    const suffixes: Record<string, string> = {
+      "1": "st",
+      "2": "nd",
+      "3": "rd",
+      "4": "th",
+    };
+    return `${year}${suffixes[year] ?? "th"} Year`;
+  };
 
   return (
     <>
@@ -631,7 +644,6 @@ function StudentSettings() {
                         <option value="4">4th Year</option>
                       </select>
                     : <div className="settings-field-value">
-                        {/* Fix: backend returns "3rd year" already, just capitalise first letter */}
                         {formData.year_level ?
                           formatYearLevel(formData.year_level)
                         : "—"}
