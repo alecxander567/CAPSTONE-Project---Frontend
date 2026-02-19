@@ -433,7 +433,7 @@ function StudentSettings() {
                       style={{ position: "relative", display: "inline-block" }}>
                       {profile.profile_image ?
                         <img
-                          src={`http://localhost:8000/${profile.profile_image}`}
+                          src={`${import.meta.env.VITE_API_URL}/${profile.profile_image}`}
                           alt="Profile"
                           style={{
                             width: "100px",
