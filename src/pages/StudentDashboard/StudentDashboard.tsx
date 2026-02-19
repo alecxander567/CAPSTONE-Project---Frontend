@@ -2,6 +2,8 @@ import StudentSidebar from "../../components/StudentSidebar/StudentSidebar";
 import { useEvents } from "../../hooks/useEvents";
 import { useAttendancePerProgram } from "../../hooks/useAttendancePerProgram";
 import { useUserProfile } from "../../hooks/useUserProfile";
+import { requestDeviceToken, listenMessages } from "./firebase";
+import { useEffect } from "react";
 
 function getUpcomingEvent(events: any[]) {
   const now = new Date();
@@ -215,6 +217,32 @@ function StudentDashboard() {
         bg: "#f3f4f6",
       })
     : null;
+
+  useEffect(() => {
+    const setupNotifications = async () => {
+      const token = await requestDeviceToken();
+      if (token) {
+        const authToken = localStorage.getItem("token");
+        await fetch(
+          `${import.meta.env.VITE_API_URL}/notifications/save-token`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${authToken}`,
+            },
+            body: JSON.stringify({ token }),
+          },
+        );
+      }
+    };
+
+    setupNotifications();
+
+    listenMessages((payload) => {
+      alert(`Notification: ${payload.notification.title}`);
+    });
+  }, []);
 
   return (
     <>

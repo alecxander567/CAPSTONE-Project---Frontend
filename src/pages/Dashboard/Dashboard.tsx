@@ -1,9 +1,11 @@
 import Sidebar from "../../components/Sidebar/Sidebar";
+import { useEffect } from "react";
 import { usePrograms } from "../../hooks/useProgram";
 import { useEvents } from "../../hooks/useEvents";
 import { useDeviceStatus } from "../../hooks/useDeviceStatus";
 import { useAttendancePerEvent } from "../../hooks/useAttendancePerEvent";
 import { useAttendancePerProgram } from "../../hooks/useAttendancePerProgram";
+import { requestDeviceToken, listenMessages } from "./firebase";
 import "./Dashboard.css";
 import {
   BarChart,
@@ -105,6 +107,32 @@ function Dashboard() {
   };
 
   const calendarDays = generateCalendar();
+
+  useEffect(() => {
+    const setupNotifications = async () => {
+      const token = await requestDeviceToken();
+      if (token) {
+        const authToken = localStorage.getItem("token");
+        await fetch(
+          `${import.meta.env.VITE_API_URL}/notifications/save-token`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${authToken}`,
+            },
+            body: JSON.stringify({ token }),
+          },
+        );
+      }
+    };
+
+    setupNotifications();
+
+    listenMessages((payload) => {
+      alert(`Notification: ${payload.notification.title}`);
+    });
+  }, []);
 
   return (
     <div className="dashboard-layout">
