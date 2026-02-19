@@ -196,6 +196,7 @@ function StudentSettings() {
       })
     : "";
 
+  // Capitalises first letter of the backend-formatted string e.g. "3rd year" → "3rd Year"
   const formatYearLevel = (year: string) =>
     year.charAt(0).toUpperCase() + year.slice(1);
 
