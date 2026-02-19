@@ -254,8 +254,8 @@ function Landingpage() {
                     <div>
                       <h5 className="fw-bold mb-2">Multi-User Access</h5>
                       <p className="text-muted small mb-0">
-                        Role-based access for students, faculty, and
-                        administrators with customized permissions.
+                        Role-based access for students, and administrators with
+                        customized permissions.
                       </p>
                     </div>
                   </div>
@@ -270,20 +270,6 @@ function Landingpage() {
                       <p className="text-muted small mb-0">
                         Access your attendance data anywhere, anytime with
                         secure cloud storage.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div className="mb-4">
-                  <div className="d-flex align-items-start mb-3">
-                    <div className="me-3">
-                      <i className="bi bi-download text-secondary fs-4"></i>
-                    </div>
-                    <div>
-                      <h5 className="fw-bold mb-2">Export & Integration</h5>
-                      <p className="text-muted small mb-0">
-                        Export data to Excel, PDF, or integrate with existing
-                        school management systems.
                       </p>
                     </div>
                   </div>
