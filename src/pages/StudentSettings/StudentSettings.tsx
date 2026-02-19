@@ -196,21 +196,18 @@ function StudentSettings() {
       })
     : "";
 
-  // Handles both raw numbers ("1", "2", "3", "4") from the select
-  // and backend-formatted strings ("1st year", "2nd year", etc.)
   const formatYearLevel = (year: string) => {
-    if (isNaN(Number(year))) {
-      // Already a formatted string from the backend e.g. "3rd year" → "3rd Year"
-      return year.charAt(0).toUpperCase() + year.slice(1);
-    }
-    // Raw number from the dropdown before saving
-    const suffixes: Record<string, string> = {
-      "1": "st",
-      "2": "nd",
-      "3": "rd",
-      "4": "th",
+    const wordMap: Record<string, string> = {
+      FIRST: "1st Year",
+      "1": "1st Year",
+      SECOND: "2nd Year",
+      "2": "2nd Year",
+      THIRD: "3rd Year",
+      "3": "3rd Year",
+      FOURTH: "4th Year",
+      "4": "4th Year",
     };
-    return `${year}${suffixes[year] ?? "th"} Year`;
+    return wordMap[year.toUpperCase()] ?? year;
   };
 
   return (
