@@ -1,4 +1,4 @@
-import StudentSidebar from "../../components/Studentsidebar/StudentSidebar";
+import StudentSidebar from "../../components/StudentSidebar/StudentSidebar";
 import { useUserProfile } from "../../hooks/useUserProfile";
 import SuccessAlert from "../../components/SuccessAlert/SuccessAlert";
 import ErrorAlert from "../../components/SuccessAlert/ErrorAlert";
