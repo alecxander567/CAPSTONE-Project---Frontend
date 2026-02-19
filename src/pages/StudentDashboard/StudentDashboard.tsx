@@ -220,10 +220,12 @@ function StudentDashboard() {
 
   useEffect(() => {
     const setupNotifications = async () => {
+      console.log("🔔 Requesting device token...");
       const token = await requestDeviceToken();
+      console.log("🔔 Token:", token);
       if (token) {
         const authToken = localStorage.getItem("token");
-        await fetch(
+        const res = await fetch(
           `${import.meta.env.VITE_API_URL}/notifications/save-token`,
           {
             method: "POST",
@@ -234,6 +236,7 @@ function StudentDashboard() {
             body: JSON.stringify({ token }),
           },
         );
+        console.log("🔔 Save token status:", res.status);
       }
     };
 
