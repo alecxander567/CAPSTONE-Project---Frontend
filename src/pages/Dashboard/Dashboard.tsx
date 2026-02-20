@@ -110,9 +110,7 @@ function Dashboard() {
 
   useEffect(() => {
     const setupNotifications = async () => {
-      console.log("🔔 Requesting device token...");
       const token = await requestDeviceToken();
-      console.log("🔔 Token:", token);
       if (token) {
         const authToken = localStorage.getItem("token");
         const res = await fetch(
@@ -126,7 +124,6 @@ function Dashboard() {
             body: JSON.stringify({ token }),
           },
         );
-        console.log("🔔 Save token status:", res.status);
       }
     };
 
