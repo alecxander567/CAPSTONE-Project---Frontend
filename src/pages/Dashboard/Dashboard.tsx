@@ -204,7 +204,7 @@ function Dashboard() {
                 <i className="bi bi-usb-symbol"></i>
               </div>
               <div className="stat-info">
-                <h4>Connection</h4>
+                <h4>ESP32 Connection</h4>
                 <span className={`status ${connected ? "online" : "offline"}`}>
                   {connected ? "Online" : "Offline"}
                 </span>
@@ -375,7 +375,13 @@ function Dashboard() {
                     }
                   </div>
 
-                  <div className="participation-chart">
+                  <div
+                    className="participation-chart"
+                    style={{
+                      flex: 1,
+                      display: "flex",
+                      flexDirection: "column",
+                    }}>
                     <h6 className="text-muted small mb-3">
                       PARTICIPATION OVERVIEW
                     </h6>
@@ -386,7 +392,9 @@ function Dashboard() {
                           role="status"
                         />
                       </div>
-                    : <div className="progress-bars">
+                    : <div
+                        className="progress-bars"
+                        style={{ flex: 1, justifyContent: "space-between" }}>
                         {(() => {
                           const filteredPrograms = programAttendanceData.filter(
                             (prog) =>
