@@ -497,10 +497,33 @@ function Dashboard() {
               </div>
 
               {/* At-Risk Students Card */}
+              {/* At-Risk Students Card */}
               <div className="lower-card" style={{ flex: 1 }}>
-                <h4 className="card-title">
-                  <i className="bi bi-exclamation-triangle-fill text-danger me-2"></i>
-                  Students with 3+ Absences
+                <h4
+                  className="card-title"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}>
+                  <span>
+                    <i className="bi bi-exclamation-triangle-fill text-danger me-2"></i>
+                    Students with 3+ Absences
+                  </span>
+                  <span
+                    style={{
+                      background:
+                        atRiskStudents.length > 0 ? "#fde8e8" : "#e8f5e9",
+                      color: atRiskStudents.length > 0 ? "#dc3545" : "#198754",
+                      borderRadius: "20px",
+                      padding: "2px 10px",
+                      fontSize: "0.78rem",
+                      fontWeight: 700,
+                      minWidth: "28px",
+                      textAlign: "center",
+                    }}>
+                    {atRiskLoading ? "—" : atRiskStudents.length}
+                  </span>
                 </h4>
 
                 {atRiskLoading ?
@@ -516,7 +539,7 @@ function Dashboard() {
                     <i className="bi bi-check-circle-fill text-success fs-4 d-block mb-2"></i>
                     No students with 3+ absences
                   </div>
-                : <div style={{ overflowY: "auto", maxHeight: "180px" }}>
+                : <div style={{ overflowY: "auto", maxHeight: "280px" }}>
                     <table
                       style={{
                         width: "100%",
