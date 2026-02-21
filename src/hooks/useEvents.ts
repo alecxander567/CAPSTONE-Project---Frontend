@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
+import { computeEventStatus } from "../utils/eventStatus";
 import axios from "axios";
 
 export type EventStatus = "upcoming" | "ongoing" | "done";
 
-export interface Event {
+export interface AppEvent {
   id: number;
   title: string;
   description?: string | null;
@@ -18,24 +19,24 @@ export interface Event {
 }
 
 export type EventInput = Omit<
-  Event,
+  AppEvent,
   "id" | "created_by" | "created_at" | "status"
 >;
 
 interface UseEventsResult {
-  events: Event[];
+  events: AppEvent[];
   loading: boolean;
   error: string | null;
   totalEvents: number;
   addEvent: (data: EventInput) => Promise<void>;
   editEvent: (id: number, data: EventInput) => Promise<void>;
   deleteEvent: (id: number) => Promise<void>;
-  getEventById: (id: number) => Promise<Event>;
+  getEventById: (id: number) => Promise<AppEvent>;
   refetch: () => Promise<void>;
 }
 
 export const useEvents = (): UseEventsResult => {
-  const [events, setEvents] = useState<Event[]>([]);
+  const [events, setEvents] = useState<AppEvent[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [totalEvents, setTotalEvents] = useState<number>(0);
@@ -43,11 +44,15 @@ export const useEvents = (): UseEventsResult => {
   const fetchEvents = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await axios.get<Event[]>(
+      const response = await axios.get<AppEvent[]>(
         `${import.meta.env.VITE_API_URL}/events/`,
       );
-      setEvents(response.data);
-      setTotalEvents(response.data.length);
+      const eventsWithStatus = response.data.map((event) => ({
+        ...event,
+        status: computeEventStatus(event),
+      }));
+      setEvents(eventsWithStatus);
+      setTotalEvents(eventsWithStatus.length);
       setError(null);
     } catch (err) {
       console.error(err);
@@ -65,13 +70,16 @@ export const useEvents = (): UseEventsResult => {
     const token = localStorage.getItem("token");
     if (!token) throw new Error("User not authenticated");
 
-    const response = await axios.post<Event>(
+    const response = await axios.post<AppEvent>(
       `${import.meta.env.VITE_API_URL}/events/`,
       data,
       { headers: { Authorization: `Bearer ${token}` } },
     );
 
-    setEvents((prev) => [...prev, response.data]);
+    setEvents((prev) => [
+      ...prev,
+      { ...response.data, status: computeEventStatus(response.data) },
+    ]);
     setTotalEvents((prev) => prev + 1);
   };
 
@@ -79,14 +87,18 @@ export const useEvents = (): UseEventsResult => {
     const token = localStorage.getItem("token");
     if (!token) throw new Error("User not authenticated");
 
-    const response = await axios.put<Event>(
+    const response = await axios.put<AppEvent>(
       `${import.meta.env.VITE_API_URL}/events/${id}`,
       data,
       { headers: { Authorization: `Bearer ${token}` } },
     );
 
     setEvents((prev) =>
-      prev.map((evt) => (evt.id === id ? response.data : evt)),
+      prev.map((evt) =>
+        evt.id === id ?
+          { ...response.data, status: computeEventStatus(response.data) }
+        : evt,
+      ),
     );
   };
 
@@ -108,15 +120,15 @@ export const useEvents = (): UseEventsResult => {
   };
 
   const getEventById = useCallback(
-    async (id: number): Promise<Event> => {
+    async (id: number): Promise<AppEvent> => {
       try {
         const existingEvent = events.find((e) => e.id === id);
         if (existingEvent) return existingEvent;
 
-        const response = await axios.get<Event>(
+        const response = await axios.get<AppEvent>(
           `${import.meta.env.VITE_API_URL}/events/${id}`,
         );
-        return response.data;
+        return { ...response.data, status: computeEventStatus(response.data) };
       } catch (err) {
         console.error(err);
         throw new Error("Failed to fetch event details.");

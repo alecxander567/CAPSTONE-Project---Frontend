@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import { useEvents } from "../../hooks/useEvents";
-import type { Event } from "../../hooks/useEvents";
+import type { AppEvent } from "../../hooks/useEvents";
 import AddEventModal from "../../components/AddEventsModal/AddEventsModal";
 import type { EventData } from "../../components/AddEventsModal/AddEventsModal";
 import DeleteEventModal from "../../components/DeleteEventModal/deleteEventModal";
@@ -44,7 +44,7 @@ function Events() {
   const [editingEvent, setEditingEvent] = useState<StoredEvent | null>(null);
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deletingEvent, setDeletingEvent] = useState<Event | null>(null);
+  const [deletingEvent, setDeletingEvent] = useState<AppEvent | null>(null);
 
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
@@ -128,7 +128,7 @@ function Events() {
     }
   };
 
-  const handleEditEvent = (event: Event) => {
+  const handleEditEvent = (event: AppEvent) => {
     setEditingEvent({
       id: event.id,
       title: event.title,
@@ -142,7 +142,7 @@ function Events() {
     setShowModal(true);
   };
 
-  const handleDeleteEvent = async (event: Event) => {
+  const handleDeleteEvent = async (event: AppEvent) => {
     setDeletingEvent(event);
     setShowDeleteModal(true);
   };
@@ -262,7 +262,7 @@ function Events() {
 
           {filteredEvents.length > 0 && !loading && (
             <div className="events-grid fade-up delay-2">
-              {filteredEvents.map((event: Event) => (
+              {filteredEvents.map((event: AppEvent) => (
                 <div key={event.id} className="event-card">
                   <div className="event-card-header">
                     <div className="event-header-wave"></div>
@@ -296,7 +296,6 @@ function Events() {
                         <i className="bi bi-geo-alt"></i>
                         <span>{event.location}</span>
                       </div>
-                      {/* Show program restriction badge if set */}
                       {event.program_id && (
                         <div className="detail-row">
                           <i className="bi bi-diagram-3"></i>
