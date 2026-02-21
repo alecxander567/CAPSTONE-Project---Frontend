@@ -199,15 +199,23 @@ function StudentSettings() {
   const formatYearLevel = (year: string) => {
     const wordMap: Record<string, string> = {
       FIRST: "1st Year",
-      "1": "1st Year",
+      "1ST YEAR": "1st Year",
+      "1st year": "1st Year",
       SECOND: "2nd Year",
-      "2": "2nd Year",
+      "2ND YEAR": "2nd Year",
+      "2nd year": "2nd Year",
       THIRD: "3rd Year",
-      "3": "3rd Year",
+      "3RD YEAR": "3rd Year",
+      "3rd year": "3rd Year",
       FOURTH: "4th Year",
+      "4TH YEAR": "4th Year",
+      "4th year": "4th Year",
+      "1": "1st Year",
+      "2": "2nd Year",
+      "3": "3rd Year",
       "4": "4th Year",
     };
-    return wordMap[year.toUpperCase()] ?? year;
+    return wordMap[year] ?? wordMap[year.toUpperCase()] ?? year;
   };
 
   return (
