@@ -445,13 +445,59 @@ function Dashboard() {
               }
             </div>
 
-            {/* Calendar column: card + button stacked */}
+            {/* Right column: calendar + at-risk + print button stacked */}
             <div
               className="fade-up delay-6"
               style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               {/* Calendar Card */}
-              {/* At-Risk Students Card */}
               <div className="lower-card">
+                <h4 className="card-title">
+                  <i className="bi bi-calendar3 text-primary me-2"></i>
+                  Calendar
+                </h4>
+
+                <div className="calendar-view">
+                  <div className="calendar-header">
+                    <div className="calendar-month">
+                      {getCurrentMonthYear()}
+                    </div>
+                  </div>
+
+                  <div className="calendar-grid">
+                    <div className="calendar-weekday">Sun</div>
+                    <div className="calendar-weekday">Mon</div>
+                    <div className="calendar-weekday">Tue</div>
+                    <div className="calendar-weekday">Wed</div>
+                    <div className="calendar-weekday">Thu</div>
+                    <div className="calendar-weekday">Fri</div>
+                    <div className="calendar-weekday">Sat</div>
+
+                    {calendarDays.map((dayInfo, idx) => (
+                      <div
+                        key={idx}
+                        className={`calendar-day ${!dayInfo.isCurrentMonth ? "other-month" : ""} ${dayInfo.isToday ? "today" : ""} ${dayInfo.hasEvent ? "has-event" : ""}`}>
+                        {dayInfo.day}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="calendar-footer mt-3">
+                    <div className="calendar-legend">
+                      <span className="legend-item">
+                        <span className="legend-dot today-dot"></span>
+                        Today
+                      </span>
+                      <span className="legend-item">
+                        <span className="legend-dot event-dot"></span>
+                        Event
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* At-Risk Students Card */}
+              <div className="lower-card" style={{ flex: 1 }}>
                 <h4 className="card-title">
                   <i className="bi bi-exclamation-triangle-fill text-danger me-2"></i>
                   Students with 3+ Absences
@@ -470,14 +516,19 @@ function Dashboard() {
                     <i className="bi bi-check-circle-fill text-success fs-4 d-block mb-2"></i>
                     No students with 3+ absences
                   </div>
-                : <div style={{ overflowY: "auto", maxHeight: "280px" }}>
+                : <div style={{ overflowY: "auto", maxHeight: "180px" }}>
                     <table
                       style={{
                         width: "100%",
                         fontSize: "0.82rem",
                         borderCollapse: "collapse",
                       }}>
-                      <thead>
+                      <thead
+                        style={{
+                          position: "sticky",
+                          top: 0,
+                          background: "#fff",
+                        }}>
                         <tr
                           style={{
                             borderBottom: "2px solid #f0f0f0",
