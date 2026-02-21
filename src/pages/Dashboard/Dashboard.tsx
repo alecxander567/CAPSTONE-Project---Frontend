@@ -495,9 +495,7 @@ function Dashboard() {
               </div>
 
               {/* At-Risk Students Card */}
-              <div
-                className="lower-card"
-                style={{ flex: 1, minHeight: "320px" }}>
+              <div className="lower-card" style={{ flex: 1 }}>
                 <h4
                   className="card-title"
                   style={{
@@ -630,6 +628,7 @@ function Dashboard() {
               {/* Print Analytics Button */}
               <button
                 className="btn btn-print-analytics w-100"
+                style={{ flex: "0 0 auto" }}
                 onClick={handlePrintAnalytics}>
                 <i className="bi bi-printer-fill me-2"></i>
                 Print Analytics
