@@ -74,7 +74,6 @@ function Dashboard() {
       const hasEvent = events.some((event) =>
         event.event_date.startsWith(dateStr),
       );
-
       calendarDays.push({
         day,
         isCurrentMonth: true,
@@ -115,7 +114,7 @@ function Dashboard() {
       const token = await requestDeviceToken();
       if (token) {
         const authToken = localStorage.getItem("token");
-        const res = await fetch(
+        await fetch(
           `${import.meta.env.VITE_API_URL}/notifications/save-token`,
           {
             method: "POST",
@@ -156,7 +155,7 @@ function Dashboard() {
         </header>
 
         <div className="dashboard-content" id="print-analytics">
-          {/* Print Header (Only visible when printing) */}
+          {/* Print Header */}
           <div className="print-header">
             <h2>ARA Biometric Attendance System</h2>
             <h4>Analytics Report</h4>
@@ -170,6 +169,7 @@ function Dashboard() {
             </p>
             <hr />
           </div>
+
           {/* Stats Cards */}
           <div className="stats-grid">
             <div className="stat-card fade-up delay-1">
@@ -181,7 +181,6 @@ function Dashboard() {
                 <span>{totalPrograms}</span>
               </div>
             </div>
-
             <div className="stat-card fade-up delay-2">
               <div className="stat-icon bg-success">
                 <i className="bi bi-people-fill"></i>
@@ -191,7 +190,6 @@ function Dashboard() {
                 <span>{totalStudents}</span>
               </div>
             </div>
-
             <div className="stat-card fade-up delay-3">
               <div className="stat-icon bg-warning">
                 <i className="bi bi-calendar-event-fill"></i>
@@ -201,7 +199,6 @@ function Dashboard() {
                 <span>{totalEvents}</span>
               </div>
             </div>
-
             <div className="stat-card fade-up delay-4">
               <div className="stat-icon bg-info">
                 <i className="bi bi-usb-symbol"></i>
@@ -214,9 +211,9 @@ function Dashboard() {
               </div>
             </div>
           </div>
+
           {/* Charts Row */}
           <div className="charts-row">
-            {/* Bar Chart */}
             <div className="analytics-chart fade-up delay-5">
               <h3 className="chart-title">
                 <i className="bi bi-bar-chart-fill"></i> Attendance Comparison
@@ -277,7 +274,6 @@ function Dashboard() {
               </div>
             </div>
 
-            {/* Area Chart */}
             <div className="analytics-chart fade-up delay-5">
               <h3 className="chart-title">
                 <i className="bi bi-graph-up-arrow"></i> Attendance Graph Per
@@ -328,7 +324,8 @@ function Dashboard() {
               </div>
             </div>
           </div>
-          {/* Lower Grid (Progress & Calendar) */}
+
+          {/* Lower Grid */}
           <div className="dashboard-lower-grid">
             {/* Program Participation Card */}
             <div className="lower-card fade-up delay-6">
@@ -341,7 +338,8 @@ function Dashboard() {
                 <div className="text-center py-4">
                   <div
                     className="spinner-border spinner-border-sm text-primary"
-                    role="status"></div>
+                    role="status"
+                  />
                   <p className="mt-2 text-muted small">Loading programs...</p>
                 </div>
               : programsError ?
@@ -350,7 +348,6 @@ function Dashboard() {
                   {programsError}
                 </div>
               : <>
-                  {/* Recent Event */}
                   <div className="recent-event-info mb-3">
                     <h6 className="text-muted small mb-2">RECENT EVENT</h6>
                     {events.length === 0 ?
@@ -378,7 +375,6 @@ function Dashboard() {
                     }
                   </div>
 
-                  {/* Program Attendance Progress Bars */}
                   <div className="participation-chart">
                     <h6 className="text-muted small mb-3">
                       PARTICIPATION OVERVIEW
@@ -396,12 +392,10 @@ function Dashboard() {
                             (prog) =>
                               !prog.program.toLowerCase().includes("osa"),
                           );
-
                           const total = filteredPrograms.reduce(
                             (sum, p) => sum + p.students,
                             0,
                           );
-
                           return filteredPrograms.map((prog, idx) => {
                             const percent =
                               total > 0 ?
@@ -493,7 +487,9 @@ function Dashboard() {
               </div>
 
               {/* At-Risk Students Card */}
-              <div className="lower-card" style={{ flex: 1, minHeight: 0 }}>
+              <div
+                className="lower-card"
+                style={{ flex: 1, minHeight: "320px" }}>
                 <h4
                   className="card-title"
                   style={{
@@ -534,7 +530,7 @@ function Dashboard() {
                     <i className="bi bi-check-circle-fill text-success fs-4 d-block mb-2"></i>
                     No students with 3+ absences
                   </div>
-                : <div style={{ overflowY: "auto", maxHeight: "280px" }}>
+                : <div style={{ overflowY: "auto", maxHeight: "260px" }}>
                     <table
                       style={{
                         width: "100%",
