@@ -28,17 +28,22 @@ function Settings() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const getSuffix = (year: string) => {
-    switch (year) {
-      case "1":
-        return "st";
-      case "2":
-        return "nd";
-      case "3":
-        return "rd";
-      default:
-        return "th";
-    }
+  const formatYearLevel = (year: string) => {
+    const wordMap: Record<string, string> = {
+      FIRST: "1st Year",
+      "1st year": "1st Year",
+      SECOND: "2nd Year",
+      "2nd year": "2nd Year",
+      THIRD: "3rd Year",
+      "3rd year": "3rd Year",
+      FOURTH: "4th Year",
+      "4th year": "4th Year",
+      "1": "1st Year",
+      "2": "2nd Year",
+      "3": "3rd Year",
+      "4": "4th Year",
+    };
+    return wordMap[year] ?? wordMap[year.toUpperCase()] ?? year;
   };
 
   const [formData, setFormData] = useState(() => ({
@@ -790,83 +795,72 @@ function Settings() {
                 <div className="settings-profile-header">
                   <div className="settings-profile-header-left">
                     {/* ── Avatar: photo upload for students, initials only for admin ── */}
-                    {!isAdmin ?
-                      <div
-                        style={{
-                          position: "relative",
-                          display: "inline-block",
-                        }}>
-                        {profile.profile_image ?
-                          <img
-                            src={`http://localhost:8000/${profile.profile_image}`}
-                            alt="Profile"
-                            style={{
-                              width: "100px",
-                              height: "100px",
-                              objectFit: "cover",
-                              borderRadius: "50%",
-                              border: "3px solid #fff",
-                              boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-                            }}
-                          />
-                        : <div className="settings-avatar-circle">
-                            {getInitials(profile.first_name, profile.last_name)}
-                          </div>
-                        }
-
-                        {/* Camera button */}
-                        <button
-                          type="button"
-                          onClick={handleUploadClick}
-                          disabled={uploading}
+                    <div
+                      style={{ position: "relative", display: "inline-block" }}>
+                      {profile.profile_image ?
+                        <img
+                          src={`${import.meta.env.VITE_API_URL}/${profile.profile_image.replace(/^\//, "")}`}
+                          alt="Profile"
                           style={{
-                            position: "absolute",
-                            bottom: "0",
-                            right: "0",
-                            width: "32px",
-                            height: "32px",
+                            width: "100px",
+                            height: "100px",
+                            objectFit: "cover",
                             borderRadius: "50%",
-                            background:
-                              "linear-gradient(135deg, #0a1aff 0%, #00b4d8 100%)",
-                            border: "3px solid white",
-                            color: "white",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            cursor: "pointer",
-                            transition: "transform 0.2s",
-                            boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                            border: "3px solid #fff",
+                            boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
                           }}
-                          onMouseEnter={(e) =>
-                            (e.currentTarget.style.transform = "scale(1.1)")
-                          }
-                          onMouseLeave={(e) =>
-                            (e.currentTarget.style.transform = "scale(1)")
-                          }>
-                          {uploading ?
-                            <span
-                              className="spinner-border spinner-border-sm"
-                              style={{ width: "14px", height: "14px" }}
-                            />
-                          : <i
-                              className="bi bi-camera-fill"
-                              style={{ fontSize: "14px" }}
-                            />
-                          }
-                        </button>
-
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
-                          onChange={handleFileSelect}
-                          style={{ display: "none" }}
                         />
-                      </div>
-                    : <div className="settings-avatar-circle">
-                        {getInitials(profile.first_name, profile.last_name)}
-                      </div>
-                    }
+                      : <div className="settings-avatar-circle">
+                          {getInitials(profile.first_name, profile.last_name)}
+                        </div>
+                      }
+                      <button
+                        type="button"
+                        onClick={handleUploadClick}
+                        disabled={uploading}
+                        style={{
+                          position: "absolute",
+                          bottom: "0",
+                          right: "0",
+                          width: "32px",
+                          height: "32px",
+                          borderRadius: "50%",
+                          background:
+                            "linear-gradient(135deg, #0a1aff 0%, #00b4d8 100%)",
+                          border: "3px solid white",
+                          color: "white",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          cursor: "pointer",
+                          transition: "transform 0.2s",
+                          boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                        }}
+                        onMouseEnter={(e) =>
+                          (e.currentTarget.style.transform = "scale(1.1)")
+                        }
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.transform = "scale(1)")
+                        }>
+                        {uploading ?
+                          <span
+                            className="spinner-border spinner-border-sm"
+                            style={{ width: "14px", height: "14px" }}
+                          />
+                        : <i
+                            className="bi bi-camera-fill"
+                            style={{ fontSize: "14px" }}
+                          />
+                        }
+                      </button>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                        onChange={handleFileSelect}
+                        style={{ display: "none" }}
+                      />
+                    </div>
 
                     <div className="settings-profile-header-text">
                       <h2 className="settings-profile-name">
@@ -888,8 +882,7 @@ function Settings() {
                         </span>
                       </div>
 
-                      {/* Remove Picture button — students only */}
-                      {!isAdmin && profile.profile_image && (
+                      {profile.profile_image && (
                         <button
                           type="button"
                           onClick={handleDeletePicture}
@@ -1029,7 +1022,7 @@ function Settings() {
                         </select>
                       : <div className="settings-field-value">
                           {formData.year_level ?
-                            `${formData.year_level}${getSuffix(formData.year_level)} Year`
+                            formatYearLevel(formData.year_level)
                           : "-"}
                         </div>
                       }
