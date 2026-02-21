@@ -6,6 +6,7 @@ import { useDeviceStatus } from "../../hooks/useDeviceStatus";
 import { useAttendancePerEvent } from "../../hooks/useAttendancePerEvent";
 import { useAttendancePerProgram } from "../../hooks/useAttendancePerProgram";
 import { requestDeviceToken, listenMessages } from "../../firebase";
+import { useAtRiskStudents } from "../../hooks/useAtRiskStudent";
 import "./Dashboard.css";
 import {
   BarChart,
@@ -31,6 +32,7 @@ function Dashboard() {
     useAttendancePerEvent();
   const { data: programAttendanceData, loading: programAttendanceLoading } =
     useAttendancePerProgram();
+  const { data: atRiskStudents, loading: atRiskLoading } = useAtRiskStudents();
 
   const programColors = [
     "#0d6efd",
@@ -448,50 +450,108 @@ function Dashboard() {
               className="fade-up delay-6"
               style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               {/* Calendar Card */}
+              {/* At-Risk Students Card */}
               <div className="lower-card">
                 <h4 className="card-title">
-                  <i className="bi bi-calendar3 text-primary me-2"></i>
-                  Calendar
+                  <i className="bi bi-exclamation-triangle-fill text-danger me-2"></i>
+                  Students with 3+ Absences
                 </h4>
 
-                <div className="calendar-view">
-                  <div className="calendar-header">
-                    <div className="calendar-month">
-                      {getCurrentMonthYear()}
-                    </div>
+                {atRiskLoading ?
+                  <div className="text-center py-4">
+                    <div
+                      className="spinner-border spinner-border-sm text-danger"
+                      role="status"
+                    />
+                    <p className="mt-2 text-muted small">Loading...</p>
                   </div>
-
-                  <div className="calendar-grid">
-                    <div className="calendar-weekday">Sun</div>
-                    <div className="calendar-weekday">Mon</div>
-                    <div className="calendar-weekday">Tue</div>
-                    <div className="calendar-weekday">Wed</div>
-                    <div className="calendar-weekday">Thu</div>
-                    <div className="calendar-weekday">Fri</div>
-                    <div className="calendar-weekday">Sat</div>
-
-                    {calendarDays.map((dayInfo, idx) => (
-                      <div
-                        key={idx}
-                        className={`calendar-day ${!dayInfo.isCurrentMonth ? "other-month" : ""} ${dayInfo.isToday ? "today" : ""} ${dayInfo.hasEvent ? "has-event" : ""}`}>
-                        {dayInfo.day}
-                      </div>
-                    ))}
+                : atRiskStudents.length === 0 ?
+                  <div className="text-center py-4 text-muted small">
+                    <i className="bi bi-check-circle-fill text-success fs-4 d-block mb-2"></i>
+                    No students with 3+ absences
                   </div>
-
-                  <div className="calendar-footer mt-3">
-                    <div className="calendar-legend">
-                      <span className="legend-item">
-                        <span className="legend-dot today-dot"></span>
-                        Today
-                      </span>
-                      <span className="legend-item">
-                        <span className="legend-dot event-dot"></span>
-                        Event
-                      </span>
-                    </div>
+                : <div style={{ overflowY: "auto", maxHeight: "280px" }}>
+                    <table
+                      style={{
+                        width: "100%",
+                        fontSize: "0.82rem",
+                        borderCollapse: "collapse",
+                      }}>
+                      <thead>
+                        <tr
+                          style={{
+                            borderBottom: "2px solid #f0f0f0",
+                            color: "#888",
+                            textTransform: "uppercase",
+                            fontSize: "0.72rem",
+                          }}>
+                          <th style={{ padding: "6px 8px", textAlign: "left" }}>
+                            Student
+                          </th>
+                          <th style={{ padding: "6px 8px", textAlign: "left" }}>
+                            Program
+                          </th>
+                          <th
+                            style={{ padding: "6px 8px", textAlign: "center" }}>
+                            Absences
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {atRiskStudents.map((s, idx) => (
+                          <tr
+                            key={idx}
+                            style={{
+                              borderBottom: "1px solid #f5f5f5",
+                              background: idx % 2 === 0 ? "#fff" : "#fafafa",
+                            }}>
+                            <td style={{ padding: "7px 8px" }}>
+                              <div style={{ fontWeight: 600 }}>
+                                {s.last_name}, {s.first_name}
+                              </div>
+                              <div
+                                style={{ color: "#aaa", fontSize: "0.72rem" }}>
+                                {s.student_id_no}
+                              </div>
+                            </td>
+                            <td style={{ padding: "7px 8px" }}>
+                              <span
+                                style={{
+                                  background: "#e8f0fe",
+                                  color: "#0d6efd",
+                                  borderRadius: "6px",
+                                  padding: "2px 7px",
+                                  fontSize: "0.72rem",
+                                  fontWeight: 600,
+                                }}>
+                                {s.program_code}
+                              </span>
+                            </td>
+                            <td
+                              style={{
+                                padding: "7px 8px",
+                                textAlign: "center",
+                              }}>
+                              <span
+                                style={{
+                                  background:
+                                    s.absences >= 5 ? "#fde8e8" : "#fff3cd",
+                                  color:
+                                    s.absences >= 5 ? "#dc3545" : "#856404",
+                                  borderRadius: "6px",
+                                  padding: "2px 10px",
+                                  fontWeight: 700,
+                                  fontSize: "0.82rem",
+                                }}>
+                                {s.absences}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                </div>
+                }
               </div>
 
               {/* Print Analytics Button */}
