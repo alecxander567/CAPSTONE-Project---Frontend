@@ -494,8 +494,10 @@ function Dashboard() {
                 </div>
               </div>
 
-              {/* At-Risk Students Card */}
-              <div className="lower-card" style={{ flex: 1 }}>
+              {/* At-Risk Students Card — flex: 1 + minHeight to stay visible */}
+              <div
+                className="lower-card"
+                style={{ flex: 1, minHeight: "320px" }}>
                 <h4
                   className="card-title"
                   style={{
