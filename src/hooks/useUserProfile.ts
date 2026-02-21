@@ -78,14 +78,7 @@ export const useUserProfile = () => {
       if (!token) throw new Error("No authentication token found");
 
       const filteredPayload = Object.fromEntries(
-        Object.entries(profileData)
-          .filter(([_, v]) => v !== undefined)
-          .map(([key, value]) => {
-            if (key === "year_level" && value !== undefined) {
-              return [key, Number(value)];
-            }
-            return [key, value];
-          }),
+        Object.entries(profileData).filter(([_, v]) => v !== undefined),
       );
 
       const response = await axios.put<UserProfile>(

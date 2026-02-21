@@ -20,6 +20,7 @@ interface Student {
   year_level: string | null;
   fingerprint_status: "not_enrolled" | "pending" | "enrolled" | "failed";
   finger_id: number | null;
+  profile_image?: string | null;
 }
 
 type FingerprintStatus = "not_enrolled" | "pending" | "enrolled" | "failed";
@@ -49,6 +50,9 @@ const FingerprintStatusBadge = ({ status }: { status: FingerprintStatus }) => {
     </span>
   );
 };
+
+const getInitials = (firstName: string, lastName: string) =>
+  `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase();
 
 const ProgramStudents = () => {
   const { programCode } = useParams();
@@ -350,7 +354,37 @@ const ProgramStudents = () => {
                       key={student.id}
                       className={`student-card fade-up fade-delay-${Math.min((index % 4) + 1, 4)}`}>
                       <div className="student-avatar">
-                        <i className="bi bi-person-circle"></i>
+                        {student.profile_image ?
+                          <img
+                            src={`${import.meta.env.VITE_API_URL}/${student.profile_image.replace(/^\//, "")}`}
+                            alt={`${student.first_name} ${student.last_name}`}
+                            style={{
+                              width: "64px",
+                              height: "64px",
+                              borderRadius: "50%",
+                              objectFit: "cover",
+                              border: "3px solid #fff",
+                              boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                            }}
+                          />
+                        : <div
+                            style={{
+                              width: "64px",
+                              height: "64px",
+                              borderRadius: "50%",
+                              background:
+                                "linear-gradient(135deg, #0a1aff 0%, #00b4d8 100%)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: "1.25rem",
+                              fontWeight: "700",
+                              color: "#fff",
+                              flexShrink: 0,
+                            }}>
+                            {getInitials(student.first_name, student.last_name)}
+                          </div>
+                        }
                       </div>
                       <div className="student-info">
                         <h3>
