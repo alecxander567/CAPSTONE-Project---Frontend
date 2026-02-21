@@ -450,19 +450,17 @@ function Dashboard() {
               className="fade-up delay-6"
               style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               {/* Calendar Card */}
-              <div className="lower-card">
+              <div className="lower-card" style={{ flex: "0 0 auto" }}>
                 <h4 className="card-title">
                   <i className="bi bi-calendar3 text-primary me-2"></i>
                   Calendar
                 </h4>
-
                 <div className="calendar-view">
                   <div className="calendar-header">
                     <div className="calendar-month">
                       {getCurrentMonthYear()}
                     </div>
                   </div>
-
                   <div className="calendar-grid">
                     <div className="calendar-weekday">Sun</div>
                     <div className="calendar-weekday">Mon</div>
@@ -471,7 +469,6 @@ function Dashboard() {
                     <div className="calendar-weekday">Thu</div>
                     <div className="calendar-weekday">Fri</div>
                     <div className="calendar-weekday">Sat</div>
-
                     {calendarDays.map((dayInfo, idx) => (
                       <div
                         key={idx}
@@ -480,7 +477,6 @@ function Dashboard() {
                       </div>
                     ))}
                   </div>
-
                   <div className="calendar-footer mt-3">
                     <div className="calendar-legend">
                       <span className="legend-item">
@@ -497,8 +493,7 @@ function Dashboard() {
               </div>
 
               {/* At-Risk Students Card */}
-              {/* At-Risk Students Card */}
-              <div className="lower-card" style={{ flex: 1 }}>
+              <div className="lower-card" style={{ flex: 1, minHeight: 0 }}>
                 <h4
                   className="card-title"
                   style={{
