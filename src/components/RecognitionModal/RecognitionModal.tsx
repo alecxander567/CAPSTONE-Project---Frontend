@@ -2,7 +2,9 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import axios from "axios";
 import "../EnrollmentModal/EnrollmentModal.css";
 
-const API_BASE_URL = `${import.meta.env.VITE_API_URL}`;
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+const RECOGNITION_TIMEOUT = 10000;
+const POLL_INTERVAL = 500;
 
 interface RecognitionModalProps {
   isOpen: boolean;
@@ -12,25 +14,23 @@ interface RecognitionModalProps {
   onRecognized: (studentId: number, success: boolean) => void;
 }
 
+type StepStatus = "waiting" | "active" | "completed" | "failed";
+
 type StepUI = {
   id: number;
   title: string;
   description: string;
   icon: string;
-  status: "waiting" | "active" | "completed" | "failed";
+  status: StepStatus;
 };
 
 const RecognitionModal = ({
   isOpen,
   onClose,
   userId,
-  fingerId,
   onRecognized,
 }: RecognitionModalProps) => {
   const [currentStep, setCurrentStep] = useState(0);
-  const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const pollRef = useRef<number | null>(null);
-
   const [steps, setSteps] = useState<StepUI[]>([
     {
       id: 0,
@@ -55,14 +55,27 @@ const RecognitionModal = ({
     },
   ]);
 
+  const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const pollRef = useRef<number | null>(null);
+  const timeoutRef = useRef<number | null>(null);
+
+  const clearTimers = () => {
+    if (pollRef.current !== null) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+
+    if (timeoutRef.current !== null) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  };
+
   const updateStepUI = useCallback((step: string) => {
     let stepIndex = 0;
     let failed = false;
 
     switch (step) {
-      case "pending":
-        stepIndex = 0;
-        break;
       case "place_finger":
         stepIndex = 1;
         break;
@@ -78,34 +91,35 @@ const RecognitionModal = ({
     }
 
     setCurrentStep(stepIndex);
+
     setSteps((prev) =>
       prev.map((s, idx) => {
-        let status: "waiting" | "active" | "completed" | "failed";
-        if (failed && idx === 2) status = "failed";
+        let status: StepStatus;
+
+        if (failed && idx === stepIndex) status = "failed";
         else if (idx < stepIndex) status = "completed";
         else if (idx === stepIndex)
           status =
-            step === "success" ? "completed"
-            : step === "error" ? "failed"
+            failed ? "failed"
+            : step === "success" ? "completed"
             : "active";
         else status = "waiting";
+
         return { ...s, status };
       }),
     );
   }, []);
 
   useEffect(() => {
-    if (stepRefs.current[currentStep]) {
-      stepRefs.current[currentStep]?.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
-    }
+    stepRefs.current[currentStep]?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
   }, [currentStep]);
 
   useEffect(() => {
     if (!isOpen) {
-      if (pollRef.current) clearInterval(pollRef.current);
+      clearTimers();
       setCurrentStep(0);
       setSteps((prev) => prev.map((s) => ({ ...s, status: "waiting" })));
       return;
@@ -115,41 +129,61 @@ const RecognitionModal = ({
 
     let targetFingerId: number | null = null;
 
-    axios
-      .post(`${API_BASE_URL}/fingerprints/start-recognition/${userId}`)
-      .then((res) => {
+    const startRecognition = async () => {
+      try {
+        const res = await axios.post(
+          `${API_BASE_URL}/fingerprints/start-recognition/${userId}`,
+        );
+
         targetFingerId = res.data.target_finger_id;
 
         updateStepUI("place_finger");
 
+        timeoutRef.current = window.setTimeout(() => {
+          clearTimers();
+          updateStepUI("error");
+          onRecognized(userId, false);
+
+          setTimeout(() => {
+            onClose?.();
+          }, 1000);
+        }, RECOGNITION_TIMEOUT);
+
         pollRef.current = window.setInterval(async () => {
           if (!targetFingerId) return;
+
           try {
             const res = await axios.get(
               `${API_BASE_URL}/fingerprints/get-recognition-result?finger_id=${targetFingerId}`,
             );
+
             const { status, matched } = res.data;
 
             if (status === "done") {
+              clearTimers();
               updateStepUI(matched ? "success" : "error");
-              clearInterval(pollRef.current!);
+
               setTimeout(() => {
                 onRecognized(userId, matched);
                 onClose?.();
               }, 1000);
             }
           } catch (err) {
-            console.error(err);
+            console.error("Polling error:", err);
           }
-        }, 500);
-      })
-      .catch((err) => {
+        }, POLL_INTERVAL);
+      } catch (err) {
         console.error("Failed to start recognition:", err);
         updateStepUI("error");
-      });
+      }
+    };
 
-    return () => clearInterval(pollRef.current!);
-  }, [isOpen, userId, updateStepUI]);
+    startRecognition();
+
+    return () => {
+      clearTimers();
+    };
+  }, [isOpen, userId, updateStepUI, onRecognized, onClose]);
 
   if (!isOpen) return null;
 
@@ -189,7 +223,7 @@ const RecognitionModal = ({
 
               <div className="step-content">
                 <div className="step-icon">
-                  <i className={`bi ${step.icon}`}></i>
+                  <i className={`bi ${step.icon}`} />
                 </div>
                 <div className="step-text">
                   <h4>{step.title}</h4>
