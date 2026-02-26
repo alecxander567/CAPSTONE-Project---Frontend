@@ -400,15 +400,9 @@ function Dashboard() {
                             (prog) =>
                               !prog.program.toLowerCase().includes("osa"),
                           );
-                          const total = filteredPrograms.reduce(
-                            (sum, p) => sum + p.students,
-                            0,
-                          );
+
                           return filteredPrograms.map((prog, idx) => {
-                            const percent =
-                              total > 0 ?
-                                Math.round((prog.students / total) * 100)
-                              : 0;
+                            const percent = prog.percentage ?? 0;
                             const color =
                               programColors[idx % programColors.length];
                             return (
@@ -417,7 +411,7 @@ function Dashboard() {
                                   <span className="program-name">
                                     {prog.program}
                                     <span className="text-muted small ms-2">
-                                      ({prog.students} present)
+                                      ({prog.present}/{prog.total_students})
                                     </span>
                                   </span>
                                   <span

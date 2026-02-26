@@ -34,14 +34,14 @@ const RecognitionModal = ({
   const [steps, setSteps] = useState<StepUI[]>([
     {
       id: 0,
-      title: "Starting Recognition",
+      title: "Waiting for ESP32",
       description: "Connecting to fingerprint sensor...",
       icon: "bi-hourglass-split",
       status: "waiting",
     },
     {
       id: 1,
-      title: "Scan Finger",
+      title: "Place Finger",
       description: "Place your finger on the sensor",
       icon: "bi-hand-index-thumb",
       status: "waiting",
@@ -76,6 +76,9 @@ const RecognitionModal = ({
     let failed = false;
 
     switch (step) {
+      case "pending":
+        stepIndex = 0; // Waiting for ESP32
+        break;
       case "place_finger":
         stepIndex = 1;
         break;

@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-interface ProgramAttendance {
+export interface ProgramAttendance {
   program: string;
-  code: string;
-  students: number;
+  present: number;
+  total_students: number;
+  percentage: number;
 }
 
 export function useAttendancePerProgram() {
