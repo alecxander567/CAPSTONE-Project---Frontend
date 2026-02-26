@@ -77,7 +77,7 @@ const RecognitionModal = ({
 
     switch (step) {
       case "pending":
-        stepIndex = 0; // Waiting for ESP32
+        stepIndex = 0;
         break;
       case "place_finger":
         stepIndex = 1;
@@ -176,8 +176,26 @@ const RecognitionModal = ({
           }
         }, POLL_INTERVAL);
       } catch (err) {
-        console.error("Failed to start recognition:", err);
-        updateStepUI("error");
+        // Device offline — stay on step 0 and show offline message
+        if (axios.isAxiosError(err) && err.response?.status === 503) {
+          setCurrentStep(0);
+          setSteps((prev) =>
+            prev.map((s, idx) =>
+              idx === 0 ?
+                {
+                  ...s,
+                  status: "failed",
+                  description: "Device is offline. Please try again.",
+                }
+              : s,
+            ),
+          );
+          onRecognized(userId, false);
+        } else {
+          // Any other error — advance to final step as failed
+          console.error("Failed to start recognition:", err);
+          updateStepUI("error");
+        }
       }
     };
 
