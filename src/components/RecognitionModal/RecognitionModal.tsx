@@ -191,6 +191,7 @@ const RecognitionModal = ({
             ),
           );
           onRecognized(userId, false);
+          onClose?.();
         } else {
           // Any other error — advance to final step as failed
           console.error("Failed to start recognition:", err);
