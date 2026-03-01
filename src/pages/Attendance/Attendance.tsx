@@ -128,9 +128,7 @@ function Attendance() {
   }, [programs]);
 
   useEffect(() => {
-    if (!attendanceActive) {
-      return;
-    }
+    if (!attendanceActive || !eventId) return;
 
     const interval = setInterval(async () => {
       try {
@@ -138,17 +136,13 @@ function Attendance() {
           `${import.meta.env.VITE_API_URL}/attendance/by-event/${eventId}`,
         );
 
-        if (!res.ok) {
-          console.error(`HTTP Error: ${res.status} ${res.statusText}`);
-          return;
-        }
+        if (!res.ok) return;
 
-        const data: { student_id_no: string; status: string; time?: string }[] =
-          await res.json();
-
-        if (data.length === 0) {
-          return;
-        }
+        const data: {
+          student_id_no: string;
+          status: string;
+          attendance_time?: string;
+        }[] = await res.json();
 
         setStudentStatus((prevStatus) => {
           const updatedStatus = { ...prevStatus };
@@ -161,8 +155,8 @@ function Attendance() {
         setStudentTime((prevTime) => {
           const updatedTime = { ...prevTime };
           data.forEach((item) => {
-            if (item.time) {
-              updatedTime[item.student_id_no] = item.time;
+            if (item.attendance_time) {
+              updatedTime[item.student_id_no] = item.attendance_time;
             }
           });
           return updatedTime;
@@ -172,10 +166,8 @@ function Attendance() {
       }
     }, 3000);
 
-    return () => {
-      clearInterval(interval);
-    };
-  }, [attendanceActive]);
+    return () => clearInterval(interval);
+  }, [attendanceActive, eventId]);
 
   return (
     <div className="attendance-layout">
