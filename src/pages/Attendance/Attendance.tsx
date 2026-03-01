@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import { usePrograms } from "../../hooks/useProgram";
-import type { Event as MyEvent } from "../../hooks/useEvents";
+import type { AppEvent } from "../../hooks/useEvents";
 import { useEvents } from "../../hooks/useEvents";
 import "./Attendance.css";
 import { useNavigate } from "react-router-dom";
@@ -55,7 +55,7 @@ function Attendance() {
     const fetchEvent = async () => {
       setLoadingEvent(true);
       try {
-        const data: MyEvent = await getEventById(Number(eventId));
+        const data: AppEvent = await getEventById(Number(eventId));
 
         const mappedEvent: Event = {
           id: data.id,
@@ -135,7 +135,7 @@ function Attendance() {
     const interval = setInterval(async () => {
       try {
         const res = await fetch(
-          `${import.meta.env.VITE_API_URL}/attendance/updates`,
+          `${import.meta.env.VITE_API_URL}/attendance/by-event/${eventId}`,
         );
 
         if (!res.ok) {
