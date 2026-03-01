@@ -136,13 +136,18 @@ function Attendance() {
           `${import.meta.env.VITE_API_URL}/attendance/by-event/${eventId}`,
         );
 
-        if (!res.ok) return;
+        if (!res.ok) {
+          console.error(`HTTP Error: ${res.status} ${res.statusText}`);
+          return;
+        }
 
         const data: {
           student_id_no: string;
           status: string;
           attendance_time?: string;
         }[] = await res.json();
+
+        console.log("Poll response:", JSON.stringify(data)); // ← debug log
 
         setStudentStatus((prevStatus) => {
           const updatedStatus = { ...prevStatus };
