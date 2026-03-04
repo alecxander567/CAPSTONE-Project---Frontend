@@ -7,6 +7,7 @@ import { useAttendancePerEvent } from "../../hooks/useAttendancePerEvent";
 import { useAttendancePerProgram } from "../../hooks/useAttendancePerProgram";
 import { requestDeviceToken, listenMessages } from "../../firebase";
 import { useAtRiskStudents } from "../../hooks/useAtRiskStudent";
+import { useAllStudentsAttendance } from "../../hooks/useAllStudentsAttendance";
 import "./Dashboard.css";
 import {
   BarChart,
@@ -33,6 +34,9 @@ function Dashboard() {
   const { data: programAttendanceData, loading: programAttendanceLoading } =
     useAttendancePerProgram();
   const { data: atRiskStudents, loading: atRiskLoading } = useAtRiskStudents();
+  const { data: allStudents, loading: allStudentsLoading } = useAllStudentsAttendance();
+const [studentSearch, setStudentSearch] = useState("");
+const [absenceFilter, setAbsenceFilter] = useState<"all" | "atrisk" | "perfect">("all");
 
   const programColors = [
     "#0d6efd",
