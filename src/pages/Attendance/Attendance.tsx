@@ -191,26 +191,11 @@ function Attendance() {
       <head>
         <title>Attendance Report</title>
         <style>
-          body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-          }
-          h2 {
-            margin-bottom: 5px;
-          }
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-          }
-          th, td {
-            border: 1px solid #ccc;
-            padding: 8px;
-            text-align: left;
-          }
-          th {
-            background-color: #f2f2f2;
-          }
+          body { font-family: Arial, sans-serif; padding: 20px; }
+          h2 { margin-bottom: 5px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+          th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+          th { background-color: #f2f2f2; }
         </style>
       </head>
       <body>
@@ -286,30 +271,34 @@ function Attendance() {
             </div>
 
             <div className="attendance-controls-right">
-              <div className="year-filter-container">
-                <select
-                  className="form-select"
-                  value={yearLevelFilter}
-                  onChange={(e) => setYearLevelFilter(e.target.value)}>
-                  <option value="ALL">All Year Levels</option>
-                  <option value="1st year">1st Year</option>
-                  <option value="2nd year">2nd Year</option>
-                  <option value="3rd year">3rd Year</option>
-                  <option value="4th year">4th Year</option>
-                </select>
+              {/* Search + Year Level on the same row */}
+              <div className="controls-row">
+                <div className="year-filter-container">
+                  <select
+                    className="form-select"
+                    value={yearLevelFilter}
+                    onChange={(e) => setYearLevelFilter(e.target.value)}>
+                    <option value="ALL">All Year Levels</option>
+                    <option value="1st year">1st Year</option>
+                    <option value="2nd year">2nd Year</option>
+                    <option value="3rd year">3rd Year</option>
+                    <option value="4th year">4th Year</option>
+                  </select>
+                </div>
+
+                <div className="student-search-container">
+                  <i className="bi bi-search search-icon"></i>
+                  <input
+                    type="text"
+                    className="student-search-input"
+                    placeholder="Search student or ID..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
               </div>
 
-              <div className="student-search-container">
-                <i className="bi bi-search search-icon"></i>
-                <input
-                  type="text"
-                  className="student-search-input"
-                  placeholder="Search student or ID..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-
+              {/* Attendance button on its own row, full width */}
               {!attendanceActive ?
                 <button
                   className="btn-attendance-action btn-start"
@@ -363,22 +352,33 @@ function Attendance() {
 
                   return (
                     <div key={program.code} className="program-table-card mb-5">
-                      <div id={`print-section-${program.code}`}>
-                        <div className="program-table-header">
-                          <div className="d-flex align-items-center gap-3">
-                            <span className="badge-program-code-large">
-                              {program.code}
-                            </span>
-                            <h3 className="program-table-title">
-                              {program.name}
-                            </h3>
-                          </div>
+
+                      {/* Card header — print button lives here */}
+                      <div className="program-table-header">
+                        <div className="d-flex align-items-center gap-3">
+                          <span className="badge-program-code-large">
+                            {program.code}
+                          </span>
+                          <h3 className="program-table-title">
+                            {program.name}
+                          </h3>
+                        </div>
+                        <div className="program-header-right">
                           <div className="program-meta">
                             <i className="bi bi-people-fill text-muted me-2"></i>
                             <strong>{studentCount}</strong> Students Enrolled
                           </div>
+                          <button
+                            className="btn-print-table"
+                            onClick={() => handlePrint(program.code)}>
+                            <i className="bi bi-printer me-1"></i>
+                            Print
+                          </button>
                         </div>
+                      </div>
 
+                      {/* Print section wraps only the table body */}
+                      <div id={`print-section-${program.code}`}>
                         <div className="table-responsive student-table-wrapper">
                           <table className="table table-hover align-middle mb-0">
                             <thead className="table-light sticky-top">
@@ -442,14 +442,6 @@ function Attendance() {
                         </div>
                       </div>{/* closes print-section */}
 
-                      <div className="d-flex justify-content-end mt-2 px-2 pb-2">
-                        <button
-                          className="btn btn-outline-secondary btn-sm"
-                          onClick={() => handlePrint(program.code)}>
-                          <i className="bi bi-printer me-1"></i>
-                          Print
-                        </button>
-                      </div>
                     </div> /* closes program-table-card */
                   );
                 })
