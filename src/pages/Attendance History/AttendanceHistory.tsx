@@ -355,6 +355,7 @@ const getRecentEvent = (events: Event[]) => {
 function AttendanceHistory() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
+  const [selectedYearLevel, setSelectedYearLevel] = useState<string>("all");
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [loadingAttendance, setLoadingAttendance] = useState(false);
 
@@ -392,15 +393,14 @@ function AttendanceHistory() {
   const filteredPrograms = programsToShow
     .map((program) => {
       const students = program.studentList ?? [];
-      const filtered = searchQuery.trim()
-        ? students.filter((s) => {
-            const fullName = `${s.first_name} ${s.last_name}`.toLowerCase();
-            return (
-              fullName.includes(searchQuery.toLowerCase()) ||
-              s.student_id_no.toLowerCase().includes(searchQuery.toLowerCase())
-            );
-          })
-        : students;
+      const filtered = students.filter((s) => {
+        const fullName = `${s.first_name} ${s.last_name}`.toLowerCase();
+        const matchesSearch = !searchQuery.trim() ||
+          fullName.includes(searchQuery.toLowerCase()) ||
+          s.student_id_no.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesYear = selectedYearLevel === "all" || String(s.year_level) === selectedYearLevel;
+        return matchesSearch && matchesYear;
+      });
       return { ...program, students: filtered };
     })
     .filter((p) => p.students.length > 0);
@@ -486,6 +486,24 @@ function AttendanceHistory() {
                         {e.title} — {new Date(e.event_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                       </option>
                     ))}
+                </select>
+                <i className="bi bi-chevron-down" style={S.selectChevron} />
+              </div>
+
+              {/* Year Level dropdown */}
+              <div style={{ position: "relative", minWidth: 150 }}>
+                <i className="bi bi-mortarboard" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#6c757d", fontSize: "0.9rem", pointerEvents: "none", zIndex: 1 }} />
+                <select
+                  value={selectedYearLevel}
+                  onChange={(e) => setSelectedYearLevel(e.target.value)}
+                  style={{ ...S.select, minWidth: 150 }}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = "#0d6efd"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(13,110,253,0.15)"; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = "#e0e7ff"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(13,110,253,0.07)"; }}>
+                  <option value="all">All Years</option>
+                  <option value="1">1st Year</option>
+                  <option value="2">2nd Year</option>
+                  <option value="3">3rd Year</option>
+                  <option value="4">4th Year</option>
                 </select>
                 <i className="bi bi-chevron-down" style={S.selectChevron} />
               </div>
