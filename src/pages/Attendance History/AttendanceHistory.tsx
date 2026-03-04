@@ -355,7 +355,7 @@ const getRecentEvent = (events: Event[]) => {
 function AttendanceHistory() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
-  const [selectedYear, setSelectedYear] = useState<string>("all");
+  const [selectedYear, setSelectedYear] = useState<string>(String(new Date().getFullYear()));
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [loadingAttendance, setLoadingAttendance] = useState(false);
 
@@ -388,9 +388,7 @@ function AttendanceHistory() {
   ).sort((a, b) => b - a);
 
   // Filter events list by selected year for the event dropdown
-  const yearFilteredEvents = selectedYear === "all"
-    ? events
-    : events.filter((e) => new Date(e.event_date).getFullYear() === Number(selectedYear));
+  const yearFilteredEvents = events.filter((e) => new Date(e.event_date).getFullYear() === Number(selectedYear));
 
   const presentIds = new Set(
     attendanceRecords.filter((r) => r.status === "present").map((r) => r.student_id_no)
@@ -509,7 +507,6 @@ function AttendanceHistory() {
                   style={{ ...S.select, minWidth: 130 }}
                   onFocus={(e) => { e.currentTarget.style.borderColor = "#0d6efd"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(13,110,253,0.15)"; }}
                   onBlur={(e) => { e.currentTarget.style.borderColor = "#e0e7ff"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(13,110,253,0.07)"; }}>
-                  <option value="all">All Years</option>
                   {uniqueYears.map((yr) => (
                     <option key={yr} value={yr}>{yr}</option>
                   ))}
