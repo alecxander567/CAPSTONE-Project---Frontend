@@ -110,7 +110,6 @@
   margin: 0;
 }
 
-/* Updated controls layout */
 .attendance-controls-right {
   display: flex;
   flex-direction: column;
@@ -334,8 +333,8 @@
     min-width: 100%;
   }
 
-  .attendance-controls-right {
-    width: 100%;
+   .attendance-controls-right {
+    flex-direction: column;
     align-items: stretch;
   }
 
@@ -397,4 +396,31 @@
   .btn-back-header span {
     display: none;
   }
+}
+
+.year-filter-container {
+  min-width: 180px;
+}
+
+.student-search-container {
+  min-width: 260px;
+}
+
+.btn-print-table {
+  background: #0d6efd;
+  color: white;
+  border: none;
+  padding: 0.45rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+}
+
+.btn-print-table:hover {
+  background: #0a58ca;
+  transform: translateY(-1px);
 }

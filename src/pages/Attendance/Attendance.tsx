@@ -38,9 +38,7 @@ function Attendance() {
   const [event, setEvent] = useState<Event | null>(null);
   const [loadingEvent, setLoadingEvent] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [studentStatus, setStudentStatus] = useState<Record<string, string>>(
-    {},
-  );
+  const [studentStatus, setStudentStatus] = useState<Record<string, string>>({});
   const [studentTime, setStudentTime] = useState<Record<string, string>>({});
   const [yearLevelFilter, setYearLevelFilter] = useState<string>("ALL");
 
@@ -177,6 +175,57 @@ function Attendance() {
     return () => clearInterval(interval);
   }, [attendanceActive, eventId]);
 
+  const handlePrint = (programCode: string) => {
+    const tableElement = document.getElementById(
+      `print-section-${programCode}`,
+    );
+
+    if (!tableElement) return;
+
+    const printWindow = window.open("", "", "width=1200,height=800");
+
+    if (!printWindow) return;
+
+    printWindow.document.write(`
+    <html>
+      <head>
+        <title>Attendance Report</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+          }
+          h2 {
+            margin-bottom: 5px;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+          }
+          th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+          }
+          th {
+            background-color: #f2f2f2;
+          }
+        </style>
+      </head>
+      <body>
+        <h2>${event?.title || "Event"}</h2>
+        ${tableElement.innerHTML}
+      </body>
+    </html>
+  `);
+
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+  };
+
   return (
     <div className="attendance-layout">
       <Sidebar />
@@ -237,6 +286,19 @@ function Attendance() {
             </div>
 
             <div className="attendance-controls-right">
+              <div className="year-filter-container">
+                <select
+                  className="form-select"
+                  value={yearLevelFilter}
+                  onChange={(e) => setYearLevelFilter(e.target.value)}>
+                  <option value="ALL">All Year Levels</option>
+                  <option value="1st year">1st Year</option>
+                  <option value="2nd year">2nd Year</option>
+                  <option value="3rd year">3rd Year</option>
+                  <option value="4th year">4th Year</option>
+                </select>
+              </div>
+
               <div className="student-search-container">
                 <i className="bi bi-search search-icon"></i>
                 <input
@@ -246,19 +308,6 @@ function Attendance() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
-              </div>
-
-              <div className="year-filter-container">
-                <select
-                  className="form-select"
-                  value={yearLevelFilter}
-                  onChange={(e) => setYearLevelFilter(e.target.value)}>
-                  <option value="ALL">All Year Levels</option>
-                  <option value="1">1st Year</option>
-                  <option value="2">2nd Year</option>
-                  <option value="3">3rd Year</option>
-                  <option value="4">4th Year</option>
-                </select>
               </div>
 
               {!attendanceActive ?
@@ -314,113 +363,94 @@ function Attendance() {
 
                   return (
                     <div key={program.code} className="program-table-card mb-5">
-                      <div className="program-table-header">
-                        <div className="d-flex align-items-center gap-3">
-                          <span className="badge-program-code-large">
-                            {program.code}
-                          </span>
-                          <h3 className="program-table-title">
-                            {program.name}
-                          </h3>
+                      <div id={`print-section-${program.code}`}>
+                        <div className="program-table-header">
+                          <div className="d-flex align-items-center gap-3">
+                            <span className="badge-program-code-large">
+                              {program.code}
+                            </span>
+                            <h3 className="program-table-title">
+                              {program.name}
+                            </h3>
+                          </div>
+                          <div className="program-meta">
+                            <i className="bi bi-people-fill text-muted me-2"></i>
+                            <strong>{studentCount}</strong> Students Enrolled
+                          </div>
                         </div>
-                        <div className="program-meta">
-                          <i className="bi bi-people-fill text-muted me-2"></i>
-                          <strong>{studentCount}</strong> Students Enrolled
-                        </div>
-                      </div>
 
-                      <div className="table-responsive student-table-wrapper">
-                        <table className="table table-hover align-middle mb-0">
-                          <thead className="table-light sticky-top">
-                            <tr>
-                              <th scope="col" style={{ width: "60px" }}>
-                                #
-                              </th>
-                              <th scope="col" style={{ width: "150px" }}>
-                                ID Number
-                              </th>
-                              <th scope="col">Student Name</th>
-                              <th scope="col" style={{ width: "120px" }}>
-                                Year Level
-                              </th>
-                              <th
-                                scope="col"
-                                className="text-center"
-                                style={{ width: "150px" }}>
-                                Status
-                              </th>
-                              <th
-                                scope="col"
-                                className="text-center"
-                                style={{ width: "180px" }}>
-                                Date
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {students.length > 0 ?
-                              students.map((student, idx) => (
-                                <tr key={student.id || idx}>
-                                  <td className="text-muted small">
-                                    {idx + 1}
-                                  </td>
-                                  <td className="fw-bold text-primary">
-                                    {student.student_id_no}
-                                  </td>
-                                  <td>
-                                    <div className="d-flex align-items-center">
-                                      <div className="avatar-circle-sm me-3">
-                                        {student.first_name.charAt(0)}
+                        <div className="table-responsive student-table-wrapper">
+                          <table className="table table-hover align-middle mb-0">
+                            <thead className="table-light sticky-top">
+                              <tr>
+                                <th scope="col" style={{ width: "60px" }}>#</th>
+                                <th scope="col" style={{ width: "150px" }}>ID Number</th>
+                                <th scope="col">Student Name</th>
+                                <th scope="col" style={{ width: "120px" }}>Year Level</th>
+                                <th scope="col" className="text-center" style={{ width: "150px" }}>Status</th>
+                                <th scope="col" className="text-center" style={{ width: "180px" }}>Date</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {students.length > 0 ?
+                                students.map((student, idx) => (
+                                  <tr key={student.id || idx}>
+                                    <td className="text-muted small">{idx + 1}</td>
+                                    <td className="fw-bold text-primary">{student.student_id_no}</td>
+                                    <td>
+                                      <div className="d-flex align-items-center">
+                                        <div className="avatar-circle-sm me-3">
+                                          {student.first_name.charAt(0)}
+                                        </div>
+                                        <span className="fw-semibold text-dark">
+                                          {student.last_name}, {student.first_name}
+                                        </span>
                                       </div>
-                                      <span className="fw-semibold text-dark">
-                                        {student.last_name},{" "}
-                                        {student.first_name}
+                                    </td>
+                                    <td className="text-center">
+                                      {student.year_level ?
+                                        <span className="badge bg-secondary bg-opacity-10 text-secondary border">
+                                          {student.year_level}
+                                        </span>
+                                      : <span className="text-muted">—</span>}
+                                    </td>
+                                    <td className="text-center">
+                                      <span
+                                        className={`badge ${
+                                          studentStatus[student.student_id_no]?.toLowerCase() === "present"
+                                            ? "bg-success"
+                                            : "bg-light text-secondary border"
+                                        }`}>
+                                        {studentStatus[student.student_id_no] || "Not Marked"}
                                       </span>
-                                    </div>
-                                  </td>
-                                  <td className="text-center">
-                                    {student.year_level ?
-                                      <span className="badge bg-secondary bg-opacity-10 text-secondary border">
-                                        {student.year_level}
-                                      </span>
-                                    : <span className="text-muted">—</span>}
-                                  </td>
-                                  <td className="text-center">
-                                    <span
-                                      className={`badge ${
-                                        (
-                                          studentStatus[
-                                            student.student_id_no
-                                          ]?.toLowerCase() === "present"
-                                        ) ?
-                                          "bg-success"
-                                        : "bg-light text-secondary border"
-                                      }`}>
-                                      {studentStatus[student.student_id_no] ||
-                                        "Not Marked"}
-                                    </span>
-                                  </td>
-                                  <td className="text-center text-muted small">
-                                    {studentTime[student.student_id_no] ?
-                                      new Date(
-                                        studentTime[student.student_id_no],
-                                      ).toLocaleDateString()
-                                    : <span className="text-secondary">—</span>}
+                                    </td>
+                                    <td className="text-center text-muted small">
+                                      {studentTime[student.student_id_no] ?
+                                        new Date(studentTime[student.student_id_no]).toLocaleDateString()
+                                      : <span className="text-secondary">—</span>}
+                                    </td>
+                                  </tr>
+                                ))
+                              : <tr>
+                                  <td colSpan={6} className="text-center py-4 text-muted">
+                                    No students found in this program.
                                   </td>
                                 </tr>
-                              ))
-                            : <tr>
-                                <td
-                                  colSpan={5}
-                                  className="text-center py-4 text-muted">
-                                  No students found in this program.
-                                </td>
-                              </tr>
-                            }
-                          </tbody>
-                        </table>
+                              }
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>{/* closes print-section */}
+
+                      <div className="d-flex justify-content-end mt-2 px-2 pb-2">
+                        <button
+                          className="btn btn-outline-secondary btn-sm"
+                          onClick={() => handlePrint(program.code)}>
+                          <i className="bi bi-printer me-1"></i>
+                          Print
+                        </button>
                       </div>
-                    </div>
+                    </div> /* closes program-table-card */
                   );
                 })
               : <div className="text-center py-5 text-muted">
