@@ -42,6 +42,7 @@ function Attendance() {
     {},
   );
   const [studentTime, setStudentTime] = useState<Record<string, string>>({});
+  const [yearLevelFilter, setYearLevelFilter] = useState<string>("ALL");
 
   const attendanceActiveRef = useRef(false);
 
@@ -93,21 +94,25 @@ function Attendance() {
 
   const filteredPrograms = programsToShow
     .map((program) => {
-      if (!searchQuery.trim()) return program;
       const filteredStudents = (program.studentList || []).filter((student) => {
         const fullName =
           `${student.first_name} ${student.last_name}`.toLowerCase();
         const id = student.student_id_no.toLowerCase();
         const query = searchQuery.toLowerCase();
-        return fullName.includes(query) || id.includes(query);
+
+        const matchesSearch =
+          !searchQuery.trim() || fullName.includes(query) || id.includes(query);
+
+        const matchesYear =
+          yearLevelFilter === "ALL" ||
+          String(student.year_level) === yearLevelFilter;
+
+        return matchesSearch && matchesYear;
       });
+
       return { ...program, studentList: filteredStudents };
     })
-    .filter(
-      (program) =>
-        !searchQuery.trim() ||
-        (program.studentList && program.studentList.length > 0),
-    );
+    .filter((program) => program.studentList && program.studentList.length > 0);
 
   useEffect(() => {
     if (programs.length === 0) return;
@@ -146,8 +151,6 @@ function Attendance() {
           status: string;
           attendance_time?: string;
         }[] = await res.json();
-
-        console.log("Poll response:", JSON.stringify(data)); // ← debug log
 
         setStudentStatus((prevStatus) => {
           const updatedStatus = { ...prevStatus };
@@ -243,6 +246,19 @@ function Attendance() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
+              </div>
+
+              <div className="year-filter-container">
+                <select
+                  className="form-select"
+                  value={yearLevelFilter}
+                  onChange={(e) => setYearLevelFilter(e.target.value)}>
+                  <option value="ALL">All Year Levels</option>
+                  <option value="1">1st Year</option>
+                  <option value="2">2nd Year</option>
+                  <option value="3">3rd Year</option>
+                  <option value="4">4th Year</option>
+                </select>
               </div>
 
               {!attendanceActive ?
