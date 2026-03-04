@@ -355,7 +355,7 @@ const getRecentEvent = (events: Event[]) => {
 function AttendanceHistory() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
-  const [selectedYearLevel, setSelectedYearLevel] = useState<string>("all");
+  const [selectedYear, setSelectedYear] = useState<string>("all");
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [loadingAttendance, setLoadingAttendance] = useState(false);
 
@@ -382,6 +382,16 @@ function AttendanceHistory() {
 
   const selectedEvent = events.find((e) => e.id === selectedEventId) ?? null;
 
+  // Derive unique years from events for the year dropdown
+  const uniqueYears = Array.from(
+    new Set(events.map((e) => new Date(e.event_date).getFullYear()))
+  ).sort((a, b) => b - a);
+
+  // Filter events list by selected year for the event dropdown
+  const yearFilteredEvents = selectedYear === "all"
+    ? events
+    : events.filter((e) => new Date(e.event_date).getFullYear() === Number(selectedYear));
+
   const presentIds = new Set(
     attendanceRecords.filter((r) => r.status === "present").map((r) => r.student_id_no)
   );
@@ -398,7 +408,7 @@ function AttendanceHistory() {
         const matchesSearch = !searchQuery.trim() ||
           fullName.includes(searchQuery.toLowerCase()) ||
           s.student_id_no.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesYear = selectedYearLevel === "all" || String(s.year_level) === selectedYearLevel;
+        const matchesYear = true; // year filter is applied at event level
         return matchesSearch && matchesYear;
       });
       return { ...program, students: filtered };
@@ -476,7 +486,7 @@ function AttendanceHistory() {
                   onFocus={(e) => { e.currentTarget.style.borderColor = "#0d6efd"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(13,110,253,0.15)"; }}
                   onBlur={(e) => { e.currentTarget.style.borderColor = "#e0e7ff"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(13,110,253,0.07)"; }}>
                   <option value="">Select an event</option>
-                  {[...events]
+                  {[...yearFilteredEvents]
                     .sort((a, b) =>
                       new Date(`${b.event_date}T${b.start_time}`).getTime() -
                       new Date(`${a.event_date}T${a.start_time}`).getTime()
@@ -490,20 +500,19 @@ function AttendanceHistory() {
                 <i className="bi bi-chevron-down" style={S.selectChevron} />
               </div>
 
-              {/* Year Level dropdown */}
-              <div style={{ position: "relative", minWidth: 150 }}>
-                <i className="bi bi-mortarboard" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#6c757d", fontSize: "0.9rem", pointerEvents: "none", zIndex: 1 }} />
+              {/* Year filter dropdown */}
+              <div style={{ position: "relative", minWidth: 130 }}>
+                <i className="bi bi-calendar3" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#6c757d", fontSize: "0.9rem", pointerEvents: "none", zIndex: 1 }} />
                 <select
-                  value={selectedYearLevel}
-                  onChange={(e) => setSelectedYearLevel(e.target.value)}
-                  style={{ ...S.select, minWidth: 150 }}
+                  value={selectedYear}
+                  onChange={(e) => { setSelectedYear(e.target.value); setSelectedEventId(null); }}
+                  style={{ ...S.select, minWidth: 130 }}
                   onFocus={(e) => { e.currentTarget.style.borderColor = "#0d6efd"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(13,110,253,0.15)"; }}
                   onBlur={(e) => { e.currentTarget.style.borderColor = "#e0e7ff"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(13,110,253,0.07)"; }}>
                   <option value="all">All Years</option>
-                  <option value="1">1st Year</option>
-                  <option value="2">2nd Year</option>
-                  <option value="3">3rd Year</option>
-                  <option value="4">4th Year</option>
+                  {uniqueYears.map((yr) => (
+                    <option key={yr} value={yr}>{yr}</option>
+                  ))}
                 </select>
                 <i className="bi bi-chevron-down" style={S.selectChevron} />
               </div>
