@@ -40,7 +40,7 @@ const S: Record<string, React.CSSProperties> = {
     maxWidth: 1600,
     margin: "0 auto",
     width: "100%",
-    padding: "0 1.5rem 2rem",
+    padding: "2.5rem 1.5rem 2rem", // ← increased top padding for breathing room
   },
 
   // Header
@@ -50,8 +50,8 @@ const S: Record<string, React.CSSProperties> = {
     color: "#fff",
     padding: "3rem 2rem",
     overflow: "hidden",
-    marginBottom: "-2rem",
-    paddingBottom: "3rem",
+    marginBottom: 0, // ← removed negative margin so content doesn't overlap
+    paddingBottom: "3.5rem",
   },
   wave: {
     position: "absolute",
@@ -124,8 +124,8 @@ const S: Record<string, React.CSSProperties> = {
     alignItems: "flex-start",
     gap: "1.5rem",
     flexWrap: "wrap" as const,
-    paddingTop: "1.5rem",
-    marginBottom: "1.5rem",
+    paddingTop: "0.5rem",
+    marginBottom: "2rem",
   },
   headerTextGroup: {
     flex: 1,
@@ -792,9 +792,9 @@ function Attendance() {
                             </tbody>
                           </table>
                         </div>
-                      </div>{/* closes print-section */}
+                      </div>
 
-                    </div> /* closes program-table-card */
+                    </div> 
                   );
                 })
               ) : (
