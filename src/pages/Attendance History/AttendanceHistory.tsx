@@ -191,6 +191,18 @@ const S: Record<string, React.CSSProperties> = {
     boxShadow: "0 2px 8px rgba(13,110,253,0.07)",
     outline: "none",
   },
+  yearLevelSelect: {
+    height: 42,
+    minWidth: 150,
+    padding: "0 2rem 0 0.85rem",
+    borderRadius: 12,
+    border: "1px solid #e2e8f0",
+    fontSize: "0.875rem",
+    backgroundColor: "#fff",
+    cursor: "pointer",
+    appearance: "auto" as const,
+    outline: "none",
+  },
   searchWrapper: { position: "relative" as const, width: 240 },
   searchIconStyle: {
     position: "absolute" as const,
@@ -394,6 +406,7 @@ const getRecentEvent = (events: Event[]) => {
 // ── Component ─────────────────────────────────────────────────────────────────
 function AttendanceHistory() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [yearLevelFilter, setYearLevelFilter] = useState<string>("ALL");
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
   const [selectedYear, setSelectedYear] = useState<string>(
     String(new Date().getFullYear()),
@@ -457,11 +470,13 @@ function AttendanceHistory() {
       const students = program.studentList ?? [];
       const filtered = students.filter((s) => {
         const fullName = `${s.first_name} ${s.last_name}`.toLowerCase();
-        return (
+        const matchesSearch =
           !searchQuery.trim() ||
           fullName.includes(searchQuery.toLowerCase()) ||
-          s.student_id_no.toLowerCase().includes(searchQuery.toLowerCase())
-        );
+          s.student_id_no.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesYear =
+          yearLevelFilter === "ALL" || String(s.year_level) === yearLevelFilter;
+        return matchesSearch && matchesYear;
       });
       return { ...program, students: filtered };
     })
@@ -624,7 +639,7 @@ function AttendanceHistory() {
                 <i className="bi bi-chevron-down" style={S.selectChevron} />
               </div>
 
-              {/* Year filter */}
+              {/* Year filter (event year) */}
               <div style={{ position: "relative", minWidth: 130 }}>
                 <i
                   className="bi bi-calendar3"
@@ -664,6 +679,18 @@ function AttendanceHistory() {
                 </select>
                 <i className="bi bi-chevron-down" style={S.selectChevron} />
               </div>
+
+              {/* Year level filter */}
+              <select
+                style={S.yearLevelSelect}
+                value={yearLevelFilter}
+                onChange={(e) => setYearLevelFilter(e.target.value)}>
+                <option value="ALL">All Year Levels</option>
+                <option value="1st year">1st Year</option>
+                <option value="2nd year">2nd Year</option>
+                <option value="3rd year">3rd Year</option>
+                <option value="4th year">4th Year</option>
+              </select>
 
               {/* Search */}
               <div style={S.searchWrapper}>
@@ -727,7 +754,6 @@ function AttendanceHistory() {
 
                   return (
                     <div key={program.code} style={S.programCard}>
-                      {/* Card header */}
                       <div style={S.programCardHeader}>
                         <div style={S.programHeaderLeft}>
                           <span style={S.programCodeBadge}>{program.code}</span>
@@ -740,7 +766,6 @@ function AttendanceHistory() {
                             gap: "0.75rem",
                             flexWrap: "wrap" as const,
                           }}>
-                          {/* Attendance rate bar */}
                           <div
                             style={{
                               display: "flex",
@@ -804,7 +829,6 @@ function AttendanceHistory() {
                         </div>
                       </div>
 
-                      {/* Printable table */}
                       <div id={`print-section-${program.code}`}>
                         <div
                           className="ah-table-wrapper"
