@@ -409,6 +409,8 @@ async function fetchAttendanceRecords(
       attendance_time?: string;
     }[] = await res.json();
 
+    console.log("Attendance data:", data);
+
     // Always overwrite with latest data from server — server is the source of truth
     setStudentStatus((prev) => {
       const updated = { ...prev };
