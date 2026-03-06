@@ -742,7 +742,7 @@ function Attendance() {
                                 Status
                               </th>
                               <th style={{ ...S.thCenter, width: 170 }}>
-                                Time
+                                Date
                               </th>
                             </tr>
                           </thead>
@@ -830,9 +830,10 @@ function Attendance() {
                                     {studentTime[student.student_id_no] ?
                                       new Date(
                                         studentTime[student.student_id_no],
-                                      ).toLocaleTimeString("en-US", {
-                                        hour: "2-digit",
-                                        minute: "2-digit",
+                                      ).toLocaleDateString("en-US", {
+                                        year: "numeric",
+                                        month: "short",
+                                        day: "numeric",
                                       })
                                     : <span style={{ color: "#cbd5e1" }}>
                                         —
