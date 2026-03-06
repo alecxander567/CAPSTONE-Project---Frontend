@@ -85,7 +85,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
           {/* Student ID */}
           <Form.Group className="mb-3">
             <Form.Label className="fw-semibold small text-secondary">
-              <i className="bi bi-credit-card me-2"></i>Student ID
+              <i className="bi bi-credit-card me-2"></i>Student ID or Account
+              ID(For Admin)
             </Form.Label>
             <Form.Control
               type="text"
