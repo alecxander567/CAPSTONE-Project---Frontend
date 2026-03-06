@@ -387,6 +387,49 @@ const S: Record<string, React.CSSProperties> = {
   },
 };
 
+// ── Fetch attendance records and update state ─────────────────────────────────
+async function fetchAttendanceRecords(
+  eventId: string,
+  setStudentStatus: React.Dispatch<
+    React.SetStateAction<Record<string, string>>
+  >,
+  setStudentTime: React.Dispatch<React.SetStateAction<Record<string, string>>>,
+) {
+  try {
+    const res = await fetch(
+      `${import.meta.env.VITE_API_URL}/attendance/by-event/${eventId}`,
+    );
+    if (!res.ok) {
+      console.error(`HTTP Error: ${res.status} ${res.statusText}`);
+      return;
+    }
+    const data: {
+      student_id_no: string;
+      status: string;
+      attendance_time?: string;
+    }[] = await res.json();
+
+    // Always overwrite with latest data from server — server is the source of truth
+    setStudentStatus((prev) => {
+      const updated = { ...prev };
+      data.forEach((item) => {
+        updated[item.student_id_no] = item.status;
+      });
+      return updated;
+    });
+    setStudentTime((prev) => {
+      const updated = { ...prev };
+      data.forEach((item) => {
+        if (item.attendance_time)
+          updated[item.student_id_no] = item.attendance_time;
+      });
+      return updated;
+    });
+  } catch (err) {
+    console.error("Failed to fetch attendance updates:", err);
+  }
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 function Attendance() {
   const navigate = useNavigate();
@@ -449,6 +492,33 @@ function Attendance() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // ── Seed "Not Marked" ONLY for students not yet seen from the server ──
+  // This runs after programs load but won't clobber keys already set by the poll.
+  useEffect(() => {
+    if (programs.length === 0) return;
+    setStudentStatus((prevStatus) => {
+      const statusMap: Record<string, string> = { ...prevStatus };
+      programs.forEach((program) => {
+        (program.studentList || []).forEach((student) => {
+          if (!(student.student_id_no in statusMap)) {
+            statusMap[student.student_id_no] = "Not Marked";
+          }
+        });
+      });
+      return statusMap;
+    });
+  }, [programs]);
+
+  // ── Poll every 3s always (fetch immediately on mount too) ──
+  useEffect(() => {
+    if (!eventId) return;
+    fetchAttendanceRecords(eventId, setStudentStatus, setStudentTime);
+    const interval = setInterval(() => {
+      fetchAttendanceRecords(eventId, setStudentStatus, setStudentTime);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [eventId]);
+
   const programsToShow =
     event?.program_id ?
       programs.filter((p) => p.id === event.program_id)
@@ -472,58 +542,6 @@ function Attendance() {
       return { ...program, studentList: filteredStudents };
     })
     .filter((program) => program.studentList && program.studentList.length > 0);
-
-  useEffect(() => {
-    if (programs.length === 0) return;
-    setStudentStatus((prevStatus) => {
-      const statusMap: Record<string, string> = { ...prevStatus };
-      programs.forEach((program) => {
-        (program.studentList || []).forEach((student) => {
-          if (!statusMap[student.student_id_no])
-            statusMap[student.student_id_no] = "Not Marked";
-        });
-      });
-      return statusMap;
-    });
-  }, [programs]);
-
-  useEffect(() => {
-    if (!attendanceActive || !eventId) return;
-    const interval = setInterval(async () => {
-      try {
-        const res = await fetch(
-          `${import.meta.env.VITE_API_URL}/attendance/by-event/${eventId}`,
-        );
-        if (!res.ok) {
-          console.error(`HTTP Error: ${res.status} ${res.statusText}`);
-          return;
-        }
-        const data: {
-          student_id_no: string;
-          status: string;
-          attendance_time?: string;
-        }[] = await res.json();
-        setStudentStatus((prev) => {
-          const updated = { ...prev };
-          data.forEach((item) => {
-            updated[item.student_id_no] = item.status;
-          });
-          return updated;
-        });
-        setStudentTime((prev) => {
-          const updated = { ...prev };
-          data.forEach((item) => {
-            if (item.attendance_time)
-              updated[item.student_id_no] = item.attendance_time;
-          });
-          return updated;
-        });
-      } catch (err) {
-        console.error("Failed to fetch attendance updates:", err);
-      }
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [attendanceActive, eventId]);
 
   return (
     <div style={S.layout}>
