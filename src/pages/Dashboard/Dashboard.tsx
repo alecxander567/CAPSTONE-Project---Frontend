@@ -907,7 +907,21 @@ function Dashboard() {
                     {calendarDays.map((dayInfo, idx) => (
                       <div
                         key={idx}
-                        className={`calendar-day ${!dayInfo.isCurrentMonth ? "other-month" : ""} ${dayInfo.isToday ? "today" : ""} ${dayInfo.hasEvent ? "has-event" : ""}`}>
+                        className={`calendar-day ${!dayInfo.isCurrentMonth ? "other-month" : ""} ${dayInfo.isToday ? "today" : ""}`}
+                        style={{
+                          backgroundColor:
+                            dayInfo.isToday ? "#0d6efd"
+                            : dayInfo.hasEvent ? "#fd7e14"
+                            : "transparent",
+                          color:
+                            dayInfo.isToday ? "#fff"
+                            : dayInfo.hasEvent ? "#fff"
+                            : !dayInfo.isCurrentMonth ? "#cbd5e1"
+                            : "#1e293b",
+                          borderRadius: "8px",
+                          fontWeight:
+                            dayInfo.isToday || dayInfo.hasEvent ? 700 : 400,
+                        }}>
                         {dayInfo.day}
                       </div>
                     ))}
