@@ -361,7 +361,9 @@ const S: Record<string, React.CSSProperties> = {
     borderRadius: 6,
     fontSize: "0.78rem",
     fontWeight: 600,
-    display: "inline-block",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
   },
   badgeAbsent: {
     background: "#f1f5f9",
@@ -371,7 +373,21 @@ const S: Record<string, React.CSSProperties> = {
     borderRadius: 6,
     fontSize: "0.78rem",
     fontWeight: 600,
-    display: "inline-block",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  badgeYearLevel: {
+    background: "rgba(100,116,139,0.1)",
+    color: "#475569",
+    border: "1px solid #e2e8f0",
+    padding: "2px 8px",
+    borderRadius: 6,
+    fontSize: "0.78rem",
+    fontWeight: 500,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
   },
   emptyState: {
     textAlign: "center" as const,
@@ -926,33 +942,38 @@ function AttendanceHistory() {
                                       </div>
                                     </td>
                                     <td style={S.tdCenter}>
-                                      {student.year_level ?
-                                        <span
-                                          style={{
-                                            background: "rgba(100,116,139,0.1)",
-                                            color: "#475569",
-                                            border: "1px solid #e2e8f0",
-                                            padding: "2px 8px",
-                                            borderRadius: 6,
-                                            fontSize: "0.78rem",
-                                            fontWeight: 500,
-                                          }}>
-                                          {student.year_level}
-                                        </span>
-                                      : <span style={{ color: "#cbd5e1" }}>
-                                          —
-                                        </span>
-                                      }
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                        }}>
+                                        {student.year_level ?
+                                          <span style={S.badgeYearLevel}>
+                                            {student.year_level}
+                                          </span>
+                                        : <span style={{ color: "#cbd5e1" }}>
+                                            —
+                                          </span>
+                                        }
+                                      </div>
                                     </td>
                                     <td style={S.tdCenter}>
-                                      {isPresent ?
-                                        <span style={S.badgePresent}>
-                                          ✓ Present
-                                        </span>
-                                      : <span style={S.badgeAbsent}>
-                                          Absent
-                                        </span>
-                                      }
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                        }}>
+                                        {isPresent ?
+                                          <span style={S.badgePresent}>
+                                            ✓ Present
+                                          </span>
+                                        : <span style={S.badgeAbsent}>
+                                            Absent
+                                          </span>
+                                        }
+                                      </div>
                                     </td>
                                     <td
                                       style={{
