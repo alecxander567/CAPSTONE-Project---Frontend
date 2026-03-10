@@ -388,6 +388,7 @@ const S: Record<string, React.CSSProperties> = {
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
+    whiteSpace: "nowrap" as const,
   },
   emptyState: {
     textAlign: "center" as const,
