@@ -331,6 +331,13 @@ const S: Record<string, React.CSSProperties> = {
     fontSize: "0.9rem",
     textAlign: "center" as const,
   },
+  tdCenterFlex: {
+    padding: "0.75rem 1.25rem",
+    verticalAlign: "middle" as const,
+    borderBottom: "1px solid #f1f5f9",
+    color: "#334155",
+    fontSize: "0.9rem",
+  },
   avatarCircle: {
     width: 32,
     height: 32,
@@ -370,6 +377,9 @@ const S: Record<string, React.CSSProperties> = {
     borderRadius: 6,
     fontSize: "0.8rem",
     fontWeight: 500,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
   },
   emptyState: {
     textAlign: "center" as const,
@@ -799,29 +809,43 @@ function Attendance() {
                                     </div>
                                   </td>
                                   <td style={S.tdCenter}>
-                                    {student.year_level ?
-                                      <span style={S.badgeYearLevel}>
-                                        {student.year_level}
-                                      </span>
-                                    : <span style={{ color: "#cbd5e1" }}>
-                                        —
-                                      </span>
-                                    }
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      }}>
+                                      {student.year_level ?
+                                        <span style={S.badgeYearLevel}>
+                                          {student.year_level}
+                                        </span>
+                                      : <span style={{ color: "#cbd5e1" }}>
+                                          —
+                                        </span>
+                                      }
+                                    </div>
                                   </td>
                                   <td style={S.tdCenter}>
-                                    <span
-                                      style={
-                                        (
-                                          studentStatus[
-                                            student.student_id_no
-                                          ]?.toLowerCase() === "present"
-                                        ) ?
-                                          S.badgePresent
-                                        : S.badgeNotMarked
-                                      }>
-                                      {studentStatus[student.student_id_no] ||
-                                        "Not Marked"}
-                                    </span>
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      }}>
+                                      <span
+                                        style={
+                                          (
+                                            studentStatus[
+                                              student.student_id_no
+                                            ]?.toLowerCase() === "present"
+                                          ) ?
+                                            S.badgePresent
+                                          : S.badgeNotMarked
+                                        }>
+                                        {studentStatus[student.student_id_no] ||
+                                          "Not Marked"}
+                                      </span>
+                                    </div>
                                   </td>
                                   <td
                                     style={{
