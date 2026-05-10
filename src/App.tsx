@@ -1,8 +1,10 @@
 import { Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
 
-// Admin pages
+// Public pages
 import Landingpage from "./pages/Landingpage/Landingpage";
+
+// Admin pages
 import Dashboard from "./pages/Dashboard/Dashboard";
 import Programs from "./pages/Programs/Programs";
 import ProgramStudents from "./pages/Programs/ProgramStudents";
@@ -24,10 +26,10 @@ import StudentSettings from "./pages/StudentSettings/StudentSettings";
 function App() {
   return (
     <Routes>
-      {/* Public */}
+      {/* Public Route */}
       <Route path="/" element={<Landingpage />} />
 
-      {/* ── Admin only ── */}
+      {/* ── Admin Routes ── */}
       <Route
         path="/dashboard"
         element={
@@ -93,7 +95,7 @@ function App() {
         }
       />
       <Route
-        path="/Settings"
+        path="/settings"
         element={
           <ProtectedRoute allowedRoles={["admin"]}>
             <Settings />
@@ -101,7 +103,7 @@ function App() {
         }
       />
 
-      {/* ── Student only ── */}
+      {/* ── Student Routes ── */}
       <Route
         path="/student-dashboard"
         element={

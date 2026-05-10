@@ -1,5 +1,7 @@
+// hooks/Login.ts
 import { useState } from "react";
 import axios from "axios";
+import api from "../api/axiosConfig"; 
 
 interface LoginPayload {
   student_id_no: string;
@@ -22,12 +24,11 @@ export const useLogin = () => {
     setError(null);
 
     try {
-      const { data } = await axios.post<LoginResponse>(
-        `${import.meta.env.VITE_API_URL}/auth/login`,
-        payload,
-      );
+      const { data } = await api.post<LoginResponse>("/auth/login", payload);
 
+      // Store ALL auth data here - this is the single source of truth
       localStorage.setItem("token", data.access_token);
+      localStorage.setItem("token_type", "bearer");
       localStorage.setItem("role", data.role);
       localStorage.setItem("student_id_no", data.student_id_no);
 

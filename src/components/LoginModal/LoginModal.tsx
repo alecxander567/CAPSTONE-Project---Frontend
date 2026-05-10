@@ -20,11 +20,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
   const [showForgot, setShowForgot] = useState(false);
   const [showReset, setShowReset] = useState(false);
   const [resetToken, setResetToken] = useState("");
-
   const [showRegister, setShowRegister] = useState(false);
-
-  const handleOpenRegister = () => setShowRegister(true);
-  const handleCloseRegister = () => setShowRegister(false);
 
   const { login, loading, error } = useLogin();
   const navigate = useNavigate();
@@ -36,23 +32,24 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
         password: password,
       });
 
-      setSuccessMessage(data.message || "");
-
-      localStorage.setItem("role", data.role);
-      localStorage.setItem("student_id_no", data.student_id_no);
+      // The useLogin hook already stores the token, role, and student_id_no
+      // No need to store them again here!
+      setSuccessMessage(data.message || "Login successful! Redirecting...");
 
       setTimeout(() => {
         setSuccessMessage("");
         handleClose();
 
+        // Redirect based on role
         if (data.role === "admin") {
-          navigate("/dashboard");
+          navigate("/dashboard", { replace: true });
         } else {
-          navigate("/student-dashboard");
+          navigate("/student-dashboard", { replace: true });
         }
       }, 1000);
-    } catch {
-      // already handled in hook
+    } catch (error) {
+      // Error is already handled in the hook and displayed via the error state
+      console.error("Login failed:", error);
     }
   };
 
@@ -61,6 +58,9 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
       handleLogin();
     }
   };
+
+  const handleOpenRegister = () => setShowRegister(true);
+  const handleCloseRegister = () => setShowRegister(false);
 
   return (
     <Modal show={show} onHide={handleClose} centered backdrop="static">
@@ -188,17 +188,12 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
                 }}>
                 Sign up
               </a>
-              {/* Register Modal */}
-              <RegisterModal
-                show={showRegister}
-                handleClose={handleCloseRegister}
-              />
             </span>
           </div>
         </div>
       </Modal.Footer>
 
-      {/* Password Modals Modal */}
+      {/* Password Modals */}
       <ForgotPasswordModal
         show={showForgot}
         onClose={() => setShowForgot(false)}
@@ -214,6 +209,9 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
         token={resetToken}
         onClose={() => setShowReset(false)}
       />
+
+      {/* Register Modal */}
+      <RegisterModal show={showRegister} handleClose={handleCloseRegister} />
     </Modal>
   );
 };

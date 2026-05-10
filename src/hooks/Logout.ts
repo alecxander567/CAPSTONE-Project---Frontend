@@ -1,20 +1,25 @@
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api/axiosConfig";
 
 export const useLogout = () => {
   const navigate = useNavigate();
 
   const logout = async () => {
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/auth/logout`);
-
-      localStorage.removeItem("student_id_no");
-
-      navigate("/");
+      const token = localStorage.getItem("token");
+      if (token) {
+        await api.post("/auth/logout");
+      }
     } catch (error) {
-      console.error("Logout failed:", error);
+      console.error("Logout error:", error);
+    } finally {
+      // Clear all auth data
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
       localStorage.removeItem("student_id_no");
-      navigate("/");
+
+      // Redirect to landing page
+      navigate("/", { replace: true });
     }
   };
 
