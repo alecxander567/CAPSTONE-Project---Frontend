@@ -33,6 +33,40 @@
   color: #ffffff !important;
   background: rgba(255, 255, 255, 0.08);
 }
+
+/* Fix hamburger icon visibility on dark navbar */
+.custom-navbar .navbar-toggler {
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.custom-navbar .navbar-toggler:focus {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15) !important;
+}
+
+.custom-navbar .navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.85%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+}
+
+/* Mobile dropdown */
+.navbar-collapse {
+  background: rgba(8, 20, 48, 0.98);
+  border-radius: 0 0 12px 12px;
+  padding: 0.5rem 1rem 1rem;
+  margin-top: 4px;
+}
+
+@media (min-width: 992px) {
+  .navbar-collapse {
+    background: transparent;
+    padding: 0;
+    margin-top: 0;
+    border-radius: 0;
+  }
+}
+
+/* ------------------- HERO ------------------- */
 .hero-section {
   flex-grow: 1;
   display: flex;
@@ -44,18 +78,6 @@
   position: relative;
   overflow: hidden;
   min-height: 80vh;
-}
-
-.hero-section::before,
-.hero-section::after {
-  content: "";
-  position: absolute;
-  width: 200%;
-  height: 300px;
-  bottom: 0;
-  left: -50%;
-  z-index: 0;
-  filter: blur(0.5px);
 }
 
 .hero-section::before {
@@ -111,6 +133,7 @@
   height: auto;
 }
 
+/* ------------------- BUTTONS ------------------- */
 .btn-login,
 .btn-register {
   border: none !important;
@@ -124,14 +147,16 @@
 }
 
 .btn-login {
-  background: transparent !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  color: rgba(255, 255, 255, 0.85) !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  color: white !important;
+  backdrop-filter: blur(4px);
 }
 
 .btn-login:hover {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border-color: rgba(255, 255, 255, 0.35) !important;
+  background: rgba(255, 255, 255, 0.22) !important;
+  border-color: rgba(255, 255, 255, 0.55) !important;
+  color: white !important;
 }
 
 .btn-register {
@@ -143,11 +168,13 @@
 .btn-register:hover {
   background: #1d4ed8 !important;
 }
+
 .btn-login i,
 .btn-register i {
   margin-right: 8px;
 }
 
+/* ------------------- CARDS ------------------- */
 .bg-primary.bg-opacity-10,
 .bg-success.bg-opacity-10,
 .bg-info.bg-opacity-10,
@@ -177,7 +204,6 @@
   padding: 0 !important;
 }
 
-/* Hover effect for cards */
 .hover-lift {
   transition:
     transform 0.3s ease,
@@ -189,34 +215,22 @@
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
 }
 
+/* ------------------- ANIMATIONS ------------------- */
+@keyframes heroWave {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @keyframes waveMove {
   0% {
     transform: translateX(0);
   }
   100% {
     transform: translateX(-50%);
-  }
-}
-
-@media (max-width: 576px) {
-  .hero-section {
-    padding: 3rem 1rem;
-    min-height: 70vh;
-  }
-
-  .btn-login,
-  .btn-register {
-    max-width: 100%;
-  }
-
-  .hero-image {
-    max-height: 250px;
-  }
-}
-
-@media (min-width: 577px) and (max-width: 768px) {
-  .hero-image {
-    max-height: 300px;
   }
 }
 
@@ -244,15 +258,7 @@
   }
 }
 
-@keyframes heroWave {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
+/* ------------------- FADE ANIMATIONS ------------------- */
 .fade-section {
   opacity: 0;
   transform: translateY(80px);
@@ -305,16 +311,7 @@
   transform: translateY(0);
 }
 
-.modal-footer .btn-primary,
-.modal-body .btn-primary {
-  background: linear-gradient(135deg, #5eb3ff, #8fccff) !important;
-  border: none !important;
-  color: white !important;
-  font-weight: 600;
-  box-shadow: 0 4px 15px rgba(94, 179, 255, 0.4);
-  transition: all 0.3s ease;
-}
-
+/* ------------------- MODALS ------------------- */
 .modal-footer .btn-primary,
 .modal-body .btn-primary {
   background: linear-gradient(135deg, #0a1f44, #0a3d91) !important;
@@ -364,19 +361,25 @@
   font-size: 1rem;
 }
 
-/* Mobile dropdown styles */
-.navbar-collapse {
-  background: rgba(8, 20, 48, 0.98);
-  border-radius: 0 0 12px 12px;
-  padding: 0.5rem 1rem 1rem;
-  margin-top: 4px;
+/* ------------------- RESPONSIVE ------------------- */
+@media (max-width: 576px) {
+  .hero-section {
+    padding: 3rem 1rem;
+    min-height: 70vh;
+  }
+
+  .btn-login,
+  .btn-register {
+    max-width: 100%;
+  }
+
+  .hero-image {
+    max-height: 250px;
+  }
 }
 
-@media (min-width: 992px) {
-  .navbar-collapse {
-    background: transparent;
-    padding: 0;
-    margin-top: 0;
-    border-radius: 0;
+@media (min-width: 577px) and (max-width: 768px) {
+  .hero-image {
+    max-height: 300px;
   }
 }
