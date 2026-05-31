@@ -1,10 +1,9 @@
-/* ── Global reset (prevents Bootstrap margin bleed) ── */
+/* ── Global reset ── */
 *,
 *::before,
 *::after {
   box-sizing: border-box;
 }
-
 body {
   margin: 0;
   padding: 0;
@@ -30,17 +29,9 @@ body {
   margin-left: var(--sidebar-width);
   width: calc(100% - var(--sidebar-width));
   padding: 0;
-  margin-top: 0;
-  transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-}
-
-/* Kill any global margin/padding bleeding into the header */
-.dashboard-main > header:first-child {
-  margin-top: 0;
-  padding-top: 3rem;
 }
 
 @media (max-width: 991px) {
@@ -48,7 +39,7 @@ body {
     margin-left: 0;
     width: 100%;
     padding-top: 56px;
-    padding-bottom: 70px; /* space for footer nav */
+    padding-bottom: 70px;
   }
 }
 
@@ -92,7 +83,7 @@ body {
   color: #fff;
   padding: 3rem 2rem 5rem 2rem;
   overflow: hidden;
-  margin: 0; /* kill any inherited margin */
+  margin: 0;
   flex-shrink: 0;
 }
 
@@ -181,14 +172,12 @@ body {
     grid-template-columns: repeat(2, 1fr);
     gap: 0.75rem;
   }
-
   .stat-card {
     padding: 1rem;
     flex-direction: column;
     text-align: center;
     gap: 0.5rem;
   }
-
   .stat-info h4 {
     font-size: 0.75rem;
   }
@@ -426,12 +415,10 @@ body {
   background: #e9ecef;
   transform: scale(1.05);
 }
-
 .calendar-day.other-month {
   color: #6c757d;
   background: transparent;
 }
-
 .calendar-day.today {
   background: var(--primary-color);
   color: white;
@@ -472,7 +459,6 @@ body {
   height: 12px;
   border-radius: 4px;
 }
-
 .today-dot {
   background: var(--primary-color);
 }
@@ -555,8 +541,7 @@ body {
 /* ── Responsive ── */
 @media (max-width: 768px) {
   .dashboard-header {
-    padding: 2rem 1.5rem;
-    padding-bottom: 50px;
+    padding: 2rem 1.5rem 4rem 1.5rem;
   }
   .dashboard-header-content {
     flex-direction: column;
@@ -590,12 +575,10 @@ body {
   body * {
     visibility: hidden;
   }
-
   #print-analytics,
   #print-analytics * {
     visibility: visible;
   }
-
   #print-analytics {
     position: absolute;
     left: 0;
@@ -603,13 +586,11 @@ body {
     width: 100%;
     padding: 20px;
   }
-
   .print-header {
     display: block;
     text-align: center;
     margin-bottom: 25px;
   }
-
   .print-header h2 {
     margin: 0;
     font-size: 22px;
@@ -624,11 +605,9 @@ body {
     font-size: 13px;
     color: #666;
   }
-
   .btn-print-analytics {
     display: none !important;
   }
-
   .stat-card,
   .analytics-chart,
   .lower-card {

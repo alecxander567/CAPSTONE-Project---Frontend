@@ -1,4 +1,4 @@
-/* ── Desktop sidebar (unchanged) ── */
+/* ── Desktop sidebar ── */
 .sidebar {
   width: 260px;
   height: 100vh;
@@ -119,47 +119,46 @@
   transform: translateY(0);
 }
 
-/* ── Top bar toggle (mobile) ── */
+/* ── Mobile topbar toggle — hidden on desktop ── */
 .sidebar-toggle {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  z-index: 1200;
-  background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-  border: none;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
-  color: #fff;
-  padding: 0.75rem 1.25rem;
-  font-size: 1rem;
-  display: none;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 0.75rem;
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.15);
+  display: none; /* hidden by default (desktop) */
 }
 
-@media (min-width: 992px) {
-  .sidebar {
-    transform: translateX(0);
-  }
+/* ── Footer nav — hidden on desktop ── */
+.footer-nav {
+  display: none; /* hidden by default (desktop) */
 }
 
-/* ── Mobile: bottom footer nav ── */
+/* ── Mobile ── */
 @media (max-width: 991px) {
-  /* Hide the original sidebar entirely */
+  /* Hide desktop sidebar */
   .sidebar {
     display: none;
   }
 
-  /* Hide the old hamburger toggle */
+  /* Show mobile topbar */
   .sidebar-toggle {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1200;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+    color: #fff;
+    padding: 0.75rem 1.25rem;
+    font-size: 1rem;
     display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 0.75rem;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.15);
   }
 
-  /* Footer nav bar */
+  /* Show footer nav */
   .footer-nav {
     position: fixed;
     bottom: 0;
@@ -211,7 +210,6 @@
   .footer-nav-item.active {
     color: #ffffff;
   }
-
   .footer-nav-item.active i {
     color: #ffffff;
   }
