@@ -1,9 +1,7 @@
 import "./Sidebar.css";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useLogout } from "../../hooks/Logout";
-import { useState } from "react";
 import { useNotifications } from "../../hooks/useNotifyEvents";
-import logo from "../../assets/logo.jpg";
 
 const Sidebar = () => {
   const navigate = useNavigate();
@@ -11,33 +9,33 @@ const Sidebar = () => {
   const { logout } = useLogout();
   const { notifications } = useNotifications();
 
-  const [open, setOpen] = useState(false);
-
   const isActive = (path: string) => location.pathname === path;
 
   const handleNavigate = (path: string) => {
     navigate(path);
-    setOpen(false);
   };
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
+  const navItems = [
+    { path: "/dashboard", icon: "bi-speedometer2", label: "Dashboard" },
+    { path: "/notifications", icon: "bi-bell", label: "Alerts" },
+    { path: "/events", icon: "bi-calendar-event", label: "Events" },
+    { path: "/calendar", icon: "bi-calendar3", label: "Schedules" },
+    {
+      path: "/attendancehistory",
+      icon: "bi-clipboard-check",
+      label: "Attendance",
+    },
+    { path: "/programs", icon: "bi-collection", label: "Programs" },
+    { path: "/settings", icon: "bi-gear", label: "Settings" },
+  ];
+
   return (
     <>
-      <button className="sidebar-toggle" onClick={() => setOpen(!open)}>
-        <i className="bi bi-list"></i>
-        <img
-          src={logo}
-          alt="Logo"
-          width="40"
-          height="40"
-          className="d-inline-block align-top rounded-circle me-2"
-        />
-      </button>
-
-      <aside className={`sidebar ${open ? "open" : ""}`}>
+      {/* ── Desktop Sidebar ── */}
+      <aside className="sidebar">
         <div className="wave"></div>
-
         <div className="sidebar-content">
           <h2 className="sidebar-title">ARA</h2>
 
@@ -121,6 +119,26 @@ const Sidebar = () => {
           </div>
         </div>
       </aside>
+
+      {/* ── Mobile Footer Nav ── */}
+      <nav className="footer-nav">
+        {navItems.map((item) => (
+          <div
+            key={item.path}
+            className={`footer-nav-item ${isActive(item.path) ? "active" : ""}`}
+            onClick={() => handleNavigate(item.path)}>
+            <i className={`bi ${item.icon}`}></i>
+            <span>{item.label}</span>
+            {item.path === "/notifications" && unreadCount > 0 && (
+              <span className="nav-dot" />
+            )}
+          </div>
+        ))}
+        <div className="footer-nav-item footer-nav-logout" onClick={logout}>
+          <i className="bi bi-box-arrow-right"></i>
+          <span>Logout</span>
+        </div>
+      </nav>
     </>
   );
 };
