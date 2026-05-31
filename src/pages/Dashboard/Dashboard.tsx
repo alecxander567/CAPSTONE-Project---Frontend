@@ -160,6 +160,7 @@ function Dashboard() {
   }, []);
 
   return (
+    // ↓ KEY FIX: display:block so fixed sidebar doesn't affect layout flow
     <div className="dashboard-layout">
       <Sidebar />
 
@@ -764,7 +765,6 @@ function Dashboard() {
               </div>
             </div>
           </div>
-          {/* end charts-row */}
 
           {/* ── Lower Grid ── */}
           <div className="dashboard-lower-grid">
