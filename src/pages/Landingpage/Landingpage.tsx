@@ -82,9 +82,6 @@ function Landingpage() {
             <Nav.Link href="#features" onClick={closeNav}>
               Features
             </Nav.Link>
-            <Nav.Link href="#contact" onClick={closeNav}>
-              Contact
-            </Nav.Link>
           </Nav>
         </Navbar.Collapse>
       </Navbar>
