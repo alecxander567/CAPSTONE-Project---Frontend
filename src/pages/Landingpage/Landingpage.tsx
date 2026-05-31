@@ -24,7 +24,6 @@ function Landingpage() {
 
   const handleClose = () => setShowRegisterModal(false);
   const handleShow = () => setShowRegisterModal(true);
-
   const closeNav = () => setNavExpanded(false);
 
   useEffect(() => {
@@ -53,7 +52,7 @@ function Landingpage() {
 
   return (
     <div className="bg-light min-vh-100 d-flex flex-column">
-      // Remove the onToggle prop — just use expanded + the Toggle's onClick
+      {/* ------------------- NAVBAR ------------------- */}
       <Navbar expand="lg" className="custom-navbar px-4" expanded={navExpanded}>
         <Navbar.Brand href="/" className="d-flex align-items-center">
           <img
@@ -89,6 +88,8 @@ function Landingpage() {
           </Nav>
         </Navbar.Collapse>
       </Navbar>
+
+      {/* ------------------- HERO SECTION ------------------- */}
       <div className="hero-section" id="hero">
         <Container>
           <Row className="justify-content-center align-items-center text-center">
@@ -97,21 +98,17 @@ function Landingpage() {
                 Activity Record Attendance (ARA) System using{" "}
                 <span className="hero-primary">Biometric Technology</span>
               </h1>
-
               <p className="lead mb-4 px-3">
                 A simple and secure way to manage student attendance
                 efficiently.
               </p>
-
               <div className="d-flex flex-column flex-sm-row justify-content-center gap-3 mb-4">
                 <Button
                   className="btn-login"
                   size="lg"
                   onClick={() => setShowLogin(true)}>
-                  <i className="bi bi-box-arrow-in-right me-2"></i>
-                  Login
+                  <i className="bi bi-box-arrow-in-right me-2"></i>Login
                 </Button>
-
                 <Button className="btn-register" size="lg" onClick={handleShow}>
                   <i className="bi bi-person-plus-fill me-2"></i> Register
                 </Button>
@@ -120,6 +117,8 @@ function Landingpage() {
           </Row>
         </Container>
       </div>
+
+      {/* ------------------- ABOUT SECTION ------------------- */}
       <section id="about" className="py-5 bg-white fade-section">
         <Container>
           <Row className="justify-content-center text-center mb-5">
@@ -194,6 +193,8 @@ function Landingpage() {
           </Row>
         </Container>
       </section>
+
+      {/* ------------------- FEATURES SECTION ------------------- */}
       <section id="features" className="py-5 bg-light fade-section">
         <Container>
           <Row className="justify-content-center text-center mb-5">
@@ -289,6 +290,8 @@ function Landingpage() {
           </Row>
         </Container>
       </section>
+
+      {/* ------------------- DOCUMENTATION SECTION ------------------- */}
       <section id="documentation" className="py-5 bg-white fade-section">
         <Container>
           <Row className="justify-content-center text-center mb-5">
@@ -302,7 +305,6 @@ function Landingpage() {
               </p>
             </Col>
           </Row>
-
           <Row className="g-4">
             <Col md={6} className="fade-up fade-delay-1">
               <Card className="h-100 border-0 shadow-sm hover-lift">
@@ -324,7 +326,6 @@ function Landingpage() {
                 </Card.Body>
               </Card>
             </Col>
-
             <Col md={6} className="fade-up fade-delay-2">
               <Card className="h-100 border-0 shadow-sm hover-lift">
                 <Card.Body className="p-4">
@@ -349,6 +350,8 @@ function Landingpage() {
           </Row>
         </Container>
       </section>
+
+      {/* ------------------- MODALS ------------------- */}
       <RegisterModal show={showRegisterModal} handleClose={handleClose} />
       <LoginModal show={showLogin} handleClose={() => setShowLogin(false)} />
       <AdminUserManualModal
@@ -359,6 +362,8 @@ function Landingpage() {
         show={showStudentManual}
         onHide={() => setShowStudentManual(false)}
       />
+
+      {/* ------------------- FOOTER ------------------- */}
       <footer className="bg-dark text-white py-4 mt-auto fade-section">
         <Container>
           <Row className="g-4 justify-content-center">
