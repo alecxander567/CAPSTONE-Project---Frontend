@@ -2,6 +2,7 @@ import "./Sidebar.css";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useLogout } from "../../hooks/Logout";
 import { useNotifications } from "../../hooks/useNotifyEvents";
+import logo from "../../assets/logo.jpg";
 
 const Sidebar = () => {
   const navigate = useNavigate();
@@ -33,6 +34,20 @@ const Sidebar = () => {
 
   return (
     <>
+      {/* ── Mobile Topbar ── */}
+      <button className="sidebar-toggle">
+        <img
+          src={logo}
+          alt="Logo"
+          width="32"
+          height="32"
+          className="rounded-circle"
+        />
+        <span style={{ fontWeight: 700, letterSpacing: 1, fontSize: "1rem" }}>
+          ARA System
+        </span>
+      </button>
+
       {/* ── Desktop Sidebar ── */}
       <aside className="sidebar">
         <div className="wave"></div>
