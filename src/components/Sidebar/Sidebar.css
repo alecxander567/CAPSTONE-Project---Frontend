@@ -121,7 +121,7 @@
 
 /* ── Mobile topbar toggle — hidden on desktop ── */
 .sidebar-toggle {
-  display: none; /* hidden by default (desktop) */
+  display: none;
 }
 
 .sidebar-toggle-title {
@@ -160,7 +160,7 @@
 
 /* ── Footer nav — hidden on desktop ── */
 .footer-nav {
-  display: none; /* hidden by default (desktop) */
+  display: none;
 }
 
 /* ── Mobile ── */
@@ -201,11 +201,14 @@
     display: flex;
     align-items: center;
     justify-content: space-around;
-    padding: 0.5rem 0.25rem;
+    /* FIX: remove horizontal padding so items have full width to share */
+    padding: 0.5rem 0;
     box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.2);
     border-top: 1px solid rgba(255, 255, 255, 0.12);
   }
 
+  /* FIX: min-width: 0 lets items shrink below content size;
+          reduced padding gives each item more breathing room */
   .footer-nav-item {
     display: flex;
     flex-direction: column;
@@ -214,24 +217,30 @@
     gap: 3px;
     color: rgba(255, 255, 255, 0.65);
     cursor: pointer;
-    padding: 0.35rem 0.5rem;
+    padding: 0.35rem 0.2rem; /* ← was 0.5rem horizontal */
     border-radius: 10px;
     transition:
       color 0.2s,
       background 0.2s;
     flex: 1;
+    min-width: 0; /* ← KEY FIX: allows shrinking */
     position: relative;
   }
 
+  /* FIX: slightly smaller icon so 7 items fit comfortably */
   .footer-nav-item i {
-    font-size: 1.3rem;
+    font-size: 1.2rem; /* ← was 1.3rem */
     line-height: 1;
   }
 
+  /* FIX: smaller label + ellipsis as safety net on very narrow screens */
   .footer-nav-item span {
-    font-size: 0.62rem;
+    font-size: 0.58rem; /* ← was 0.62rem */
     font-weight: 500;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
   }
 
   .footer-nav-item:hover {
@@ -242,6 +251,7 @@
   .footer-nav-item.active {
     color: #ffffff;
   }
+
   .footer-nav-item.active i {
     color: #ffffff;
   }
