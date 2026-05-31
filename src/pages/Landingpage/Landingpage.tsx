@@ -20,9 +20,12 @@ function Landingpage() {
   const [showLogin, setShowLogin] = useState(false);
   const [showAdminManual, setShowAdminManual] = useState(false);
   const [showStudentManual, setShowStudentManual] = useState(false);
+  const [navExpanded, setNavExpanded] = useState(false);
 
   const handleClose = () => setShowRegisterModal(false);
   const handleShow = () => setShowRegisterModal(true);
+
+  const closeNav = () => setNavExpanded(false);
 
   useEffect(() => {
     const sections = document.querySelectorAll(".fade-section");
@@ -50,8 +53,11 @@ function Landingpage() {
 
   return (
     <div className="bg-light min-vh-100 d-flex flex-column">
-      {/* ------------------- NAVBAR ------------------- */}
-      <Navbar expand="lg" className="custom-navbar px-4">
+      <Navbar
+        expand="lg"
+        className="custom-navbar px-4"
+        expanded={navExpanded}
+        onToggle={() => setNavExpanded(!navExpanded)}>
         <Navbar.Brand href="/" className="d-flex align-items-center">
           <img
             src={logo}
@@ -63,18 +69,30 @@ function Landingpage() {
           <span className="d-none d-md-inline">ARAS-BT</span>
           <span className="d-inline d-md-none">ARA System</span>
         </Navbar.Brand>
-        <Navbar.Toggle aria-controls="basic-navbar-nav" />
+
+        <Navbar.Toggle
+          aria-controls="basic-navbar-nav"
+          onClick={() => setNavExpanded(!navExpanded)}
+        />
+
         <Navbar.Collapse id="basic-navbar-nav">
-          <Nav className="ms-auto">
-            <Nav.Link href="#about">About</Nav.Link>
-            <Nav.Link href="#documentation">Documentation</Nav.Link>
-            <Nav.Link href="#features">Features</Nav.Link>
-            <Nav.Link href="#contact">Contact</Nav.Link>
+          <Nav className="ms-auto" onSelect={closeNav}>
+            <Nav.Link href="#about" onClick={closeNav}>
+              About
+            </Nav.Link>
+            <Nav.Link href="#documentation" onClick={closeNav}>
+              Documentation
+            </Nav.Link>
+            <Nav.Link href="#features" onClick={closeNav}>
+              Features
+            </Nav.Link>
+            <Nav.Link href="#contact" onClick={closeNav}>
+              Contact
+            </Nav.Link>
           </Nav>
         </Navbar.Collapse>
       </Navbar>
 
-      {/* ------------------- HERO SECTION ------------------- */}
       <div className="hero-section" id="hero">
         <Container>
           <Row className="justify-content-center align-items-center text-center">
@@ -107,7 +125,6 @@ function Landingpage() {
         </Container>
       </div>
 
-      {/* ------------------- ABOUT SECTION ------------------- */}
       <section id="about" className="py-5 bg-white fade-section">
         <Container>
           <Row className="justify-content-center text-center mb-5">
@@ -183,7 +200,6 @@ function Landingpage() {
         </Container>
       </section>
 
-      {/* ------------------- FEATURES SECTION ------------------- */}
       <section id="features" className="py-5 bg-light fade-section">
         <Container>
           <Row className="justify-content-center text-center mb-5">
@@ -280,10 +296,8 @@ function Landingpage() {
         </Container>
       </section>
 
-      {/* ------------------- DOCUMENTATION SECTION ------------------- */}
       <section id="documentation" className="py-5 bg-white fade-section">
         <Container>
-          {/* Header */}
           <Row className="justify-content-center text-center mb-5">
             <Col lg={8}>
               <div className="mb-4">
@@ -296,9 +310,7 @@ function Landingpage() {
             </Col>
           </Row>
 
-          {/* User Manuals */}
           <Row className="g-4">
-            {/* Admin Manual */}
             <Col md={6} className="fade-up fade-delay-1">
               <Card className="h-100 border-0 shadow-sm hover-lift">
                 <Card.Body className="p-4">
@@ -320,7 +332,6 @@ function Landingpage() {
               </Card>
             </Col>
 
-            {/* Student Manual */}
             <Col md={6} className="fade-up fade-delay-2">
               <Card className="h-100 border-0 shadow-sm hover-lift">
                 <Card.Body className="p-4">
@@ -346,7 +357,6 @@ function Landingpage() {
         </Container>
       </section>
 
-      {/*  MODALS */}
       <RegisterModal show={showRegisterModal} handleClose={handleClose} />
       <LoginModal show={showLogin} handleClose={() => setShowLogin(false)} />
       <AdminUserManualModal
@@ -358,7 +368,6 @@ function Landingpage() {
         onHide={() => setShowStudentManual(false)}
       />
 
-      {/* ------------------- FOOTER ------------------- */}
       <footer className="bg-dark text-white py-4 mt-auto fade-section">
         <Container>
           <Row className="g-4 justify-content-center">

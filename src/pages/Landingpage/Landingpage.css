@@ -363,3 +363,20 @@
 .modal-body .btn {
   font-size: 1rem;
 }
+
+/* Mobile dropdown styles */
+.navbar-collapse {
+  background: rgba(8, 20, 48, 0.98);
+  border-radius: 0 0 12px 12px;
+  padding: 0.5rem 1rem 1rem;
+  margin-top: 4px;
+}
+
+@media (min-width: 992px) {
+  .navbar-collapse {
+    background: transparent;
+    padding: 0;
+    margin-top: 0;
+    border-radius: 0;
+  }
+}
