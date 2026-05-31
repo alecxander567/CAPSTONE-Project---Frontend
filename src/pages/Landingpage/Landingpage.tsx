@@ -53,11 +53,8 @@ function Landingpage() {
 
   return (
     <div className="bg-light min-vh-100 d-flex flex-column">
-      <Navbar
-        expand="lg"
-        className="custom-navbar px-4"
-        expanded={navExpanded}
-        onToggle={() => setNavExpanded(!navExpanded)}>
+      // Remove the onToggle prop — just use expanded + the Toggle's onClick
+      <Navbar expand="lg" className="custom-navbar px-4" expanded={navExpanded}>
         <Navbar.Brand href="/" className="d-flex align-items-center">
           <img
             src={logo}
@@ -72,11 +69,11 @@ function Landingpage() {
 
         <Navbar.Toggle
           aria-controls="basic-navbar-nav"
-          onClick={() => setNavExpanded(!navExpanded)}
+          onClick={() => setNavExpanded((prev) => !prev)}
         />
 
         <Navbar.Collapse id="basic-navbar-nav">
-          <Nav className="ms-auto" onSelect={closeNav}>
+          <Nav className="ms-auto">
             <Nav.Link href="#about" onClick={closeNav}>
               About
             </Nav.Link>
@@ -92,7 +89,6 @@ function Landingpage() {
           </Nav>
         </Navbar.Collapse>
       </Navbar>
-
       <div className="hero-section" id="hero">
         <Container>
           <Row className="justify-content-center align-items-center text-center">
@@ -124,7 +120,6 @@ function Landingpage() {
           </Row>
         </Container>
       </div>
-
       <section id="about" className="py-5 bg-white fade-section">
         <Container>
           <Row className="justify-content-center text-center mb-5">
@@ -199,7 +194,6 @@ function Landingpage() {
           </Row>
         </Container>
       </section>
-
       <section id="features" className="py-5 bg-light fade-section">
         <Container>
           <Row className="justify-content-center text-center mb-5">
@@ -295,7 +289,6 @@ function Landingpage() {
           </Row>
         </Container>
       </section>
-
       <section id="documentation" className="py-5 bg-white fade-section">
         <Container>
           <Row className="justify-content-center text-center mb-5">
@@ -356,7 +349,6 @@ function Landingpage() {
           </Row>
         </Container>
       </section>
-
       <RegisterModal show={showRegisterModal} handleClose={handleClose} />
       <LoginModal show={showLogin} handleClose={() => setShowLogin(false)} />
       <AdminUserManualModal
@@ -367,7 +359,6 @@ function Landingpage() {
         show={showStudentManual}
         onHide={() => setShowStudentManual(false)}
       />
-
       <footer className="bg-dark text-white py-4 mt-auto fade-section">
         <Container>
           <Row className="g-4 justify-content-center">
