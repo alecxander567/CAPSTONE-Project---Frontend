@@ -11,10 +11,7 @@ const Sidebar = () => {
   const { notifications } = useNotifications();
 
   const isActive = (path: string) => location.pathname === path;
-
-  const handleNavigate = (path: string) => {
-    navigate(path);
-  };
+  const handleNavigate = (path: string) => navigate(path);
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
@@ -35,7 +32,7 @@ const Sidebar = () => {
   return (
     <>
       {/* ── Mobile Topbar ── */}
-      <button className="sidebar-toggle">
+      <div className="sidebar-toggle">
         <img
           src={logo}
           alt="Logo"
@@ -43,10 +40,12 @@ const Sidebar = () => {
           height="32"
           className="rounded-circle"
         />
-        <span style={{ fontWeight: 700, letterSpacing: 1, fontSize: "1rem" }}>
-          ARA System
-        </span>
-      </button>
+        <span className="sidebar-toggle-title">ARA System</span>
+        <button className="sidebar-toggle-logout" onClick={logout}>
+          <i className="bi bi-box-arrow-right"></i>
+          <span>Logout</span>
+        </button>
+      </div>
 
       {/* ── Desktop Sidebar ── */}
       <aside className="sidebar">
@@ -135,7 +134,7 @@ const Sidebar = () => {
         </div>
       </aside>
 
-      {/* ── Mobile Footer Nav ── */}
+      {/* ── Mobile Footer Nav (no logout here) ── */}
       <nav className="footer-nav">
         {navItems.map((item) => (
           <div
@@ -149,10 +148,6 @@ const Sidebar = () => {
             )}
           </div>
         ))}
-        <div className="footer-nav-item footer-nav-logout" onClick={logout}>
-          <i className="bi bi-box-arrow-right"></i>
-          <span>Logout</span>
-        </div>
       </nav>
     </>
   );

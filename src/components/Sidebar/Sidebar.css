@@ -124,6 +124,40 @@
   display: none; /* hidden by default (desktop) */
 }
 
+.sidebar-toggle-title {
+  flex: 1;
+  font-weight: 700;
+  letter-spacing: 1px;
+  font-size: 1rem;
+}
+
+.sidebar-toggle-logout {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #dc3545;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.15s ease;
+  white-space: nowrap;
+}
+
+.sidebar-toggle-logout:hover {
+  background: #bb2d3b;
+  transform: translateY(-1px);
+}
+
+.sidebar-toggle-logout i {
+  font-size: 1rem;
+}
+
 /* ── Footer nav — hidden on desktop ── */
 .footer-nav {
   display: none; /* hidden by default (desktop) */
@@ -143,19 +177,17 @@
     left: 0;
     width: 100%;
     z-index: 1200;
-    background: rgba(255, 255, 255, 0.12);
-    backdrop-filter: blur(20px) saturate(160%);
-    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    background: linear-gradient(90deg, #0a1aff, #0f52ba);
     border: none;
     border-bottom: 1px solid rgba(255, 255, 255, 0.18);
     color: #fff;
-    padding: 0.75rem 1.25rem;
+    padding: 0.6rem 1rem;
     font-size: 1rem;
     display: flex;
-    justify-content: flex-start;
+    justify-content: space-between;
     align-items: center;
     gap: 0.75rem;
-    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.2);
   }
 
   /* Show footer nav */
