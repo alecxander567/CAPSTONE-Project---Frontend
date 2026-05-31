@@ -93,14 +93,10 @@
   position: relative;
   z-index: 1;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  text-align: center;
-  gap: 1rem;
+  gap: 1.5rem;
   max-width: 1400px;
   margin: 0 auto;
-  width: 100%;
 }
 
 .dashboard-header-content h1 {
@@ -527,6 +523,11 @@
   .dashboard-header {
     padding: 2rem 1.5rem;
     padding-bottom: 50px;
+  }
+  .dashboard-header-content {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
   }
   .dashboard-header-content h1 {
     font-size: 1.75rem;
