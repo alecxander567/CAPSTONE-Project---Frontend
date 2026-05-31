@@ -6,7 +6,6 @@ import { useNavigate } from "react-router-dom";
 import RegisterModal from "../RegisterModal/RegisterModal";
 import ResetPasswordModal from "../ResetPasswordModal/ResetPasswordModal";
 import ForgotPasswordModal from "../ForgotPasswordModal/ForgotPasswordModal";
-import "./LoginModal.css";
 
 interface LoginModalProps {
   show: boolean;
@@ -33,12 +32,15 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
         password: password,
       });
 
+      // The useLogin hook already stores the token, role, and student_id_no
+      // No need to store them again here!
       setSuccessMessage(data.message || "Login successful! Redirecting...");
 
       setTimeout(() => {
         setSuccessMessage("");
         handleClose();
 
+        // Redirect based on role
         if (data.role === "admin") {
           navigate("/dashboard", { replace: true });
         } else {
@@ -46,6 +48,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
         }
       }, 1000);
     } catch (error) {
+      // Error is already handled in the hook and displayed via the error state
       console.error("Login failed:", error);
     }
   };
@@ -60,21 +63,17 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
   const handleCloseRegister = () => setShowRegister(false);
 
   return (
-    <Modal
-      show={show}
-      onHide={handleClose}
-      centered
-      backdrop="static"
-      dialogClassName="glass-modal-dialog"
-      contentClassName="glass-modal-content">
-      <Modal.Header closeButton className="glass-modal-header border-0 pb-0">
+    <Modal show={show} onHide={handleClose} centered backdrop="static">
+      <Modal.Header closeButton className="border-0 pb-0">
         <Modal.Title className="w-100 text-center">
           <div className="d-flex flex-column align-items-center">
-            <div className="glass-icon-circle mb-3">
-              <i className="bi bi-box-arrow-in-right fs-2"></i>
+            <div
+              className="bg-primary bg-opacity-10 rounded-circle p-3 mb-3"
+              style={{ width: "70px", height: "70px" }}>
+              <i className="bi bi-box-arrow-in-right text-primary fs-1"></i>
             </div>
-            <h4 className="mb-1 fw-bold text-white">Welcome Back</h4>
-            <p className="glass-subtitle small mb-0">
+            <h4 className="mb-1 fw-bold">Welcome Back</h4>
+            <p className="text-muted small mb-0">
               Sign in to continue to your account
             </p>
           </div>
@@ -85,16 +84,16 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
         <Form onKeyPress={handleKeyPress}>
           {/* Student ID */}
           <Form.Group className="mb-3">
-            <Form.Label className="glass-label fw-semibold small">
-              <i className="bi bi-credit-card me-2"></i>Student ID or Account ID
-              (For Admin)
+            <Form.Label className="fw-semibold small text-secondary">
+              <i className="bi bi-credit-card me-2"></i>Student ID or Account
+              ID(For Admin)
             </Form.Label>
             <Form.Control
               type="text"
               placeholder="Enter your student ID number"
               value={studentId}
               onChange={(e) => setStudentId(e.target.value)}
-              className="glass-input py-2"
+              className="py-2 border-2"
               style={{ fontSize: "0.95rem" }}
               autoFocus
             />
@@ -103,12 +102,12 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
           {/* Password */}
           <Form.Group className="mb-3">
             <div className="d-flex justify-content-between align-items-center mb-2">
-              <Form.Label className="glass-label fw-semibold small mb-0">
+              <Form.Label className="fw-semibold small text-secondary mb-0">
                 <i className="bi bi-lock me-2"></i>Password
               </Form.Label>
               <a
                 href="#"
-                className="glass-link text-decoration-none small"
+                className="text-primary text-decoration-none small"
                 onClick={(e) => {
                   e.preventDefault();
                   setShowForgot(true);
@@ -122,11 +121,13 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="glass-input py-2 pe-5"
+                className="py-2 border-2 pe-5"
                 style={{ fontSize: "0.95rem" }}
               />
               <i
-                className={`bi ${showPassword ? "bi-eye-slash-fill" : "bi-eye-fill"} position-absolute top-50 end-0 translate-middle-y me-3 glass-eye-icon`}
+                className={`bi ${
+                  showPassword ? "bi-eye-slash-fill" : "bi-eye-fill"
+                } position-absolute top-50 end-0 translate-middle-y me-3 text-secondary`}
                 style={{ cursor: "pointer", fontSize: "1.1rem" }}
                 onClick={() => setShowPassword(!showPassword)}
                 role="button"
@@ -136,6 +137,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
           </Form.Group>
         </Form>
 
+        {/* Alerts */}
         {successMessage && (
           <AnimatedAlert type="success" message={successMessage} />
         )}
@@ -146,15 +148,17 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
         <div className="w-100">
           <div className="d-flex gap-2 mb-3">
             <Button
+              variant="outline-secondary"
               onClick={handleClose}
-              className="glass-btn-cancel flex-fill py-2 fw-semibold"
+              className="flex-fill py-2 fw-semibold"
               disabled={loading}>
               Cancel
             </Button>
             <Button
+              variant="primary"
               onClick={handleLogin}
               disabled={loading}
-              className="glass-btn-primary flex-fill py-2 fw-semibold">
+              className="flex-fill py-2 fw-semibold">
               {loading ?
                 <>
                   <span
@@ -171,12 +175,13 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
             </Button>
           </div>
 
+          {/* Sign up link */}
           <div className="text-center">
-            <span className="glass-subtitle small">
+            <span className="text-muted small">
               Don't have an account?{" "}
               <a
                 href="#"
-                className="glass-link text-decoration-none fw-semibold"
+                className="text-primary text-decoration-none fw-semibold"
                 onClick={(e) => {
                   e.preventDefault();
                   handleOpenRegister();
@@ -188,6 +193,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
         </div>
       </Modal.Footer>
 
+      {/* Password Modals */}
       <ForgotPasswordModal
         show={showForgot}
         onClose={() => setShowForgot(false)}
@@ -204,6 +210,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
         onClose={() => setShowReset(false)}
       />
 
+      {/* Register Modal */}
       <RegisterModal show={showRegister} handleClose={handleCloseRegister} />
     </Modal>
   );
