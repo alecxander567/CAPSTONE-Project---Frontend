@@ -397,14 +397,15 @@
 @media (max-width: 991px) {
   .page-content {
     margin-left: 0;
-    padding-top: 56px; /* topbar height */
+    padding-top: 0; /* no gap — header handles topbar offset */
     padding-bottom: 90px; /* footer nav + safe breathing room */
     width: 100%;
     min-height: 100vh;
   }
 
   .notifications-header {
-    padding: 2rem 1.5rem 4rem 1.5rem;
+    /* topbar is 56px fixed; push header content down so it clears it */
+    padding: calc(56px + 2rem) 1.5rem 4rem 1.5rem;
   }
 
   /* Stack header: icon+title left, actions below — mirror dashboard mobile */
@@ -444,7 +445,7 @@
   }
 
   .notifications-header {
-    padding: 1.75rem 1rem 3.5rem 1rem;
+    padding: calc(56px + 1.75rem) 1rem 3.5rem 1rem;
   }
 
   .notifications-header-icon {
