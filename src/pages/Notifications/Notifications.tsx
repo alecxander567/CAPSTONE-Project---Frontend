@@ -99,17 +99,18 @@ const Notifications = () => {
           <div className="wave"></div>
 
           <div className="notifications-header-content">
+            {/* Left: icon + title — mirrors dashboard-header-content */}
             <div className="notifications-header-left">
               <div className="notifications-header-icon">
                 <i className="bi bi-bell-fill"></i>
               </div>
-
               <div className="notifications-header-text">
                 <h1>Notifications</h1>
-                <p>Stay updated with real-time event notifications</p>
+                <p>Analytics overview and attendance insights</p>
               </div>
             </div>
 
+            {/* Right: action buttons */}
             <div className="notifications-header-actions">
               {unreadCount > 0 && (
                 <button
