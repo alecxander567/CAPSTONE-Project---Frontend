@@ -1,24 +1,135 @@
-.page-content {
-  margin-left: 260px;
+/* ── Global reset ── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
   padding: 0;
-  width: calc(100% - 260px);
+}
+
+:root {
+  --primary-color: #0d6efd;
+  --bg-light: #f8f9fa;
+  --text-dark: #1a1a1a;
+  --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  --sidebar-width: 260px;
+}
+
+/* ── Layout (matching Dashboard) ── */
+.dashboard-layout {
+  display: block;
   min-height: 100vh;
-  background-color: #f8f9fa;
+  background-color: var(--bg-light);
+  overflow-x: hidden;
+}
+
+.dashboard-main {
+  margin-left: var(--sidebar-width);
+  width: calc(100% - var(--sidebar-width));
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+@media (max-width: 991px) {
+  .dashboard-main {
+    margin-left: 0;
+    width: 100%;
+    padding-top: 56px;
+    padding-bottom: 70px;
+  }
+}
+
+/* ── Page Content (for Notifications page) ── */
+.page-content {
+  margin-left: var(--sidebar-width);
+  padding: 0;
+  width: calc(100% - var(--sidebar-width));
+  min-height: 100vh;
+  background-color: var(--bg-light);
   transition:
     margin-left 0.3s ease,
     width 0.3s ease;
   box-sizing: border-box;
+  position: relative;
+  top: 0;
 }
 
-/* ── Header — matches Dashboard style ── */
+@media (max-width: 991px) {
+  .page-content {
+    margin-left: 0;
+    padding-top: 0;
+    padding-bottom: 120px;
+    width: 100%;
+    min-height: 100vh;
+    top: 0;
+  }
+}
+
+/* ── Animations ── */
+.fade-up {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.delay-1 {
+  animation-delay: 0.1s;
+}
+.delay-2 {
+  animation-delay: 0.2s;
+}
+.delay-3 {
+  animation-delay: 0.3s;
+}
+.delay-4 {
+  animation-delay: 0.4s;
+}
+.delay-5 {
+  animation-delay: 0.5s;
+}
+.delay-6 {
+  animation-delay: 0.6s;
+}
+
+@keyframes fadeUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Notifications Header (matches Dashboard header) ── */
 .notifications-header {
   position: relative;
   background: linear-gradient(135deg, #0a1aff 0%, #00b4d8 100%);
   color: #fff;
   padding: 3rem 2rem 5rem 2rem;
   overflow: hidden;
-  margin-bottom: 0;
-  margin-top: 0; /* Added to ensure no gap at the top */
+  margin: 0;
+  flex-shrink: 0;
+}
+
+@media (max-width: 991px) {
+  .notifications-header {
+    padding-top: calc(56px + 2rem);
+    padding-right: 1.5rem;
+    padding-bottom: 4rem;
+    padding-left: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .notifications-header {
+    padding-top: calc(56px + 1.75rem);
+    padding-right: 1rem;
+    padding-bottom: 3.5rem;
+    padding-left: 1rem;
+  }
 }
 
 .notifications-header .wave {
@@ -52,11 +163,29 @@
   margin: 0 auto;
 }
 
+@media (max-width: 991px) {
+  .notifications-header-content {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1.25rem;
+  }
+}
+
 /* ── Left side: icon + text (matches dashboard-header-content layout) ── */
 .notifications-header-left {
   display: flex;
   align-items: center;
   gap: 1.5rem;
+}
+
+@media (max-width: 991px) {
+  .notifications-header-left {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+  }
 }
 
 .notifications-header-icon {
@@ -72,11 +201,26 @@
   flex-shrink: 0;
 }
 
+@media (max-width: 768px) {
+  .notifications-header-icon {
+    width: 52px;
+    height: 52px;
+    font-size: 1.4rem;
+    border-radius: 12px;
+  }
+}
+
 .notifications-header-text h1 {
   margin: 0 0 0.5rem 0;
   font-size: 2rem;
   font-weight: 700;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 991px) {
+  .notifications-header-text h1 {
+    font-size: 1.75rem;
+  }
 }
 
 .notifications-header-text p {
@@ -85,12 +229,28 @@
   opacity: 0.95;
 }
 
+/* ── Action Buttons ── */
 .notifications-header-actions {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   position: relative;
   z-index: 1;
+}
+
+@media (max-width: 991px) {
+  .notifications-header-actions {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 576px) {
+  .notifications-header-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+  }
 }
 
 .clear-all-btn,
@@ -111,6 +271,16 @@
   white-space: nowrap;
 }
 
+@media (max-width: 576px) {
+  .clear-all-btn,
+  .mark-all-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.6rem 1rem;
+    font-size: 0.875rem;
+  }
+}
+
 .clear-all-btn:hover,
 .mark-all-btn:hover {
   background: rgba(255, 255, 255, 0.3);
@@ -125,7 +295,7 @@
   transform: none;
 }
 
-/* ── Content — mirrors dashboard-content with negative margin pull-up ── */
+/* ── Notifications Content (matches dashboard-content with negative margin) ── */
 .notifications-content {
   padding: 0 2rem 2rem 2rem;
   max-width: 1400px;
@@ -136,14 +306,45 @@
   z-index: 1;
 }
 
+@media (max-width: 991px) {
+  .notifications-content {
+    padding: 0 1.5rem 2rem 1.5rem;
+    margin-top: -30px;
+  }
+}
+
+@media (max-width: 768px) {
+  .notifications-content {
+    padding: 0 1rem 2rem 1rem;
+    margin-top: -30px;
+  }
+}
+
 .notifications-wrapper {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   width: 100%;
   box-sizing: border-box;
-  /* Added padding bottom for cards */
   padding-bottom: 30px;
+}
+
+@media (max-width: 991px) {
+  .notifications-wrapper {
+    padding-bottom: 40px;
+  }
+}
+
+@media (max-width: 768px) {
+  .notifications-wrapper {
+    padding-bottom: 50px;
+  }
+}
+
+@media (max-width: 576px) {
+  .notifications-wrapper {
+    padding-bottom: 60px;
+  }
 }
 
 /* ── Count pill ── */
@@ -168,7 +369,7 @@
   padding: 5rem 2rem;
   background: #fff;
   border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--card-shadow);
   border: 1px solid rgba(0, 0, 0, 0.03);
 }
 
@@ -197,7 +398,7 @@
   background: white;
   border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--card-shadow);
   border: 1px solid rgba(0, 0, 0, 0.03);
   position: relative;
   transition:
@@ -205,6 +406,11 @@
     box-shadow 0.3s ease;
   width: 100%;
   box-sizing: border-box;
+}
+
+.notification-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
 /* Top accent bar */
@@ -225,11 +431,6 @@
   background: linear-gradient(90deg, #0a1aff, #00b4d8);
 }
 
-.notification-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-}
-
 /* Card header row */
 .notification-card-header {
   display: flex;
@@ -237,6 +438,12 @@
   gap: 0.875rem;
   padding: 1.25rem 1.25rem 0;
   margin-bottom: 0.875rem;
+}
+
+@media (max-width: 768px) {
+  .notification-card-header {
+    padding: 1rem 1rem 0;
+  }
 }
 
 /* Icon avatar */
@@ -277,6 +484,15 @@
   line-height: 1.4;
 }
 
+@media (max-width: 576px) {
+  .notification-card h4 {
+    font-size: 0.95rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+  }
+}
+
 .notification-card h4 span {
   font-size: 0.6rem;
   background: linear-gradient(135deg, #ef4444, #dc2626);
@@ -314,6 +530,19 @@
   border-radius: 0 8px 8px 0;
 }
 
+@media (max-width: 768px) {
+  .notification-message {
+    margin: 0 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .notification-message {
+    font-size: 0.875rem;
+    padding: 0.75rem 0.875rem;
+  }
+}
+
 .notification-card:not(.unread) .notification-message {
   border-left-color: #e2e8f0;
 }
@@ -325,6 +554,13 @@
   align-items: center;
   padding: 1rem 1.25rem 1.25rem;
   justify-content: flex-end;
+}
+
+@media (max-width: 768px) {
+  .notification-action-group {
+    padding: 0.875rem 1rem 1rem;
+    justify-content: stretch;
+  }
 }
 
 .mark-read-btn {
@@ -341,6 +577,14 @@
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 2px 8px rgba(34, 197, 94, 0.25);
+}
+
+@media (max-width: 768px) {
+  .mark-read-btn,
+  .delete-btn {
+    flex: 1;
+    justify-content: center;
+  }
 }
 
 .mark-read-btn:hover {
@@ -392,156 +636,25 @@
   box-shadow: none;
 }
 
-/* ══════════════════════════════════════
-   RESPONSIVE
-══════════════════════════════════════ */
-
-/* ── Tablet ── */
-@media (max-width: 991px) {
-  .page-content {
-    margin-left: 0;
-    padding-top: 0;
-    padding-bottom: 120px; /* Increased for better footer spacing */
-    width: 100%;
-    min-height: 100vh;
+/* Print styles (if needed) */
+@media print {
+  body * {
+    visibility: hidden;
   }
-
-  .notifications-header {
-    margin-top: 0;
-    padding-top: calc(56px + 2rem);
-    padding-right: 1.5rem;
-    padding-bottom: 4rem;
-    padding-left: 1.5rem;
+  .notifications-content,
+  .notifications-content * {
+    visibility: visible;
   }
-
-  /* Stack header: icon+title left, actions below — mirror dashboard mobile */
-  .notifications-header-content {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 1.25rem;
-  }
-
-  .notifications-header-left {
-    flex-direction: column;
-    align-items: center;
-    gap: 0.75rem;
-    width: 100%;
-  }
-
-  .notifications-header-text h1 {
-    font-size: 1.75rem;
-  }
-
-  .notifications-header-actions {
-    width: 100%;
-    justify-content: center;
-  }
-
   .notifications-content {
-    padding: 0 1.5rem 2rem 1.5rem;
-    margin-top: -30px;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 20px;
   }
-
-  /* Added extra bottom padding for wrapper on tablet */
-  .notifications-wrapper {
-    padding-bottom: 40px;
-  }
-}
-
-/* ── Mobile ── */
-@media (max-width: 768px) {
-  .page-content {
-    padding-bottom: 140px; /* Increased significantly for mobile */
-  }
-
-  .notifications-header {
-    padding-top: calc(56px + 1.75rem);
-    padding-right: 1rem;
-    padding-bottom: 3.5rem;
-    padding-left: 1rem;
-  }
-
-  .notifications-header-icon {
-    width: 52px;
-    height: 52px;
-    font-size: 1.4rem;
-    border-radius: 12px;
-  }
-
-  .notifications-header-text h1 {
-    font-size: 1.75rem;
-  }
-
-  .notifications-header-text p {
-    font-size: 1rem;
-    opacity: 0.95;
-  }
-
-  .notifications-content {
-    padding: 0 1rem 2rem 1rem;
-    margin-top: -30px;
-  }
-
-  .notification-card-header {
-    padding: 1rem 1rem 0;
-  }
-
-  .notification-message {
-    margin: 0 1rem;
-  }
-
+  .notifications-header,
+  .notifications-header-actions,
   .notification-action-group {
-    padding: 0.875rem 1rem 1rem;
-    justify-content: stretch;
-  }
-
-  .mark-read-btn,
-  .delete-btn {
-    flex: 1;
-    justify-content: center;
-  }
-
-  /* Extra padding wrapper for mobile */
-  .notifications-wrapper {
-    padding-bottom: 50px;
-  }
-}
-
-/* ── Small mobile ── */
-@media (max-width: 576px) {
-  .page-content {
-    padding-bottom: 160px; /* Maximum padding for smallest screens */
-  }
-
-  .notifications-header-actions {
-    flex-direction: column;
-    gap: 0.5rem;
-    width: 100%;
-  }
-
-  .clear-all-btn,
-  .mark-all-btn {
-    width: 100%;
-    justify-content: center;
-    padding: 0.6rem 1rem;
-    font-size: 0.875rem;
-  }
-
-  .notification-card h4 {
-    font-size: 0.95rem;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.35rem;
-  }
-
-  .notification-message {
-    font-size: 0.875rem;
-    padding: 0.75rem 0.875rem;
-  }
-
-  /* Extra bottom padding for smallest screens */
-  .notifications-wrapper {
-    padding-bottom: 60px;
+    display: none !important;
   }
 }

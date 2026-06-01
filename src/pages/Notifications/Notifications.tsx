@@ -71,7 +71,8 @@ const Notifications = () => {
   };
 
   return (
-    <>
+    // CHANGE 1: Wrap everything in dashboard-layout div
+    <div className="dashboard-layout">
       <Sidebar />
 
       <DeleteNotificationModal
@@ -94,11 +95,13 @@ const Notifications = () => {
         onClose={clearErrorMessage}
       />
 
-      <main className="page-content">
+      {/* CHANGE 2: Change from page-content to dashboard-main */}
+      <main className="dashboard-main">
         <header className="notifications-header">
           <div className="wave"></div>
 
-          <div className="notifications-header-content">
+          {/* CHANGE 3: Add fade-up class for animation (optional) */}
+          <div className="notifications-header-content fade-up">
             {/* Left: icon + title — mirrors dashboard-header-content */}
             <div className="notifications-header-left">
               <div className="notifications-header-icon">
@@ -134,6 +137,7 @@ const Notifications = () => {
           </div>
         </header>
 
+        {/* CHANGE 4: Keep notifications-content as is */}
         <div className="notifications-content">
           <div className="notifications-wrapper">
             {sortedNotifications.length === 0 ?
@@ -223,7 +227,7 @@ const Notifications = () => {
           </div>
         </div>
       </main>
-    </>
+    </div>
   );
 };
 
