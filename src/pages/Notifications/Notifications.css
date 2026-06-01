@@ -15,9 +15,10 @@
   position: relative;
   background: linear-gradient(135deg, #0a1aff 0%, #00b4d8 100%);
   color: #fff;
-  padding: 3rem 2rem 5rem 2rem; /* same extra bottom padding as dashboard */
+  padding: 3rem 2rem 5rem 2rem;
   overflow: hidden;
   margin-bottom: 0;
+  margin-top: 0; /* Added to ensure no gap at the top */
 }
 
 .notifications-header .wave {
@@ -141,6 +142,8 @@
   gap: 1rem;
   width: 100%;
   box-sizing: border-box;
+  /* Added padding bottom for cards */
+  padding-bottom: 30px;
 }
 
 /* ── Count pill ── */
@@ -397,16 +400,13 @@
 @media (max-width: 991px) {
   .page-content {
     margin-left: 0;
-    /* No padding-top here — the header gradient itself covers the topbar gap */
     padding-top: 0;
-    padding-bottom: 90px; /* footer nav + breathing room */
+    padding-bottom: 120px; /* Increased for better footer spacing */
     width: 100%;
     min-height: 100vh;
   }
 
   .notifications-header {
-    /* Extend the gradient up by 56px to fill behind the fixed topbar,
-       then add inner padding so content clears the topbar */
     margin-top: 0;
     padding-top: calc(56px + 2rem);
     padding-right: 1.5rem;
@@ -442,12 +442,17 @@
     padding: 0 1.5rem 2rem 1.5rem;
     margin-top: -30px;
   }
+
+  /* Added extra bottom padding for wrapper on tablet */
+  .notifications-wrapper {
+    padding-bottom: 40px;
+  }
 }
 
 /* ── Mobile ── */
 @media (max-width: 768px) {
   .page-content {
-    padding-bottom: 95px;
+    padding-bottom: 140px; /* Increased significantly for mobile */
   }
 
   .notifications-header {
@@ -496,12 +501,17 @@
     flex: 1;
     justify-content: center;
   }
+
+  /* Extra padding wrapper for mobile */
+  .notifications-wrapper {
+    padding-bottom: 50px;
+  }
 }
 
 /* ── Small mobile ── */
 @media (max-width: 576px) {
   .page-content {
-    padding-bottom: 100px;
+    padding-bottom: 160px; /* Maximum padding for smallest screens */
   }
 
   .notifications-header-actions {
@@ -528,5 +538,10 @@
   .notification-message {
     font-size: 0.875rem;
     padding: 0.75rem 0.875rem;
+  }
+
+  /* Extra bottom padding for smallest screens */
+  .notifications-wrapper {
+    padding-bottom: 60px;
   }
 }
