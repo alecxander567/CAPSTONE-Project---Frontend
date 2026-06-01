@@ -31,7 +31,14 @@
   .content-area {
     margin-left: 0;
     width: 100%;
-    padding-top: 60px;
+    padding-top: 0; /* header handles topbar offset */
+    padding-bottom: 90px; /* clears footer nav */
+  }
+}
+
+@media (max-width: 576px) {
+  .content-area {
+    padding-bottom: 100px; /* extra safety on small screens */
   }
 }
 
@@ -59,10 +66,15 @@
   position: relative;
   background: linear-gradient(135deg, #0a1aff 0%, #00b4d8 100%);
   color: #fff;
-  padding: 3rem 2rem;
+  padding: 3rem 2rem 60px 2rem;
   overflow: hidden;
   margin-bottom: 0;
-  padding-bottom: 60px;
+}
+
+@media (max-width: 991px) {
+  .dashboard-header {
+    padding: calc(56px + 2rem) 1.5rem 4rem 1.5rem;
+  }
 }
 
 .dashboard-header .wave {
@@ -93,6 +105,14 @@
   gap: 1.5rem;
   max-width: 1400px;
   margin: 0 auto;
+}
+
+@media (max-width: 991px) {
+  .dashboard-header-content {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
 }
 
 .dashboard-header-icon {
@@ -323,8 +343,7 @@
 
 @media (max-width: 768px) {
   .dashboard-header {
-    padding: 2rem 1.5rem;
-    padding-bottom: 50px;
+    padding: calc(56px + 1.75rem) 1rem 3.5rem 1rem;
   }
 
   .content-wrapper {
