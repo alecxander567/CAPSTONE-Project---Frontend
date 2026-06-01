@@ -397,15 +397,21 @@
 @media (max-width: 991px) {
   .page-content {
     margin-left: 0;
-    padding-top: 0; /* no gap — header handles topbar offset */
-    padding-bottom: 90px; /* footer nav + safe breathing room */
+    /* No padding-top here — the header gradient itself covers the topbar gap */
+    padding-top: 0;
+    padding-bottom: 90px; /* footer nav + breathing room */
     width: 100%;
     min-height: 100vh;
   }
 
   .notifications-header {
-    /* topbar is 56px fixed; push header content down so it clears it */
-    padding: calc(56px + 2rem) 1.5rem 4rem 1.5rem;
+    /* Extend the gradient up by 56px to fill behind the fixed topbar,
+       then add inner padding so content clears the topbar */
+    margin-top: 0;
+    padding-top: calc(56px + 2rem);
+    padding-right: 1.5rem;
+    padding-bottom: 4rem;
+    padding-left: 1.5rem;
   }
 
   /* Stack header: icon+title left, actions below — mirror dashboard mobile */
@@ -445,7 +451,10 @@
   }
 
   .notifications-header {
-    padding: calc(56px + 1.75rem) 1rem 3.5rem 1rem;
+    padding-top: calc(56px + 1.75rem);
+    padding-right: 1rem;
+    padding-bottom: 3.5rem;
+    padding-left: 1rem;
   }
 
   .notifications-header-icon {
