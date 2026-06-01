@@ -35,9 +35,7 @@ const Notifications = () => {
   });
 
   const sortedNotifications = useMemo(() => {
-    return [...notifications].sort((a, b) => {
-      return b.id - a.id;
-    });
+    return [...notifications].sort((a, b) => b.id - a.id);
   }, [notifications]);
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
@@ -117,8 +115,7 @@ const Notifications = () => {
                 <button
                   onClick={handleMarkAllAsRead}
                   disabled={isMarkingAll}
-                  className="mark-all-btn"
-                  style={{ marginRight: "10px" }}>
+                  className="mark-all-btn">
                   <i className="bi bi-check-all"></i>
                   {isMarkingAll ? "Marking..." : "Mark All as Read"}
                 </button>
@@ -137,7 +134,6 @@ const Notifications = () => {
         </header>
 
         <div className="notifications-content">
-
           <div className="notifications-wrapper">
             {sortedNotifications.length === 0 ?
               <div className="empty-state">
@@ -152,11 +148,20 @@ const Notifications = () => {
               </div>
             : <>
                 <div className="notification-count">
-                  <strong>{sortedNotifications.length}</strong> notification
+                  <strong>{sortedNotifications.length}</strong>
+                  &nbsp;notification
                   {sortedNotifications.length !== 1 ? "s" : ""}
                   {unreadCount > 0 && (
-                    <span style={{ marginLeft: "10px", color: "#dc3545" }}>
-                      ({unreadCount} unread)
+                    <span
+                      style={{
+                        fontSize: "0.65rem",
+                        backgroundColor: "#dc3545",
+                        color: "white",
+                        padding: "0.15rem 0.55rem",
+                        borderRadius: "999px",
+                        fontWeight: "800",
+                      }}>
+                      {unreadCount} unread
                     </span>
                   )}
                 </div>
@@ -165,59 +170,51 @@ const Notifications = () => {
                   <div
                     key={n.id}
                     className={`notification-card ${!n.is_read ? "unread" : ""}`}>
+                    {/* Header: icon + title + timestamp */}
                     <div className="notification-card-header">
+                      <div className="notification-card-icon">
+                        <i className="bi bi-bell-fill"></i>
+                      </div>
+
                       <div className="notification-info">
                         <h4>
                           {n.title}
-                          {!n.is_read && (
-                            <span
-                              style={{
-                                marginLeft: "10px",
-                                fontSize: "10px",
-                                backgroundColor: "#dc3545",
-                                color: "white",
-                                padding: "2px 8px",
-                                borderRadius: "12px",
-                                fontWeight: "bold",
-                              }}>
-                              NEW
-                            </span>
-                          )}
+                          {!n.is_read && <span>NEW</span>}
                         </h4>
                         <div className="notification-timestamp">
                           <i className="bi bi-clock"></i>
                           {new Date(n.timestamp).toLocaleString()}
                         </div>
                       </div>
-
-                      <div className="notification-action-group">
-                        {!n.is_read && (
-                          <button
-                            onClick={() => markAsRead(n.id)}
-                            disabled={markingIds.includes(n.id)}
-                            className="mark-read-btn"
-                            title="Mark as read">
-                            <i className="bi bi-check"></i>
-                            {markingIds.includes(n.id) ?
-                              "Marking..."
-                            : "Mark Read"}
-                          </button>
-                        )}
-
-                        <button
-                          onClick={() => handleDeleteClick(n.id, n.title)}
-                          disabled={deletingIds.includes(n.id)}
-                          className="delete-btn"
-                          title="Delete notification">
-                          <i className="bi bi-trash"></i>
-                          {deletingIds.includes(n.id) ?
-                            "Deleting..."
-                          : "Delete"}
-                        </button>
-                      </div>
                     </div>
 
+                    {/* Message body */}
                     <p className="notification-message">{n.message}</p>
+
+                    {/* Actions */}
+                    <div className="notification-action-group">
+                      {!n.is_read && (
+                        <button
+                          onClick={() => markAsRead(n.id)}
+                          disabled={markingIds.includes(n.id)}
+                          className="mark-read-btn"
+                          title="Mark as read">
+                          <i className="bi bi-check"></i>
+                          {markingIds.includes(n.id) ?
+                            "Marking..."
+                          : "Mark Read"}
+                        </button>
+                      )}
+
+                      <button
+                        onClick={() => handleDeleteClick(n.id, n.title)}
+                        disabled={deletingIds.includes(n.id)}
+                        className="delete-btn"
+                        title="Delete notification">
+                        <i className="bi bi-trash"></i>
+                        {deletingIds.includes(n.id) ? "Deleting..." : "Delete"}
+                      </button>
+                    </div>
                   </div>
                 ))}
               </>
