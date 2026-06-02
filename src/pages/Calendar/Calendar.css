@@ -19,15 +19,6 @@
   }
 }
 
-@keyframes shimmer {
-  0% {
-    background-position: -200% center;
-  }
-  100% {
-    background-position: 200% center;
-  }
-}
-
 /* ── Layout ─────────────────────────────────────────────────────────────────── */
 .calendar-page-wrapper {
   margin-left: 260px;
@@ -189,14 +180,12 @@
     0 4px 10px rgba(0, 0, 0, 0.06);
 }
 
-/* Left accent stripe */
 .calendar-event-stripe {
   width: 5px;
   background: linear-gradient(180deg, #0d6efd 0%, #00b4d8 100%);
   flex-shrink: 0;
 }
 
-/* Date badge */
 .calendar-date-badge {
   display: flex;
   flex-direction: column;
@@ -225,7 +214,6 @@
   letter-spacing: 1px;
 }
 
-/* Event info */
 .calendar-event-info {
   flex: 1;
   display: flex;
@@ -275,7 +263,7 @@
   color: #94a3b8;
 }
 
-/* ── Empty / loading states ──────────────────────────────────────────────────── */
+/* ── Empty state ─────────────────────────────────────────────────────────────── */
 .calendar-empty-state {
   text-align: center;
   padding: 4rem 1.5rem;
@@ -304,11 +292,16 @@
     margin-left: 0;
     width: 100%;
   }
+
+  /* Push header content below the mobile top navbar */
+  .calendar-header {
+    padding: calc(56px + 2rem) 1.5rem 60px;
+  }
 }
 
 @media (max-width: 768px) {
   .calendar-header {
-    padding: 2.5rem 1.5rem 60px;
+    padding: calc(56px + 1.75rem) 1.25rem 55px;
   }
 
   .calendar-content-wrapper {
@@ -335,8 +328,7 @@
 
 @media (max-width: 576px) {
   .calendar-header {
-    padding-top: 2rem;
-    padding-bottom: 55px;
+    padding: calc(56px + 1.5rem) 1rem 50px;
   }
 
   .calendar-header-content {
@@ -364,7 +356,6 @@
     width: 100%;
   }
 
-  /* Stack card vertically on very small screens */
   .calendar-event-card {
     flex-direction: column;
   }
