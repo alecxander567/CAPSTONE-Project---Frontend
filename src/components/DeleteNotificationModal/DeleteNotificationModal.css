@@ -168,29 +168,44 @@
 
 /* ── Mobile fixes ─────────────────────────────────────────────────────────── */
 @media (max-width: 576px) {
-  /* Anchor to bottom with generous padding so footer clears nav bars/home indicator */
+  /* Full-screen overlay that scrolls if needed */
   .modal.show.d-block {
     display: flex !important;
-    align-items: flex-end;
+    align-items: center;
     justify-content: center;
-    padding: 1rem 1rem 5rem;
+    /* safe-area-inset accounts for notch/home indicator on all phones */
+    padding-top: max(4rem, env(safe-area-inset-top, 4rem));
+    padding-bottom: max(4rem, env(safe-area-inset-bottom, 4rem));
+    padding-left: 1rem;
+    padding-right: 1rem;
     box-sizing: border-box;
     overflow-y: auto;
+    /* fill the full visual viewport */
+    min-height: 100dvh;
+    position: fixed;
+    inset: 0;
   }
 
-  /* Dialog fills width, capped so it never overflows the viewport */
   .modal-dialog {
     margin: 0;
     width: 100%;
     max-width: 100%;
-    max-height: calc(100dvh - 6rem);
+    /* never taller than what's left after the safe padding */
+    max-height: calc(
+      100dvh -
+        max(
+          8rem,
+          env(safe-area-inset-top, 4rem) + env(safe-area-inset-bottom, 4rem)
+        )
+    );
     display: flex;
     flex-direction: column;
   }
 
-  /* Card is a flex column — header/footer fixed, body scrolls */
+  /* Card is a flex column so header/footer stay visible and body scrolls */
   .modal-content-delete-notif {
-    max-height: calc(100dvh - 6rem);
+    width: 100%;
+    max-height: inherit;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -210,51 +225,55 @@
   }
 
   .modal-title {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
   }
 
   .modal-subtitle {
     font-size: 0.75rem;
   }
 
-  /* Body scrolls if content is tall */
+  /* Only the body scrolls if content overflows */
   .modal-body-delete-notif {
     padding: 1.5rem 1.25rem;
     overflow-y: auto;
     flex: 1 1 auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .delete-warning-icon-notif {
-    width: 60px;
-    height: 60px;
-    font-size: 1.75rem;
-    margin-bottom: 1rem;
+    width: 56px;
+    height: 56px;
+    font-size: 1.6rem;
+    margin-bottom: 0.875rem;
   }
 
   .delete-question-notif {
-    font-size: 1rem;
-    margin-bottom: 1rem;
+    font-size: 0.95rem;
+    margin-bottom: 0.875rem;
   }
 
   .notification-title-display {
-    font-size: 0.9rem;
-    padding: 0.6rem 1rem;
-    margin-bottom: 1rem;
+    font-size: 0.875rem;
+    padding: 0.5rem 0.875rem;
+    margin-bottom: 0.875rem;
     text-align: left;
   }
 
   .delete-warning-text-notif {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
+    line-height: 1.5;
   }
 
   .modal-footer-delete-notif {
     padding: 1rem 1.25rem;
     flex-direction: column;
     flex-shrink: 0;
+    gap: 0.5rem;
   }
 
   .btn-cancel-delete-notif,
   .btn-confirm-delete-notif {
     width: 100%;
+    padding: 0.7rem 1rem;
   }
 }
