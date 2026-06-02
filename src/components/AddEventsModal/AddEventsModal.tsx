@@ -58,6 +58,19 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
       .catch(console.error);
   }, []);
 
+  // Add this useEffect to prevent body scroll when modal is open
+  useEffect(() => {
+    if (visible && active) {
+      document.body.classList.add("modal-open");
+    } else {
+      document.body.classList.remove("modal-open");
+    }
+
+    return () => {
+      document.body.classList.remove("modal-open");
+    };
+  }, [visible, active]);
+  
   // Sync form fields when initialData or show changes
   useEffect(() => {
     setTitle(initialData?.title || "");
