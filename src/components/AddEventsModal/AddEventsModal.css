@@ -12,9 +12,14 @@
   transition:
     opacity 0.3s ease,
     background-color 0.3s ease;
-  padding: 2rem 1rem;
-  overflow-y: auto;
+  /* safe padding on all sides for every device */
+  padding-top: max(2rem, env(safe-area-inset-top, 2rem));
+  padding-bottom: max(2rem, env(safe-area-inset-bottom, 2rem));
+  padding-left: 1rem;
+  padding-right: 1rem;
   box-sizing: border-box;
+  /* backdrop itself does NOT scroll — the body inside the card does */
+  overflow: hidden;
 }
 
 .custom-modal.active {
@@ -23,10 +28,15 @@
   background-color: rgba(10, 26, 255, 0.15);
 }
 
+/* ── Dialog ──────────────────────────────────────────────────────────────────── */
 .custom-modal .modal-dialog {
   width: 100%;
   max-width: 600px;
-  margin: auto;
+  /* Fills available height inside the padded backdrop */
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
   transform: scale(0.95);
   opacity: 0;
   transition:
@@ -44,14 +54,18 @@
   border-radius: 20px;
   border: none;
   box-shadow: 0 20px 60px rgba(10, 26, 255, 0.2);
-  overflow: hidden;
   background: white;
   width: 100%;
+  /* Key: card is a flex column that fills the dialog height */
   display: flex;
   flex-direction: column;
+  /* Fills remaining space inside dialog, never exceeds it */
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
 }
 
-/* ── Header ──────────────────────────────────────────────────────────────────── */
+/* ── Header — always visible, never shrinks ──────────────────────────────────── */
 .modal-header-enhanced {
   background: linear-gradient(135deg, #0a1aff 0%, #0f52ba 80%, #00b4d8 100%);
   color: white;
@@ -121,15 +135,18 @@
   opacity: 0.85;
   position: relative;
   z-index: 2;
+  flex-shrink: 0;
 }
 
-/* ── Body ────────────────────────────────────────────────────────────────────── */
+/* ── Body — scrollable, takes all remaining height ───────────────────────────── */
 .modal-body-enhanced {
   padding: 2rem;
   background: linear-gradient(to bottom, #ffffff 0%, #f8f9ff 100%);
+  /* This is the only part that scrolls */
   overflow-y: auto;
-  flex: 1 1 auto;
   -webkit-overflow-scrolling: touch;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .form-group-enhanced {
@@ -184,7 +201,7 @@ textarea.form-control-enhanced {
   resize: vertical;
 }
 
-/* ── Footer ──────────────────────────────────────────────────────────────────── */
+/* ── Footer — always visible, never shrinks ──────────────────────────────────── */
 .modal-footer-enhanced {
   padding: 1.5rem 2rem;
   background: #f8faff;
@@ -233,8 +250,7 @@ textarea.form-control-enhanced {
 /* ── Tablet ──────────────────────────────────────────────────────────────────── */
 @media (max-width: 991px) {
   .custom-modal {
-    padding: 1rem 0.75rem;
-    align-items: center;
+    padding: 1.5rem 0.75rem;
   }
 
   .modal-header-enhanced {
@@ -270,47 +286,19 @@ textarea.form-control-enhanced {
 
 /* ── Mobile ──────────────────────────────────────────────────────────────────── */
 @media (max-width: 576px) {
-  /* Full-screen overlay with safe-area padding on all sides */
   .custom-modal {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding-top: max(4rem, env(safe-area-inset-top, 4rem));
-    padding-bottom: max(4rem, env(safe-area-inset-bottom, 4rem));
+    padding-top: max(3.5rem, env(safe-area-inset-top, 3.5rem));
+    padding-bottom: max(3.5rem, env(safe-area-inset-bottom, 3.5rem));
     padding-left: 0.75rem;
     padding-right: 0.75rem;
-    overflow-y: auto;
-    min-height: 100dvh;
-    box-sizing: border-box;
   }
 
-  /* Dialog never taller than the safe viewport */
-  .custom-modal .modal-dialog {
-    max-width: 100%;
-    margin: 0;
-    max-height: calc(
-      100dvh -
-        max(
-          8rem,
-          env(safe-area-inset-top, 4rem) + env(safe-area-inset-bottom, 4rem)
-        )
-    );
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* Card fills dialog height, body scrolls internally */
   .modal-content-enhanced {
     border-radius: 16px;
-    max-height: inherit;
-    overflow: hidden;
   }
 
   .modal-header-enhanced {
     padding: 1rem 1rem 0.875rem;
-    flex-shrink: 0;
   }
 
   .modal-header-content {
@@ -334,21 +322,18 @@ textarea.form-control-enhanced {
     line-height: 1.3;
   }
 
-  /* Body scrolls so footer is always visible */
   .modal-body-enhanced {
     padding: 1rem;
-    overflow-y: auto;
-    flex: 1 1 auto;
   }
 
   .form-group-enhanced {
-    margin-bottom: 1rem;
+    margin-bottom: 0.875rem;
   }
 
   .form-row-2col {
     grid-template-columns: 1fr;
     gap: 0.75rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0.875rem;
   }
 
   .form-label-enhanced {
@@ -366,20 +351,20 @@ textarea.form-control-enhanced {
     min-height: 65px;
   }
 
+  /* Footer: stacked, full-width buttons, always pinned */
   .modal-footer-enhanced {
     padding: 0.875rem 1rem;
     flex-direction: column-reverse;
     gap: 0.5rem;
     border-top-width: 1.5px;
-    flex-shrink: 0;
   }
 
   .btn-secondary-enhanced,
   .btn-primary-enhanced {
     width: 100%;
     justify-content: center;
-    padding: 0.65rem 1rem;
-    font-size: 0.875rem;
+    padding: 0.7rem 1rem;
+    font-size: 0.9rem;
     border-radius: 8px;
   }
 }
