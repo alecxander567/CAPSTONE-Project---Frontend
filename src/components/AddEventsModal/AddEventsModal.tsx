@@ -58,20 +58,6 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
       .catch(console.error);
   }, []);
 
-  // Add this useEffect to prevent body scroll when modal is open
-  useEffect(() => {
-    if (visible && active) {
-      document.body.classList.add("modal-open");
-    } else {
-      document.body.classList.remove("modal-open");
-    }
-
-    return () => {
-      document.body.classList.remove("modal-open");
-    };
-  }, [visible, active]);
-  
-  // Sync form fields when initialData or show changes
   useEffect(() => {
     setTitle(initialData?.title || "");
     setDescription(initialData?.description || "");
@@ -82,7 +68,6 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
     setProgramId(initialData?.program_id ?? null);
   }, [initialData, show]);
 
-  // Drive visibility + CSS transition — same pattern as DeleteNotificationModal
   useEffect(() => {
     let timeout: number;
     if (show) {
@@ -142,39 +127,24 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
             />
           </div>
 
-          {/* Form wraps body + footer so footer stays pinned */}
+          {/* Form */}
           <form className="modal-form" onSubmit={handleSubmit}>
-            {/* Body — scrollable */}
             <div className="modal-body modal-body-enhanced">
-              <div className="form-group-enhanced">
-                <label className="form-label-enhanced">
-                  <i className="bi bi-card-heading" /> Event Title
-                </label>
-                <input
-                  type="text"
-                  className="form-control form-control-enhanced"
-                  placeholder="Enter event title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="form-group-enhanced">
-                <label className="form-label-enhanced">
-                  <i className="bi bi-text-paragraph" /> Description
-                </label>
-                <textarea
-                  className="form-control form-control-enhanced"
-                  placeholder="Describe your event"
-                  rows={3}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  required
-                />
-              </div>
-
+              {/* Row 1: Title + Date */}
               <div className="form-row-2col">
+                <div className="form-group-enhanced">
+                  <label className="form-label-enhanced">
+                    <i className="bi bi-card-heading" /> Event Title
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control form-control-enhanced"
+                    placeholder="Enter event title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    required
+                  />
+                </div>
                 <div className="form-group-enhanced">
                   <label className="form-label-enhanced">
                     <i className="bi bi-calendar3" /> Event Date
@@ -187,21 +157,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                     required
                   />
                 </div>
-                <div className="form-group-enhanced">
-                  <label className="form-label-enhanced">
-                    <i className="bi bi-geo-alt" /> Location
-                  </label>
-                  <input
-                    type="text"
-                    className="form-control form-control-enhanced"
-                    placeholder="Enter event location"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    required
-                  />
-                </div>
               </div>
 
+              {/* Row 2: Start Time + End Time */}
               <div className="form-row-2col">
                 <div className="form-group-enhanced">
                   <label className="form-label-enhanced">
@@ -229,34 +187,60 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                 </div>
               </div>
 
-              <div className="form-group-enhanced">
+              {/* Row 3: Location + Program */}
+              <div className="form-row-2col">
+                <div className="form-group-enhanced">
+                  <label className="form-label-enhanced">
+                    <i className="bi bi-geo-alt" /> Location
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control form-control-enhanced"
+                    placeholder="Enter event location"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="form-group-enhanced">
+                  <label className="form-label-enhanced">
+                    <i className="bi bi-diagram-3" /> Program
+                  </label>
+                  <select
+                    className="form-control form-control-enhanced"
+                    value={programId ?? ""}
+                    onChange={(e) =>
+                      setProgramId(
+                        e.target.value === "" ? null : Number(e.target.value),
+                      )
+                    }>
+                    <option value="">All Programs</option>
+                    {programs.map((prog) => (
+                      <option key={prog.id} value={prog.id}>
+                        {prog.name} ({prog.code})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Row 4: Description — full width */}
+              <div className="form-group-enhanced mb-0">
                 <label className="form-label-enhanced">
-                  <i className="bi bi-diagram-3" /> Program
-                  <span
-                    className="text-muted ms-2"
-                    style={{ fontSize: "0.8rem", fontWeight: 400 }}>
-                    (leave blank for all programs)
-                  </span>
+                  <i className="bi bi-text-paragraph" /> Description
                 </label>
-                <select
+                <textarea
                   className="form-control form-control-enhanced"
-                  value={programId ?? ""}
-                  onChange={(e) =>
-                    setProgramId(
-                      e.target.value === "" ? null : Number(e.target.value),
-                    )
-                  }>
-                  <option value="">All Programs</option>
-                  {programs.map((prog) => (
-                    <option key={prog.id} value={prog.id}>
-                      {prog.name} ({prog.code})
-                    </option>
-                  ))}
-                </select>
+                  placeholder="Describe your event"
+                  rows={2}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  required
+                />
               </div>
             </div>
 
-            {/* Footer — pinned */}
+            {/* Footer */}
             <div className="modal-footer modal-footer-enhanced">
               <button
                 type="button"
