@@ -49,7 +49,6 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
   const [programId, setProgramId] = useState<number | null>(
     initialData?.program_id ?? null,
   );
-
   const [programs, setPrograms] = useState<Program[]>([]);
 
   useEffect(() => {
@@ -60,7 +59,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
   }, []);
 
   useEffect(() => {
-    const resetState = () => {
+    const id = setTimeout(() => {
       setTitle(initialData?.title || "");
       setDescription(initialData?.description || "");
       setEventDate(initialData?.event_date || "");
@@ -68,15 +67,12 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
       setEndTime(initialData?.end_time || "");
       setLocation(initialData?.location || "");
       setProgramId(initialData?.program_id ?? null);
-    };
-
-    const id = setTimeout(resetState, 0);
+    }, 0);
     return () => clearTimeout(id);
   }, [initialData, show]);
 
   useEffect(() => {
     let timeout: number;
-
     if (show) {
       timeout = window.setTimeout(() => {
         setVisible(true);
@@ -88,13 +84,11 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
         setVisible(false);
       }, 0);
     }
-
     return () => clearTimeout(timeout);
   }, [show]);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-
     onSave({
       title,
       description: description || "",
@@ -114,13 +108,13 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
         className="modal-dialog modal-dialog-centered"
         onClick={(e) => e.stopPropagation()}>
         <div className="modal-content modal-content-enhanced">
+          {/* ── Header — always visible ── */}
           <div className="modal-header modal-header-enhanced">
             <div className="modal-header-content">
               <div className="modal-icon">
                 <i
-                  className={`bi ${
-                    initialData ? "bi-pencil-square" : "bi-calendar-plus"
-                  }`}></i>
+                  className={`bi ${initialData ? "bi-pencil-square" : "bi-calendar-plus"}`}
+                />
               </div>
               <div>
                 <h5 className="modal-title">
@@ -136,15 +130,20 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
             <button
               type="button"
               className="btn-close btn-close-white"
-              onClick={onClose}></button>
+              onClick={onClose}
+            />
           </div>
 
-          <form onSubmit={handleSubmit}>
+          {/*
+            ── form is a flex column so the body can grow/scroll
+               and the footer stays pinned at the bottom ──
+          */}
+          <form className="modal-form" onSubmit={handleSubmit}>
+            {/* ── Body — scrollable ── */}
             <div className="modal-body modal-body-enhanced">
               <div className="form-group-enhanced">
                 <label className="form-label-enhanced">
-                  <i className="bi bi-card-heading"></i>
-                  Event Title
+                  <i className="bi bi-card-heading" /> Event Title
                 </label>
                 <input
                   type="text"
@@ -158,8 +157,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
 
               <div className="form-group-enhanced">
                 <label className="form-label-enhanced">
-                  <i className="bi bi-text-paragraph"></i>
-                  Description
+                  <i className="bi bi-text-paragraph" /> Description
                 </label>
                 <textarea
                   className="form-control form-control-enhanced"
@@ -167,14 +165,14 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                   rows={3}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  required></textarea>
+                  required
+                />
               </div>
 
               <div className="form-row-2col">
                 <div className="form-group-enhanced">
                   <label className="form-label-enhanced">
-                    <i className="bi bi-calendar3"></i>
-                    Event Date
+                    <i className="bi bi-calendar3" /> Event Date
                   </label>
                   <input
                     type="date"
@@ -184,11 +182,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                     required
                   />
                 </div>
-
                 <div className="form-group-enhanced">
                   <label className="form-label-enhanced">
-                    <i className="bi bi-geo-alt"></i>
-                    Location
+                    <i className="bi bi-geo-alt" /> Location
                   </label>
                   <input
                     type="text"
@@ -204,8 +200,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
               <div className="form-row-2col">
                 <div className="form-group-enhanced">
                   <label className="form-label-enhanced">
-                    <i className="bi bi-clock"></i>
-                    Start Time
+                    <i className="bi bi-clock" /> Start Time
                   </label>
                   <input
                     type="time"
@@ -215,11 +210,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                     required
                   />
                 </div>
-
                 <div className="form-group-enhanced">
                   <label className="form-label-enhanced">
-                    <i className="bi bi-clock-fill"></i>
-                    End Time
+                    <i className="bi bi-clock-fill" /> End Time
                   </label>
                   <input
                     type="time"
@@ -231,11 +224,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                 </div>
               </div>
 
-              {/* Program restriction — optional */}
               <div className="form-group-enhanced">
                 <label className="form-label-enhanced">
-                  <i className="bi bi-diagram-3"></i>
-                  Program
+                  <i className="bi bi-diagram-3" /> Program
                   <span
                     className="text-muted ms-2"
                     style={{ fontSize: "0.8rem", fontWeight: 400 }}>
@@ -260,21 +251,21 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
               </div>
             </div>
 
+            {/* ── Footer — always pinned ── */}
             <div className="modal-footer modal-footer-enhanced">
               <button
                 type="button"
                 className="btn btn-secondary btn-secondary-enhanced"
                 onClick={onClose}>
-                <i className="bi bi-x-circle me-2"></i>
+                <i className="bi bi-x-circle me-2" />
                 Cancel
               </button>
               <button
                 type="submit"
                 className="btn btn-primary btn-primary-enhanced">
                 <i
-                  className={`bi ${
-                    initialData ? "bi-save" : "bi-check-circle"
-                  } me-2`}></i>
+                  className={`bi ${initialData ? "bi-save" : "bi-check-circle"} me-2`}
+                />
                 {initialData ? "Update Event" : "Save Event"}
               </button>
             </div>

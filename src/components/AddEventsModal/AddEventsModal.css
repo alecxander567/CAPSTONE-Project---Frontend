@@ -12,13 +12,11 @@
   transition:
     opacity 0.3s ease,
     background-color 0.3s ease;
-  /* safe padding on all sides for every device */
   padding-top: max(2rem, env(safe-area-inset-top, 2rem));
   padding-bottom: max(2rem, env(safe-area-inset-bottom, 2rem));
   padding-left: 1rem;
   padding-right: 1rem;
   box-sizing: border-box;
-  /* backdrop itself does NOT scroll — the body inside the card does */
   overflow: hidden;
 }
 
@@ -32,7 +30,6 @@
 .custom-modal .modal-dialog {
   width: 100%;
   max-width: 600px;
-  /* Fills available height inside the padded backdrop */
   max-height: 100%;
   display: flex;
   flex-direction: column;
@@ -42,6 +39,8 @@
   transition:
     transform 0.3s ease,
     opacity 0.3s ease;
+  /* Must not shrink below dialog height */
+  min-height: 0;
 }
 
 .custom-modal.active .modal-dialog {
@@ -49,30 +48,40 @@
   opacity: 1;
 }
 
-/* ── Modal card ──────────────────────────────────────────────────────────────── */
+/* ── Card ────────────────────────────────────────────────────────────────────── */
 .modal-content-enhanced {
   border-radius: 20px;
   border: none;
   box-shadow: 0 20px 60px rgba(10, 26, 255, 0.2);
   background: white;
   width: 100%;
-  /* Key: card is a flex column that fills the dialog height */
   display: flex;
   flex-direction: column;
-  /* Fills remaining space inside dialog, never exceeds it */
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
 }
 
-/* ── Header — always visible, never shrinks ──────────────────────────────────── */
+/* ── Form — must also be a flex column so body/footer chain works ────────────── */
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ── Header — pinned, never shrinks ──────────────────────────────────────────── */
 .modal-header-enhanced {
   background: linear-gradient(135deg, #0a1aff 0%, #0f52ba 80%, #00b4d8 100%);
   color: white;
-  padding: 2rem 2rem 1.75rem;
+  padding: 1.75rem 2rem 1.5rem;
   position: relative;
   overflow: hidden;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .modal-header-enhanced::before {
@@ -105,29 +114,29 @@
 }
 
 .modal-icon {
-  width: 50px;
-  height: 50px;
+  width: 48px;
+  height: 48px;
   background: rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   flex-shrink: 0;
 }
 
 .modal-title {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.35rem;
   font-weight: 700;
 }
 
 .modal-subtitle {
-  margin-top: 0.25rem;
+  margin-top: 0.2rem;
   margin-bottom: 0;
-  font-size: 0.875rem;
-  opacity: 0.9;
+  font-size: 0.82rem;
+  opacity: 0.88;
 }
 
 .btn-close-white {
@@ -138,11 +147,10 @@
   flex-shrink: 0;
 }
 
-/* ── Body — scrollable, takes all remaining height ───────────────────────────── */
+/* ── Body — scrollable, fills all remaining height ───────────────────────────── */
 .modal-body-enhanced {
-  padding: 2rem;
+  padding: 1.75rem 2rem;
   background: linear-gradient(to bottom, #ffffff 0%, #f8f9ff 100%);
-  /* This is the only part that scrolls */
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   flex: 1 1 auto;
@@ -150,14 +158,14 @@
 }
 
 .form-group-enhanced {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
 .form-row-2col {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
 .form-row-2col .form-group-enhanced {
@@ -169,9 +177,9 @@
   align-items: center;
   gap: 0.5rem;
   font-weight: 600;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
   color: #2c3e50;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
 }
 
 .form-label-enhanced i {
@@ -181,8 +189,8 @@
 .form-control-enhanced {
   border: 2px solid #e3f2fd;
   border-radius: 10px;
-  padding: 0.75rem 1rem;
-  font-size: 0.95rem;
+  padding: 0.65rem 1rem;
+  font-size: 0.92rem;
   transition:
     border-color 0.25s ease,
     box-shadow 0.25s ease;
@@ -197,13 +205,13 @@
 }
 
 textarea.form-control-enhanced {
-  min-height: 80px;
+  min-height: 75px;
   resize: vertical;
 }
 
-/* ── Footer — always visible, never shrinks ──────────────────────────────────── */
+/* ── Footer — pinned, never shrinks ──────────────────────────────────────────── */
 .modal-footer-enhanced {
-  padding: 1.5rem 2rem;
+  padding: 1.25rem 2rem;
   background: #f8faff;
   border-top: 2px solid #e3f2fd;
   display: flex;
@@ -216,12 +224,13 @@ textarea.form-control-enhanced {
   background: #6c757d;
   color: white;
   border: none;
-  padding: 0.625rem 1.25rem;
+  padding: 0.6rem 1.25rem;
   border-radius: 10px;
   font-weight: 600;
   transition: all 0.25s ease;
   display: flex;
   align-items: center;
+  cursor: pointer;
 }
 
 .btn-secondary-enhanced:hover {
@@ -233,12 +242,13 @@ textarea.form-control-enhanced {
   background: linear-gradient(135deg, #0a1aff, #0f52ba);
   color: white;
   border: none;
-  padding: 0.625rem 1.25rem;
+  padding: 0.6rem 1.25rem;
   border-radius: 10px;
   font-weight: 600;
   transition: all 0.25s ease;
   display: flex;
   align-items: center;
+  cursor: pointer;
 }
 
 .btn-primary-enhanced:hover {
@@ -254,21 +264,17 @@ textarea.form-control-enhanced {
   }
 
   .modal-header-enhanced {
-    padding: 1.5rem 1.5rem 1.25rem;
+    padding: 1.35rem 1.5rem 1.1rem;
   }
 
   .modal-icon {
-    width: 44px;
-    height: 44px;
-    font-size: 1.25rem;
+    width: 42px;
+    height: 42px;
+    font-size: 1.2rem;
   }
 
   .modal-title {
-    font-size: 1.25rem;
-  }
-
-  .modal-subtitle {
-    font-size: 0.8rem;
+    font-size: 1.15rem;
   }
 
   .modal-body-enhanced {
@@ -280,15 +286,15 @@ textarea.form-control-enhanced {
   }
 
   .modal-footer-enhanced {
-    padding: 1.25rem 1.5rem;
+    padding: 1.1rem 1.5rem;
   }
 }
 
 /* ── Mobile ──────────────────────────────────────────────────────────────────── */
 @media (max-width: 576px) {
   .custom-modal {
-    padding-top: max(3.5rem, env(safe-area-inset-top, 3.5rem));
-    padding-bottom: max(3.5rem, env(safe-area-inset-bottom, 3.5rem));
+    padding-top: max(3rem, env(safe-area-inset-top, 3rem));
+    padding-bottom: max(3rem, env(safe-area-inset-bottom, 3rem));
     padding-left: 0.75rem;
     padding-right: 0.75rem;
   }
@@ -298,62 +304,61 @@ textarea.form-control-enhanced {
   }
 
   .modal-header-enhanced {
-    padding: 1rem 1rem 0.875rem;
+    padding: 1rem 1rem 0.85rem;
   }
 
   .modal-header-content {
-    gap: 0.75rem;
+    gap: 0.65rem;
   }
 
   .modal-icon {
-    width: 38px;
-    height: 38px;
-    font-size: 1.1rem;
-    border-radius: 10px;
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+    border-radius: 9px;
   }
 
   .modal-title {
-    font-size: 1.05rem;
+    font-size: 1rem;
     line-height: 1.3;
   }
 
   .modal-subtitle {
-    font-size: 0.72rem;
-    line-height: 1.3;
+    font-size: 0.7rem;
   }
 
   .modal-body-enhanced {
-    padding: 1rem;
+    padding: 1rem 0.875rem;
   }
 
   .form-group-enhanced {
-    margin-bottom: 0.875rem;
+    margin-bottom: 0.85rem;
   }
 
   .form-row-2col {
     grid-template-columns: 1fr;
-    gap: 0.75rem;
-    margin-bottom: 0.875rem;
+    gap: 0.65rem;
+    margin-bottom: 0.85rem;
   }
 
   .form-label-enhanced {
-    font-size: 0.82rem;
-    margin-bottom: 0.35rem;
+    font-size: 0.8rem;
+    margin-bottom: 0.3rem;
   }
 
   .form-control-enhanced {
-    padding: 0.55rem 0.75rem;
-    font-size: 0.875rem;
+    padding: 0.5rem 0.7rem;
+    font-size: 0.85rem;
     border-radius: 8px;
   }
 
   textarea.form-control-enhanced {
-    min-height: 65px;
+    min-height: 60px;
   }
 
-  /* Footer: stacked, full-width buttons, always pinned */
+  /* Footer: full-width stacked buttons, always pinned at bottom */
   .modal-footer-enhanced {
-    padding: 0.875rem 1rem;
+    padding: 0.85rem 0.875rem;
     flex-direction: column-reverse;
     gap: 0.5rem;
     border-top-width: 1.5px;
@@ -363,8 +368,8 @@ textarea.form-control-enhanced {
   .btn-primary-enhanced {
     width: 100%;
     justify-content: center;
-    padding: 0.7rem 1rem;
-    font-size: 0.9rem;
+    padding: 0.65rem 1rem;
+    font-size: 0.875rem;
     border-radius: 8px;
   }
 }
