@@ -447,9 +447,9 @@
     width: 100% !important;
   }
 
-  /* More top padding on the hero in mobile */
+  /* More top padding on the hero in mobile — enough to clear the back button */
   .attendance-header {
-    padding-top: 5rem;
+    padding-top: 7.5rem;
   }
 
   /* More bottom padding on the content area in mobile */
