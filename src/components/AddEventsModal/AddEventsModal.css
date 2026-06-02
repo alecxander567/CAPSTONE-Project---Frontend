@@ -12,11 +12,13 @@
   transition:
     opacity 0.3s ease,
     background-color 0.3s ease;
-  padding-top: max(2rem, env(safe-area-inset-top, 2rem));
-  padding-bottom: max(2rem, env(safe-area-inset-bottom, 2rem));
-  padding-left: 1rem;
-  padding-right: 1rem;
+  /* Use padding to keep the dialog away from screen edges & device notches */
+  padding: max(1.5rem, env(safe-area-inset-top, 1.5rem))
+    max(1rem, env(safe-area-inset-right, 1rem))
+    max(1.5rem, env(safe-area-inset-bottom, 1.5rem))
+    max(1rem, env(safe-area-inset-left, 1rem));
   box-sizing: border-box;
+  /* Keep overflow on the backdrop hidden; scrolling lives inside .modal-body */
   overflow: hidden;
 }
 
@@ -30,7 +32,10 @@
 .custom-modal .modal-dialog {
   width: 100%;
   max-width: 600px;
+  /* KEY FIX: constrain to whatever height the padding-shrunk viewport offers */
   max-height: 100%;
+  height: 100%; /* stretch to fill available space … */
+  max-height: 100%; /* … but never exceed it */
   display: flex;
   flex-direction: column;
   margin: 0 auto;
@@ -39,7 +44,6 @@
   transition:
     transform 0.3s ease,
     opacity 0.3s ease;
-  /* Must not shrink below dialog height */
   min-height: 0;
 }
 
@@ -55,14 +59,17 @@
   box-shadow: 0 20px 60px rgba(10, 26, 255, 0.2);
   background: white;
   width: 100%;
+  /* Fill the dialog column but never overflow it */
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
+  /* Natural / content height on large screens; capped on small ones */
+  max-height: 100%;
 }
 
-/* ── Form — must also be a flex column so body/footer chain works ────────────── */
+/* ── Form — flex column so body scrolls between fixed header & footer ─────────── */
 .modal-form {
   display: flex;
   flex-direction: column;
@@ -78,7 +85,7 @@
   padding: 1.75rem 2rem 1.5rem;
   position: relative;
   overflow: hidden;
-  flex-shrink: 0;
+  flex: 0 0 auto; /* ← replaces flex-shrink: 0 for clarity */
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -217,7 +224,7 @@ textarea.form-control-enhanced {
   display: flex;
   gap: 0.75rem;
   justify-content: flex-end;
-  flex-shrink: 0;
+  flex: 0 0 auto; /* ← pinned, never shrinks */
 }
 
 .btn-secondary-enhanced {
@@ -260,7 +267,7 @@ textarea.form-control-enhanced {
 /* ── Tablet ──────────────────────────────────────────────────────────────────── */
 @media (max-width: 991px) {
   .custom-modal {
-    padding: 1.5rem 0.75rem;
+    padding: 1.25rem 0.75rem;
   }
 
   .modal-header-enhanced {
@@ -293,10 +300,20 @@ textarea.form-control-enhanced {
 /* ── Mobile ──────────────────────────────────────────────────────────────────── */
 @media (max-width: 576px) {
   .custom-modal {
-    padding-top: max(3rem, env(safe-area-inset-top, 3rem));
-    padding-bottom: max(3rem, env(safe-area-inset-bottom, 3rem));
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
+    /* Tighter padding — just enough to clear notch/status bar */
+    padding-top: max(0.75rem, env(safe-area-inset-top, 0.75rem));
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0.75rem));
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    /* Allow the dialog to use essentially the full screen height */
+    align-items: stretch; /* dialog fills vertically on very short screens */
+  }
+
+  .custom-modal .modal-dialog {
+    /* On mobile let it grow to fill the available column */
+    height: auto;
+    max-height: 100%;
+    align-self: center; /* re-centre vertically when content is short */
   }
 
   .modal-content-enhanced {
@@ -371,6 +388,53 @@ textarea.form-control-enhanced {
     padding: 0.65rem 1rem;
     font-size: 0.875rem;
     border-radius: 8px;
+  }
+}
+
+/* ── Very short screens (landscape mobile, small tablets) ────────────────────── */
+@media (max-height: 600px) {
+  .custom-modal {
+    padding-top: max(0.5rem, env(safe-area-inset-top, 0.5rem));
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0.5rem));
+  }
+
+  .modal-header-enhanced {
+    padding: 0.75rem 1rem;
+  }
+
+  .modal-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+  }
+
+  .modal-title {
+    font-size: 0.95rem;
+  }
+
+  .modal-subtitle {
+    display: none; /* reclaim vertical space on tiny screens */
+  }
+
+  .modal-body-enhanced {
+    padding: 0.75rem 1rem;
+  }
+
+  .form-group-enhanced {
+    margin-bottom: 0.6rem;
+  }
+
+  .form-row-2col {
+    margin-bottom: 0.6rem;
+    gap: 0.5rem;
+  }
+
+  textarea.form-control-enhanced {
+    min-height: 50px;
+  }
+
+  .modal-footer-enhanced {
+    padding: 0.65rem 1rem;
   }
 }
 
