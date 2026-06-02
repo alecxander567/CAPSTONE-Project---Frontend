@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import ReactDOM from "react-dom";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import { useEvents } from "../../hooks/useEvents";
 import type { AppEvent } from "../../hooks/useEvents";
@@ -179,6 +180,48 @@ function Events() {
     event.title.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
+  // Portals ensure modals render directly on <body>, completely outside
+  // .content-area and its padding/overflow, so they always cover the
+  // full viewport correctly on every screen size.
+  const modals = ReactDOM.createPortal(
+    <>
+      <AddEventModal
+        show={showModal}
+        onClose={() => {
+          handleCloseModal();
+          setEditingEvent(null);
+        }}
+        onSave={handleSaveEvent}
+        initialData={editingEvent}
+      />
+
+      <DeleteEventModal
+        show={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setDeletingEvent(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        eventTitle={deletingEvent?.title || ""}
+      />
+
+      <SuccessAlert
+        show={showSuccess}
+        message={successMessage}
+        onClose={() => setShowSuccess(false)}
+        duration={3000}
+      />
+
+      <ErrorAlert
+        show={showError}
+        message={errorMessage}
+        onClose={() => setShowError(false)}
+        duration={3000}
+      />
+    </>,
+    document.body,
+  );
+
   return (
     <div className="events-layout">
       <Sidebar />
@@ -338,41 +381,10 @@ function Events() {
             </div>
           )}
         </div>
-
-        <AddEventModal
-          show={showModal}
-          onClose={() => {
-            handleCloseModal();
-            setEditingEvent(null);
-          }}
-          onSave={handleSaveEvent}
-          initialData={editingEvent}
-        />
-
-        <DeleteEventModal
-          show={showDeleteModal}
-          onClose={() => {
-            setShowDeleteModal(false);
-            setDeletingEvent(null);
-          }}
-          onConfirm={handleConfirmDelete}
-          eventTitle={deletingEvent?.title || ""}
-        />
-
-        <SuccessAlert
-          show={showSuccess}
-          message={successMessage}
-          onClose={() => setShowSuccess(false)}
-          duration={3000}
-        />
-
-        <ErrorAlert
-          show={showError}
-          message={errorMessage}
-          onClose={() => setShowError(false)}
-          duration={3000}
-        />
       </div>
+
+      {/* Portalled modals — rendered on document.body, outside all layout containers */}
+      {modals}
     </div>
   );
 }
