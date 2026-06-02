@@ -58,31 +58,26 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
       .catch(console.error);
   }, []);
 
+  // Sync form fields when initialData or show changes
   useEffect(() => {
-    const id = setTimeout(() => {
-      setTitle(initialData?.title || "");
-      setDescription(initialData?.description || "");
-      setEventDate(initialData?.event_date || "");
-      setStartTime(initialData?.start_time || "");
-      setEndTime(initialData?.end_time || "");
-      setLocation(initialData?.location || "");
-      setProgramId(initialData?.program_id ?? null);
-    }, 0);
-    return () => clearTimeout(id);
+    setTitle(initialData?.title || "");
+    setDescription(initialData?.description || "");
+    setEventDate(initialData?.event_date || "");
+    setStartTime(initialData?.start_time || "");
+    setEndTime(initialData?.end_time || "");
+    setLocation(initialData?.location || "");
+    setProgramId(initialData?.program_id ?? null);
   }, [initialData, show]);
 
+  // Drive visibility + CSS transition — same pattern as DeleteNotificationModal
   useEffect(() => {
     let timeout: number;
     if (show) {
-      timeout = window.setTimeout(() => {
-        setVisible(true);
-        setActive(true);
-      }, 0);
+      setVisible(true);
+      timeout = window.setTimeout(() => setActive(true), 10);
     } else {
-      timeout = window.setTimeout(() => {
-        setActive(false);
-        setVisible(false);
-      }, 0);
+      setActive(false);
+      timeout = window.setTimeout(() => setVisible(false), 300);
     }
     return () => clearTimeout(timeout);
   }, [show]);
@@ -108,7 +103,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
         className="modal-dialog modal-dialog-centered"
         onClick={(e) => e.stopPropagation()}>
         <div className="modal-content modal-content-enhanced">
-          {/* ── Header — always visible ── */}
+          {/* Header */}
           <div className="modal-header modal-header-enhanced">
             <div className="modal-header-content">
               <div className="modal-icon">
@@ -134,12 +129,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
             />
           </div>
 
-          {/*
-            ── form is a flex column so the body can grow/scroll
-               and the footer stays pinned at the bottom ──
-          */}
+          {/* Form wraps body + footer so footer stays pinned */}
           <form className="modal-form" onSubmit={handleSubmit}>
-            {/* ── Body — scrollable ── */}
+            {/* Body — scrollable */}
             <div className="modal-body modal-body-enhanced">
               <div className="form-group-enhanced">
                 <label className="form-label-enhanced">
@@ -251,7 +243,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
               </div>
             </div>
 
-            {/* ── Footer — always pinned ── */}
+            {/* Footer — pinned */}
             <div className="modal-footer modal-footer-enhanced">
               <button
                 type="button"
