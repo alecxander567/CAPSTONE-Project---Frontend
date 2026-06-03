@@ -4,6 +4,7 @@ import Sidebar from "../../components/Sidebar/Sidebar";
 import { usePrograms } from "../../hooks/useProgram";
 import { useEvents } from "../../hooks/useEvents";
 import type { AppEvent as Event } from "../../hooks/useEvents";
+import "./AttendanceHistory.css";
 
 interface AttendanceRecord {
   student_id_no: string;
@@ -13,389 +14,6 @@ interface AttendanceRecord {
   status: string;
   attendance_time: string | null;
 }
-
-// ── Responsive helper ─────────────────────────────────────────────────────────
-const injectResponsiveStyles = () => {
-  if (document.getElementById("ah-responsive")) return;
-  const style = document.createElement("style");
-  style.id = "ah-responsive";
-  style.textContent = `
-    @keyframes wave {
-      from { transform: rotate(0deg); }
-      to   { transform: rotate(360deg); }
-    }
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(12px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    .ah-fade-up { animation: fadeUp 0.5s ease-out forwards; opacity: 0; }
-    .ah-delay-1 { animation-delay: 0.1s; }
-    .ah-delay-2 { animation-delay: 0.2s; }
-
-    .ah-content-area {
-      margin-left: 260px;
-      width: calc(100% - 260px);
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-      box-sizing: border-box;
-    }
-    @media (max-width: 768px) {
-      .ah-content-area {
-        margin-left: 0 !important;
-        width: 100% !important;
-      }
-    }
-    @media (max-width: 960px) {
-      .ah-controls-bar {
-        flex-direction: column !important;
-        align-items: stretch !important;
-      }
-      .ah-controls-right {
-        flex-wrap: wrap !important;
-        width: 100% !important;
-      }
-      .ah-controls-right > * {
-        flex: 1 1 160px !important;
-        min-width: 0 !important;
-      }
-    }
-    @media (max-width: 640px) {
-      .ah-content-wrapper {
-        padding: 1.25rem 1rem 1.5rem !important;
-      }
-    }
-    .ah-table-wrapper { overflow-x: auto !important; }
-  `;
-  document.head.appendChild(style);
-};
-
-// ── Styles ────────────────────────────────────────────────────────────────────
-const S: Record<string, React.CSSProperties> = {
-  layout: {
-    display: "flex",
-    minHeight: "100vh",
-    backgroundColor: "#f8f9fa",
-    overflowX: "hidden",
-  },
-  header: {
-    position: "relative",
-    background: "linear-gradient(135deg, #0a1aff 0%, #00b4d8 100%)",
-    color: "#fff",
-    padding: "3rem 2rem",
-    overflow: "hidden",
-  },
-  wave: {
-    position: "absolute",
-    width: "200%",
-    height: "200%",
-    background: "rgba(255,255,255,0.08)",
-    borderRadius: "40%",
-    top: "-60%",
-    left: "-50%",
-    animation: "wave 15s linear infinite",
-    pointerEvents: "none",
-  },
-  headerContent: {
-    position: "relative",
-    zIndex: 1,
-    display: "flex",
-    alignItems: "center",
-    gap: "1.5rem",
-    maxWidth: 1400,
-    margin: "0 auto",
-  },
-  headerIcon: {
-    background: "rgba(255,255,255,0.2)",
-    backdropFilter: "blur(5px)",
-    width: 64,
-    height: 64,
-    borderRadius: 16,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: "2rem",
-    flexShrink: 0,
-  },
-  headerTitle: {
-    margin: "0 0 0.25rem 0",
-    fontSize: "1.75rem",
-    fontWeight: 700,
-  },
-  headerSubtitle: { margin: 0, opacity: 0.85, fontSize: "0.95rem" },
-  content: {
-    padding: "2rem 2rem 3rem",
-    maxWidth: 1600,
-    margin: "0 auto",
-    width: "100%",
-    boxSizing: "border-box" as const,
-  },
-  controlsBar: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: "1.5rem",
-    flexWrap: "wrap" as const,
-    paddingTop: "1.5rem",
-    marginBottom: "2rem",
-  },
-  eventTitle: {
-    fontSize: "1.6rem",
-    fontWeight: 700,
-    color: "#1e293b",
-    margin: "0 0 0.35rem 0",
-    display: "flex",
-    alignItems: "center",
-    gap: "0.5rem",
-  },
-  eventSubtitle: { fontSize: "0.9rem", color: "#64748b", margin: 0 },
-  controlsRight: {
-    display: "flex",
-    gap: "10px",
-    alignItems: "center",
-    flexShrink: 0,
-    flexWrap: "wrap" as const,
-  },
-  selectWrapper: { position: "relative" as const, minWidth: 260 },
-  selectIcon: {
-    position: "absolute" as const,
-    left: 12,
-    top: "50%",
-    transform: "translateY(-50%)",
-    color: "#0d6efd",
-    fontSize: "0.9rem",
-    pointerEvents: "none" as const,
-    zIndex: 1,
-  },
-  selectChevron: {
-    position: "absolute" as const,
-    right: 12,
-    top: "50%",
-    transform: "translateY(-50%)",
-    color: "#6c757d",
-    fontSize: "0.75rem",
-    pointerEvents: "none" as const,
-  },
-  select: {
-    width: "100%",
-    height: 42,
-    padding: "0 2rem 0 2.25rem",
-    borderRadius: 12,
-    border: "1.5px solid #e0e7ff",
-    background: "white",
-    color: "#1a1a1a",
-    fontSize: "0.875rem",
-    fontWeight: 500,
-    appearance: "none" as const,
-    cursor: "pointer",
-    boxShadow: "0 2px 8px rgba(13,110,253,0.07)",
-    outline: "none",
-  },
-  yearLevelSelect: {
-    height: 42,
-    minWidth: 150,
-    padding: "0 2rem 0 0.85rem",
-    borderRadius: 12,
-    border: "1px solid #e2e8f0",
-    fontSize: "0.875rem",
-    backgroundColor: "#fff",
-    cursor: "pointer",
-    appearance: "auto" as const,
-    outline: "none",
-  },
-  searchWrapper: { position: "relative" as const, width: 240 },
-  searchIconStyle: {
-    position: "absolute" as const,
-    left: 12,
-    top: "50%",
-    transform: "translateY(-50%)",
-    color: "#94a3b8",
-    fontSize: "0.9rem",
-    pointerEvents: "none" as const,
-  },
-  searchInput: {
-    width: "100%",
-    height: 42,
-    padding: "0 1rem 0 2.5rem",
-    border: "1px solid #e2e8f0",
-    borderRadius: 12,
-    fontSize: "0.875rem",
-    backgroundColor: "#fff",
-    outline: "none",
-    boxSizing: "border-box" as const,
-  },
-  programCard: {
-    background: "#fff",
-    borderRadius: 16,
-    boxShadow:
-      "0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -1px rgba(0,0,0,0.04)",
-    border: "1px solid #e2e8f0",
-    overflow: "hidden",
-    marginBottom: "2rem",
-  },
-  programCardHeader: {
-    padding: "1rem 1.5rem",
-    borderBottom: "1px solid #f1f5f9",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    flexWrap: "wrap" as const,
-    gap: "0.75rem",
-  },
-  programHeaderLeft: { display: "flex", alignItems: "center", gap: "0.75rem" },
-  programCodeBadge: {
-    background: "#e0e7ff",
-    color: "#4338ca",
-    fontWeight: 800,
-    fontSize: "0.85rem",
-    padding: "0.35rem 0.75rem",
-    borderRadius: 8,
-    letterSpacing: "0.5px",
-    whiteSpace: "nowrap" as const,
-  },
-  programCardTitle: {
-    margin: 0,
-    fontSize: "1.1rem",
-    fontWeight: 700,
-    color: "#1e293b",
-  },
-  programMeta: {
-    display: "flex",
-    alignItems: "center",
-    gap: "0.4rem",
-    color: "#64748b",
-    fontSize: "0.875rem",
-    background: "#f8fafc",
-    padding: "0.35rem 0.85rem",
-    borderRadius: 8,
-    border: "1px solid #e2e8f0",
-    whiteSpace: "nowrap" as const,
-  },
-  presentCount: { color: "#198754", fontWeight: 700 },
-  btnPrint: {
-    background: "#0d6efd",
-    color: "white",
-    border: "none",
-    padding: "0 0.9rem",
-    borderRadius: 8,
-    fontSize: "0.85rem",
-    fontWeight: 600,
-    display: "inline-flex",
-    alignItems: "center",
-    gap: 5,
-    cursor: "pointer",
-    height: 36,
-    whiteSpace: "nowrap" as const,
-    transition: "background 0.2s ease",
-  },
-  tableWrapper: {
-    overflowX: "auto" as const,
-    overflowY: "auto" as const,
-    maxHeight: 520,
-  },
-  table: { width: "100%", borderCollapse: "collapse" as const, minWidth: 560 },
-  th: {
-    background: "#f8fafc",
-    color: "#475569",
-    fontWeight: 600,
-    textTransform: "uppercase" as const,
-    fontSize: "0.72rem",
-    letterSpacing: "0.05em",
-    padding: "0.9rem 1.25rem",
-    borderBottom: "2px solid #e2e8f0",
-    position: "sticky" as const,
-    top: 0,
-    zIndex: 10,
-    textAlign: "left" as const,
-    whiteSpace: "nowrap" as const,
-  },
-  thCenter: {
-    background: "#f8fafc",
-    color: "#475569",
-    fontWeight: 600,
-    textTransform: "uppercase" as const,
-    fontSize: "0.72rem",
-    letterSpacing: "0.05em",
-    padding: "0.9rem 1.25rem",
-    borderBottom: "2px solid #e2e8f0",
-    position: "sticky" as const,
-    top: 0,
-    zIndex: 10,
-    textAlign: "center" as const,
-    whiteSpace: "nowrap" as const,
-  },
-  td: {
-    padding: "0.8rem 1.25rem",
-    verticalAlign: "middle" as const,
-    borderBottom: "1px solid #f1f5f9",
-    color: "#334155",
-    fontSize: "0.875rem",
-  },
-  tdCenter: {
-    padding: "0.8rem 1.25rem",
-    verticalAlign: "middle" as const,
-    borderBottom: "1px solid #f1f5f9",
-    color: "#334155",
-    fontSize: "0.875rem",
-    textAlign: "center" as const,
-  },
-  avatarCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: "50%",
-    background: "#c7d2fe",
-    color: "#3730a3",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontWeight: 700,
-    fontSize: "0.8rem",
-    flexShrink: 0,
-    marginRight: "0.75rem",
-  },
-  badgePresent: {
-    background: "#dcfce7",
-    color: "#166534",
-    border: "1px solid #bbf7d0",
-    padding: "0.3rem 0.75rem",
-    borderRadius: 6,
-    fontSize: "0.78rem",
-    fontWeight: 600,
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  badgeAbsent: {
-    background: "#f1f5f9",
-    color: "#64748b",
-    border: "1px solid #e2e8f0",
-    padding: "0.3rem 0.75rem",
-    borderRadius: 6,
-    fontSize: "0.78rem",
-    fontWeight: 600,
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  badgeYearLevel: {
-    background: "rgba(100,116,139,0.1)",
-    color: "#475569",
-    border: "1px solid #e2e8f0",
-    padding: "2px 8px",
-    borderRadius: 6,
-    fontSize: "0.78rem",
-    fontWeight: 500,
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    whiteSpace: "nowrap" as const,
-  },
-  emptyState: {
-    textAlign: "center" as const,
-    padding: "4rem 2rem",
-    color: "#94a3b8",
-  },
-};
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const getRecentEvent = (events: Event[]) => {
@@ -435,10 +53,6 @@ function AttendanceHistory() {
 
   const { programs, loading: programsLoading } = usePrograms();
   const { events, loading: eventsLoading } = useEvents();
-
-  useEffect(() => {
-    injectResponsiveStyles();
-  }, []);
 
   useEffect(() => {
     if (!events.length) return;
@@ -532,14 +146,14 @@ function AttendanceHistory() {
 
   if (programsLoading || eventsLoading) {
     return (
-      <div style={S.layout}>
+      <div className="ah-layout">
         <Sidebar />
         <main
           className="ah-content-area"
           style={{ justifyContent: "center", alignItems: "center" }}>
-          <div style={{ textAlign: "center", color: "#94a3b8" }}>
+          <div className="ah-loading">
             <div className="spinner-border text-primary" role="status" />
-            <p style={{ marginTop: "0.75rem" }}>
+            <p style={{ marginTop: "0.75rem", color: "#94a3b8" }}>
               Loading attendance history...
             </p>
           </div>
@@ -549,38 +163,36 @@ function AttendanceHistory() {
   }
 
   return (
-    <div style={S.layout}>
+    <div className="ah-layout">
       <Sidebar />
 
       <main className="ah-content-area">
         {/* ── Header ── */}
-        <header style={S.header}>
-          <div style={S.wave} />
-          <div style={S.headerContent} className="ah-fade-up">
-            <div style={S.headerIcon}>
+        <header className="ah-header">
+          <div className="ah-header-wave" />
+          <div className="ah-header-content ah-fade-up">
+            <div className="ah-header-icon">
               <i className="bi bi-clipboard-check" />
             </div>
-            <div>
-              <h1 style={S.headerTitle}>Attendance History</h1>
-              <p style={S.headerSubtitle}>Past event attendance records</p>
+            <div className="ah-header-text">
+              <h1>Attendance History</h1>
+              <p>Past event attendance records</p>
             </div>
           </div>
         </header>
 
-        <div className="ah-content-wrapper" style={S.content}>
+        <div className="ah-content-wrapper">
           {/* ── Controls Bar ── */}
-          <div
-            className="ah-controls-bar ah-fade-up ah-delay-1"
-            style={S.controlsBar}>
+          <div className="ah-controls-bar ah-fade-up ah-delay-1">
             <div>
-              <h2 style={S.eventTitle}>
+              <h2 className="ah-event-title">
                 <i
                   className="bi bi-calendar-event"
                   style={{ color: "#4f46e5", fontSize: "1.4rem" }}
                 />
                 {selectedEvent ? selectedEvent.title : "No Event Selected"}
               </h2>
-              <p style={S.eventSubtitle}>
+              <p className="ah-event-subtitle">
                 {selectedEvent ?
                   <>
                     {new Date(selectedEvent.event_date).toLocaleDateString(
@@ -592,16 +204,7 @@ function AttendanceHistory() {
                       {selectedEvent.status}
                     </span>
                     {selectedEvent.program_id && (
-                      <span
-                        style={{
-                          background: "rgba(79,70,229,0.1)",
-                          color: "#4f46e5",
-                          borderRadius: 6,
-                          padding: "2px 8px",
-                          fontSize: "0.78rem",
-                          fontWeight: 600,
-                          marginLeft: 8,
-                        }}>
+                      <span className="ah-program-specific-badge">
                         <i
                           className="bi bi-diagram-3"
                           style={{ marginRight: 4 }}
@@ -614,10 +217,10 @@ function AttendanceHistory() {
               </p>
             </div>
 
-            <div className="ah-controls-right" style={S.controlsRight}>
+            <div className="ah-controls-right">
               {/* Event dropdown */}
-              <div style={S.selectWrapper}>
-                <i className="bi bi-calendar-event" style={S.selectIcon} />
+              <div className="ah-select-wrapper">
+                <i className="bi bi-calendar-event ah-select-icon" />
                 <select
                   value={selectedEventId ?? ""}
                   onChange={(e) =>
@@ -625,17 +228,7 @@ function AttendanceHistory() {
                       e.target.value ? Number(e.target.value) : null,
                     )
                   }
-                  style={S.select}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = "#0d6efd";
-                    e.currentTarget.style.boxShadow =
-                      "0 0 0 3px rgba(13,110,253,0.15)";
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = "#e0e7ff";
-                    e.currentTarget.style.boxShadow =
-                      "0 2px 8px rgba(13,110,253,0.07)";
-                  }}>
+                  className="ah-select">
                   <option value="">Select an event</option>
                   {[...yearFilteredEvents]
                     .sort(
@@ -653,10 +246,10 @@ function AttendanceHistory() {
                       </option>
                     ))}
                 </select>
-                <i className="bi bi-chevron-down" style={S.selectChevron} />
+                <i className="bi bi-chevron-down ah-select-chevron" />
               </div>
 
-              {/* Year filter (event year) */}
+              {/* Year filter */}
               <div style={{ position: "relative", minWidth: 130 }}>
                 <i
                   className="bi bi-calendar3"
@@ -677,29 +270,19 @@ function AttendanceHistory() {
                     setSelectedYear(e.target.value);
                     setSelectedEventId(null);
                   }}
-                  style={{ ...S.select, minWidth: 130 }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = "#0d6efd";
-                    e.currentTarget.style.boxShadow =
-                      "0 0 0 3px rgba(13,110,253,0.15)";
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = "#e0e7ff";
-                    e.currentTarget.style.boxShadow =
-                      "0 2px 8px rgba(13,110,253,0.07)";
-                  }}>
+                  className="ah-select-year">
                   {uniqueYears.map((yr) => (
                     <option key={yr} value={yr}>
                       {yr}
                     </option>
                   ))}
                 </select>
-                <i className="bi bi-chevron-down" style={S.selectChevron} />
+                <i className="bi bi-chevron-down ah-select-chevron" />
               </div>
 
               {/* Year level filter */}
               <select
-                style={S.yearLevelSelect}
+                className="ah-year-level-select"
                 value={yearLevelFilter}
                 onChange={(e) => setYearLevelFilter(e.target.value)}>
                 <option value="ALL">All Year Levels</option>
@@ -710,23 +293,14 @@ function AttendanceHistory() {
               </select>
 
               {/* Search */}
-              <div style={S.searchWrapper}>
-                <i className="bi bi-search" style={S.searchIconStyle} />
+              <div className="ah-search-wrapper">
+                <i className="bi bi-search ah-search-icon" />
                 <input
                   type="text"
-                  style={S.searchInput}
+                  className="ah-search-input"
                   placeholder="Search student or ID..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = "#4f46e5";
-                    e.currentTarget.style.boxShadow =
-                      "0 0 0 3px rgba(79,70,229,0.1)";
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = "#e2e8f0";
-                    e.currentTarget.style.boxShadow = "none";
-                  }}
                 />
               </div>
             </div>
@@ -734,7 +308,7 @@ function AttendanceHistory() {
 
           {/* ── Loading ── */}
           {loadingAttendance && (
-            <div style={{ textAlign: "center", padding: "3rem" }}>
+            <div className="ah-loading">
               <div
                 className="spinner-border spinner-border-sm text-primary"
                 role="status"
@@ -770,18 +344,22 @@ function AttendanceHistory() {
                     : "#dc3545";
 
                   return (
-                    <div key={program.code} style={S.programCard}>
-                      <div style={S.programCardHeader}>
-                        <div style={S.programHeaderLeft}>
-                          <span style={S.programCodeBadge}>{program.code}</span>
-                          <h3 style={S.programCardTitle}>{program.name}</h3>
+                    <div key={program.code} className="ah-program-card">
+                      <div className="ah-program-card-header">
+                        <div className="ah-program-header-left">
+                          <span className="ah-program-code-badge">
+                            {program.code}
+                          </span>
+                          <h3 className="ah-program-card-title">
+                            {program.name}
+                          </h3>
                         </div>
                         <div
                           style={{
                             display: "flex",
                             alignItems: "center",
                             gap: "0.75rem",
-                            flexWrap: "wrap" as const,
+                            flexWrap: "wrap",
                           }}>
                           <div
                             style={{
@@ -789,20 +367,12 @@ function AttendanceHistory() {
                               alignItems: "center",
                               gap: 8,
                             }}>
-                            <div
-                              style={{
-                                width: 80,
-                                height: 6,
-                                background: "#e2e8f0",
-                                borderRadius: 99,
-                                overflow: "hidden",
-                              }}>
+                            <div className="ah-progress-track">
                               <div
+                                className="ah-progress-fill"
                                 style={{
-                                  height: "100%",
                                   width: `${pct}%`,
                                   background: pctColor,
-                                  borderRadius: 99,
                                 }}
                               />
                             </div>
@@ -815,28 +385,20 @@ function AttendanceHistory() {
                               {pct}%
                             </span>
                           </div>
-                          <div style={S.programMeta}>
+                          <div className="ah-program-meta">
                             <i
                               className="bi bi-people-fill"
                               style={{ color: "#94a3b8" }}
                             />
-                            <span style={S.presentCount}>{presentCount}</span>
+                            <span className="ah-present-count">
+                              {presentCount}
+                            </span>
                             <span style={{ color: "#94a3b8" }}>
                               / {totalCount} present
                             </span>
                           </div>
                           <button
-                            style={S.btnPrint}
-                            onMouseEnter={(e) => {
-                              (
-                                e.currentTarget as HTMLButtonElement
-                              ).style.background = "#0a58ca";
-                            }}
-                            onMouseLeave={(e) => {
-                              (
-                                e.currentTarget as HTMLButtonElement
-                              ).style.background = "#0d6efd";
-                            }}
+                            className="ah-btn-print"
                             onClick={() =>
                               handlePrint(program.code, program.name)
                             }>
@@ -847,24 +409,30 @@ function AttendanceHistory() {
                       </div>
 
                       <div id={`print-section-${program.code}`}>
-                        <div
-                          className="ah-table-wrapper"
-                          style={S.tableWrapper}>
-                          <table style={S.table}>
+                        <div className="ah-table-wrapper">
+                          <table className="ah-table">
                             <thead>
                               <tr>
-                                <th style={{ ...S.th, width: 50 }}>#</th>
-                                <th style={{ ...S.th, width: 150 }}>
+                                <th className="ah-th" style={{ width: 50 }}>
+                                  #
+                                </th>
+                                <th className="ah-th" style={{ width: 150 }}>
                                   ID Number
                                 </th>
-                                <th style={S.th}>Student Name</th>
-                                <th style={{ ...S.thCenter, width: 100 }}>
+                                <th className="ah-th">Student Name</th>
+                                <th
+                                  className="ah-th-center"
+                                  style={{ width: 100 }}>
                                   Year
                                 </th>
-                                <th style={{ ...S.thCenter, width: 130 }}>
+                                <th
+                                  className="ah-th-center"
+                                  style={{ width: 130 }}>
                                   Status
                                 </th>
-                                <th style={{ ...S.thCenter, width: 160 }}>
+                                <th
+                                  className="ah-th-center"
+                                  style={{ width: 160 }}>
                                   Time
                                 </th>
                               </tr>
@@ -881,48 +449,36 @@ function AttendanceHistory() {
                                 return (
                                   <tr
                                     key={student.id}
+                                    className="ah-table-row"
                                     style={{
-                                      borderBottom: "1px solid #f1f5f9",
                                       background:
                                         idx % 2 === 0 ? "#fff" : "#fafafa",
-                                      transition: "background 0.15s",
-                                    }}
-                                    onMouseEnter={(e) => {
-                                      (
-                                        e.currentTarget as HTMLTableRowElement
-                                      ).style.background = "#f0f4ff";
-                                    }}
-                                    onMouseLeave={(e) => {
-                                      (
-                                        e.currentTarget as HTMLTableRowElement
-                                      ).style.background =
-                                        idx % 2 === 0 ? "#fff" : "#fafafa";
                                     }}>
                                     <td
+                                      className="ah-td"
                                       style={{
-                                        ...S.td,
                                         color: "#94a3b8",
                                         fontSize: "0.8rem",
                                       }}>
                                       {idx + 1}
                                     </td>
                                     <td
+                                      className="ah-td"
                                       style={{
-                                        ...S.td,
                                         fontWeight: 700,
                                         color: "#4f46e5",
                                       }}>
                                       {student.student_id_no}
                                     </td>
-                                    <td style={S.td}>
+                                    <td className="ah-td">
                                       <div
                                         style={{
                                           display: "flex",
                                           alignItems: "center",
                                         }}>
                                         <div
+                                          className="ah-avatar-circle"
                                           style={{
-                                            ...S.avatarCircle,
                                             background:
                                               isPresent ? "#dcfce7" : "#f1f5f9",
                                             color:
@@ -942,7 +498,7 @@ function AttendanceHistory() {
                                         </div>
                                       </div>
                                     </td>
-                                    <td style={S.tdCenter}>
+                                    <td className="ah-td-center">
                                       <div
                                         style={{
                                           display: "flex",
@@ -950,7 +506,7 @@ function AttendanceHistory() {
                                           justifyContent: "center",
                                         }}>
                                         {student.year_level ?
-                                          <span style={S.badgeYearLevel}>
+                                          <span className="ah-badge-year-level">
                                             {student.year_level}
                                           </span>
                                         : <span style={{ color: "#cbd5e1" }}>
@@ -959,7 +515,7 @@ function AttendanceHistory() {
                                         }
                                       </div>
                                     </td>
-                                    <td style={S.tdCenter}>
+                                    <td className="ah-td-center">
                                       <div
                                         style={{
                                           display: "flex",
@@ -967,18 +523,18 @@ function AttendanceHistory() {
                                           justifyContent: "center",
                                         }}>
                                         {isPresent ?
-                                          <span style={S.badgePresent}>
+                                          <span className="ah-badge-present">
                                             ✓ Present
                                           </span>
-                                        : <span style={S.badgeAbsent}>
+                                        : <span className="ah-badge-absent">
                                             Absent
                                           </span>
                                         }
                                       </div>
                                     </td>
                                     <td
+                                      className="ah-td-center"
                                       style={{
-                                        ...S.tdCenter,
                                         color: "#94a3b8",
                                         fontSize: "0.82rem",
                                       }}>
@@ -1004,16 +560,8 @@ function AttendanceHistory() {
                     </div>
                   );
                 })
-              : <div style={S.emptyState}>
-                  <i
-                    className="bi bi-search"
-                    style={{
-                      fontSize: "2.5rem",
-                      display: "block",
-                      marginBottom: "0.75rem",
-                      opacity: 0.35,
-                    }}
-                  />
+              : <div className="ah-empty-state">
+                  <i className="bi bi-search ah-empty-icon" />
                   <p style={{ fontSize: "0.95rem", margin: 0 }}>
                     {selectedEventId ?
                       "No students match your search."
