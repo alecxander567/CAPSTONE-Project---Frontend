@@ -9,6 +9,7 @@ export interface StudentAttendance {
   absences: number;
   present: number;
   total_events: number;
+  year_level?: number | string;
 }
 
 export function useAllStudentsAttendance() {
@@ -20,12 +21,12 @@ export function useAllStudentsAttendance() {
     const fetch_ = async () => {
       try {
         const res = await fetch(
-          `${import.meta.env.VITE_API_URL}/attendance/all-students-attendance`
+          `${import.meta.env.VITE_API_URL}/attendance/all-students-attendance`,
         );
         if (!res.ok) throw new Error("Failed to fetch");
         const json = await res.json();
         setData(json);
-      } catch (e) {
+      } catch {
         setError("Failed to load student attendance data");
       } finally {
         setLoading(false);

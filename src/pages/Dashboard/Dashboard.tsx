@@ -160,7 +160,6 @@ function Dashboard() {
   }, []);
 
   return (
-    // ↓ KEY FIX: display:block so fixed sidebar doesn't affect layout flow
     <div className="dashboard-layout">
       <Sidebar />
 
@@ -624,7 +623,7 @@ function Dashboard() {
 
           {/* ── Charts Row ── */}
           <div className="charts-row">
-            {/* Bar Chart: Student Population per Program */}
+            {/* Bar Chart */}
             <div className="analytics-chart fade-up delay-5">
               <h3 className="chart-title">
                 <i className="bi bi-people-fill"></i> Student Population per
@@ -687,7 +686,7 @@ function Dashboard() {
               </div>
             </div>
 
-            {/* Area Chart: Attendance Graph Per Event with Year Filter */}
+            {/* Area Chart */}
             <div className="analytics-chart fade-up delay-5">
               <div
                 style={{
@@ -890,16 +889,17 @@ function Dashboard() {
                   <i className="bi bi-calendar3 text-primary me-2"></i>
                   Calendar
                 </h4>
-                <div className="calendar-view">
-                  <div className="calendar-header">
-                    <div className="calendar-month">
+                {/* ↓ All calendar classes now use dash-cal- prefix */}
+                <div className="dash-cal-view">
+                  <div className="dash-cal-header">
+                    <div className="dash-cal-month">
                       {getCurrentMonthYear()}
                     </div>
                   </div>
-                  <div className="calendar-grid">
+                  <div className="dash-cal-grid">
                     {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
                       (d) => (
-                        <div key={d} className="calendar-weekday">
+                        <div key={d} className="dash-cal-weekday">
                           {d}
                         </div>
                       ),
@@ -907,7 +907,7 @@ function Dashboard() {
                     {calendarDays.map((dayInfo, idx) => (
                       <div
                         key={idx}
-                        className={`calendar-day ${!dayInfo.isCurrentMonth ? "other-month" : ""} ${dayInfo.isToday ? "today" : ""}`}
+                        className={`dash-cal-day ${!dayInfo.isCurrentMonth ? "dash-cal-other-month" : ""} ${dayInfo.isToday ? "dash-cal-today" : ""}`}
                         style={{
                           backgroundColor:
                             dayInfo.isToday ? "#0d6efd"
@@ -926,13 +926,15 @@ function Dashboard() {
                       </div>
                     ))}
                   </div>
-                  <div className="calendar-footer mt-3">
-                    <div className="calendar-legend">
-                      <span className="legend-item">
-                        <span className="legend-dot today-dot"></span>Today
+                  <div className="dash-cal-footer mt-3">
+                    <div className="dash-cal-legend">
+                      <span className="dash-cal-legend-item">
+                        <span className="dash-cal-legend-dot dash-cal-today-dot"></span>
+                        Today
                       </span>
-                      <span className="legend-item">
-                        <span className="legend-dot event-dot"></span>Event
+                      <span className="dash-cal-legend-item">
+                        <span className="dash-cal-legend-dot dash-cal-event-dot"></span>
+                        Event
                       </span>
                     </div>
                   </div>
@@ -949,9 +951,7 @@ function Dashboard() {
               </button>
             </div>
           </div>
-          {/* end dashboard-lower-grid */}
         </div>
-        {/* end dashboard-content */}
       </main>
     </div>
   );

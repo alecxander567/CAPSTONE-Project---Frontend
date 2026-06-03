@@ -359,35 +359,34 @@ body {
   font-weight: 700;
 }
 
-/* ── Calendar ── */
-.event-card {
-  background: linear-gradient(to bottom right, #ffffff, #f0f7ff);
-  border: 1px solid #dbeafe;
-}
-
-.calendar-view {
+/* ════════════════════════════════════════════
+   DASHBOARD CALENDAR  (dash-cal-* namespace)
+   All classes prefixed to avoid conflicts with
+   any other calendar component in the project.
+   ════════════════════════════════════════════ */
+.dash-cal-view {
   display: flex;
   flex-direction: column;
 }
 
-.calendar-header {
+.dash-cal-header {
   margin-bottom: 1rem;
   text-align: center;
 }
 
-.calendar-month {
+.dash-cal-month {
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--text-dark);
 }
 
-.calendar-grid {
+.dash-cal-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 4px;
 }
 
-.calendar-weekday {
+.dash-cal-weekday {
   text-align: center;
   font-size: 0.75rem;
   font-weight: 600;
@@ -396,7 +395,7 @@ body {
   text-transform: uppercase;
 }
 
-.calendar-day {
+.dash-cal-day {
   aspect-ratio: 1;
   display: flex;
   align-items: center;
@@ -411,42 +410,34 @@ body {
   position: relative;
 }
 
-.calendar-day:hover {
+.dash-cal-day:hover {
   background: #e9ecef;
   transform: scale(1.05);
 }
-.calendar-day.other-month {
+
+.dash-cal-other-month {
   color: #6c757d;
   background: transparent;
 }
-.calendar-day.today {
+
+.dash-cal-today {
   background: var(--primary-color);
   color: white;
   font-weight: 700;
 }
 
-.calendar-day.has-event::after {
-  content: "";
-  position: absolute;
-  bottom: 4px;
-  width: 4px;
-  height: 4px;
-  background: #fd7e14;
-  border-radius: 50%;
-}
-
-.calendar-footer {
+.dash-cal-footer {
   padding-top: 1rem;
   border-top: 1px solid #e9ecef;
 }
 
-.calendar-legend {
+.dash-cal-legend {
   display: flex;
   gap: 1.5rem;
   justify-content: center;
 }
 
-.legend-item {
+.dash-cal-legend-item {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -454,19 +445,26 @@ body {
   color: #495057;
 }
 
-.legend-dot {
+.dash-cal-legend-dot {
   width: 12px;
   height: 12px;
   border-radius: 4px;
 }
-.today-dot {
+
+.dash-cal-today-dot {
   background: var(--primary-color);
 }
-.event-dot {
+
+.dash-cal-event-dot {
   background: #fd7e14;
 }
 
 /* ── Event Info ── */
+.event-card {
+  background: linear-gradient(to bottom right, #ffffff, #f0f7ff);
+  border: 1px solid #dbeafe;
+}
+
 .recent-event-info {
   padding-bottom: 1rem;
   border-bottom: 1px solid #e9ecef;
