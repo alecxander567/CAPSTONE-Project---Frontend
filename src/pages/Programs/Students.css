@@ -338,7 +338,8 @@
 
 .student-actions {
   display: flex;
-  gap: 0.75rem;
+  flex-direction: column;
+  gap: 0.5rem;
   width: 100%;
   margin-top: 0.5rem;
 }
@@ -434,14 +435,50 @@
   color: #dc2626;
 }
 
+/* ── Responsive ── */
 @media (max-width: 991px) {
   .students-content {
     margin-left: 0;
-    padding-top: 4.5rem;
+    padding-top: 0; /* removed — header sits flush under navbar */
   }
 
   .students-header {
-    padding: 2.5rem 1.5rem;
+    /* flush against the top navbar, no gap */
+    margin-top: 0;
+    padding-top: 0;
+    padding-bottom: 2.5rem;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+
+    /* center everything inside the hero */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  /* back button: relative flow, full width row, left-aligned text */
+  .btn-back-header {
+    position: relative;
+    top: auto;
+    left: auto;
+    align-self: flex-start; /* sits left while hero is centered */
+    margin-bottom: 1rem;
+    margin-top: 1rem;
+  }
+
+  .students-header .header-content {
+    align-items: center;
+    text-align: center;
+    width: 100%;
+  }
+
+  .students-header .header-content .d-flex {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.75rem;
   }
 
   .students-header h1 {
@@ -462,22 +499,9 @@
 }
 
 @media (max-width: 768px) {
-  .btn-back-header {
-    top: 0.75rem;
-    left: 1rem;
-    padding: 0.5rem;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    justify-content: center;
-  }
-
-  .btn-back-header span {
-    display: none;
-  }
-
   .students-header {
-    padding: 2rem 1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
   }
 
   .students-header h1 {
@@ -510,14 +534,6 @@
   .student-card {
     padding: 1.5rem;
   }
-
-  .action-btn span {
-    display: none;
-  }
-
-  .action-btn i {
-    font-size: 1.125rem;
-  }
 }
 
 @media (max-width: 576px) {
@@ -528,7 +544,9 @@
 
 @media (max-width: 480px) {
   .students-header {
-    padding: 1.5rem 0.875rem;
+    padding-bottom: 1.5rem;
+    padding-left: 0.875rem;
+    padding-right: 0.875rem;
   }
 
   .students-header h1 {
@@ -573,6 +591,7 @@
   }
 }
 
+/* ── Animations ── */
 .fade-up {
   opacity: 0;
   transform: translateY(40px);
@@ -598,14 +617,6 @@
 }
 .fade-delay-4 {
   transition-delay: 0.4s;
-}
-
-.student-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  width: 100%;
-  margin-top: 0.5rem;
 }
 
 .btn-recognize {
