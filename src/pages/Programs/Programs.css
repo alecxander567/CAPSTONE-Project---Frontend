@@ -463,3 +463,16 @@
     font-size: 1.5rem;
   }
 }
+
+@media (max-width: 991px) {
+  .modal {
+    padding-top: 0 !important;
+  }
+
+  .modal-dialog {
+    margin: auto !important;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+  }
+}
