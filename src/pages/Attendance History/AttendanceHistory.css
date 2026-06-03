@@ -546,6 +546,16 @@
   .ah-controls-right > * {
     flex: 1 1 160px;
     min-width: 0;
+    width: 100%;
+  }
+  /* ← add these two */
+  .ah-select-year {
+    width: 100%;
+    min-width: 0;
+  }
+  .ah-year-level-select {
+    width: 100%;
+    min-width: 0;
   }
 }
 
