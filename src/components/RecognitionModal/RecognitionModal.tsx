@@ -58,18 +58,29 @@ const RecognitionModal = ({
   const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
   const pollRef = useRef<number | null>(null);
   const timeoutRef = useRef<number | null>(null);
+  // ✅ Guard to ensure onRecognized only fires once per session
+  const hasCalledRef = useRef(false);
 
   const clearTimers = () => {
     if (pollRef.current !== null) {
       clearInterval(pollRef.current);
       pollRef.current = null;
     }
-
     if (timeoutRef.current !== null) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
   };
+
+  // ✅ Safe wrapper — only calls onRecognized once per modal open
+  const safeOnRecognized = useCallback(
+    (id: number, success: boolean) => {
+      if (hasCalledRef.current) return;
+      hasCalledRef.current = true;
+      onRecognized(id, success);
+    },
+    [onRecognized],
+  );
 
   const updateStepUI = useCallback((step: string) => {
     let stepIndex = 0;
@@ -123,6 +134,8 @@ const RecognitionModal = ({
   useEffect(() => {
     if (!isOpen) {
       clearTimers();
+      // ✅ Reset the guard when modal closes
+      hasCalledRef.current = false;
       setCurrentStep(0);
       setSteps((prev) => prev.map((s) => ({ ...s, status: "waiting" })));
       return;
@@ -145,8 +158,8 @@ const RecognitionModal = ({
         timeoutRef.current = window.setTimeout(() => {
           clearTimers();
           updateStepUI("error");
-          onRecognized(userId, false);
-
+          // ✅ Safe call — won't double fire
+          safeOnRecognized(userId, false);
           setTimeout(() => {
             onClose?.();
           }, 1000);
@@ -167,7 +180,8 @@ const RecognitionModal = ({
               updateStepUI(matched ? "success" : "error");
 
               setTimeout(() => {
-                onRecognized(userId, matched);
+                // ✅ Safe call — won't double fire
+                safeOnRecognized(userId, matched);
                 onClose?.();
               }, 1000);
             }
@@ -176,7 +190,6 @@ const RecognitionModal = ({
           }
         }, POLL_INTERVAL);
       } catch (err) {
-        // Device offline — stay on step 0 and show offline message
         if (axios.isAxiosError(err) && err.response?.status === 503) {
           setCurrentStep(0);
           setSteps((prev) =>
@@ -190,10 +203,10 @@ const RecognitionModal = ({
               : s,
             ),
           );
-          onRecognized(userId, false);
+          // ✅ Safe call — won't double fire
+          safeOnRecognized(userId, false);
           onClose?.();
         } else {
-          // Any other error — advance to final step as failed
           console.error("Failed to start recognition:", err);
           updateStepUI("error");
         }
@@ -205,7 +218,7 @@ const RecognitionModal = ({
     return () => {
       clearTimers();
     };
-  }, [isOpen, userId, updateStepUI, onRecognized, onClose]);
+  }, [isOpen, userId, updateStepUI, safeOnRecognized, onClose]);
 
   if (!isOpen) return null;
 
