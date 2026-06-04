@@ -7,7 +7,7 @@ import DeleteFingerprintModal from "../../components/DeleteFingerprintModal/Dele
 import RecognitionModal from "../../components/RecognitionModal/RecognitionModal";
 import SuccessAlert from "../../components/SuccessAlert/SuccessAlert";
 import ErrorAlert from "../../components/SuccessAlert/ErrorAlert";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import "./Students.css";
 
@@ -84,6 +84,35 @@ const ProgramStudents = () => {
 
   const { enrollFingerprint, isLoading } = useEnrollFingerprint();
 
+  // ✅ Add refs to prevent duplicate alerts
+  const isProcessingRecognitionRef = useRef(false);
+  const isProcessingEnrollmentRef = useRef(false);
+  const alertTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // ✅ Helper function to show alerts with debounce
+  const showAlert = (message: string, isSuccess: boolean) => {
+    // Clear any pending alert timeout
+    if (alertTimeoutRef.current) {
+      clearTimeout(alertTimeoutRef.current);
+    }
+
+    setAlertMessage(message);
+
+    if (isSuccess) {
+      setShowSuccessAlert(true);
+      // Auto-hide success alert after 3 seconds
+      alertTimeoutRef.current = setTimeout(() => {
+        setShowSuccessAlert(false);
+      }, 3000);
+    } else {
+      setShowErrorAlert(true);
+      // Auto-hide error alert after 4 seconds
+      alertTimeoutRef.current = setTimeout(() => {
+        setShowErrorAlert(false);
+      }, 4000);
+    }
+  };
+
   useEffect(() => {
     const observerOptions = {
       threshold: 0.1,
@@ -119,14 +148,12 @@ const ProgramStudents = () => {
       const data = await enrollFingerprint(studentId);
 
       if (!data) {
-        setAlertMessage("Failed to start enrollment. Please try again.");
-        setShowErrorAlert(true);
+        showAlert("Failed to start enrollment. Please try again.", false);
         return;
       }
 
       if (!data.finger_id) {
-        setAlertMessage("Invalid enrollment response. Please try again.");
-        setShowErrorAlert(true);
+        showAlert("Invalid enrollment response. Please try again.", false);
         return;
       }
 
@@ -136,25 +163,37 @@ const ProgramStudents = () => {
     } catch (err: any) {
       const errorMessage =
         err.response?.data?.detail || err.message || "Unknown error";
-      setAlertMessage(`Failed to start enrollment: ${errorMessage}`);
-      setShowErrorAlert(true);
+      showAlert(`Failed to start enrollment: ${errorMessage}`, false);
     }
   };
 
   const handleRecognizeClick = (student: Student) => {
+    // ✅ Prevent opening multiple modals
+    if (recognitionModalOpen) return;
     setCurrentStudent(student);
     setRecognitionModalOpen(true);
   };
 
-  // ✅ FIXED: Only handles recognition results, no alert for enrollment
+  // ✅ FIXED: Added guard to prevent duplicate recognition alerts
   const handleRecognitionResult = (studentId: number, success: boolean) => {
-    if (success) {
-      setAlertMessage("Fingerprint recognized!");
-      setShowSuccessAlert(true);
-    } else {
-      setAlertMessage("Recognition failed.");
-      setShowErrorAlert(true);
+    // Prevent duplicate calls
+    if (isProcessingRecognitionRef.current) {
+      console.log("Recognition result already processing, skipping...");
+      return;
     }
+
+    isProcessingRecognitionRef.current = true;
+
+    if (success) {
+      showAlert("Fingerprint recognized!", true);
+    } else {
+      showAlert("Recognition failed.", false);
+    }
+
+    // Reset after a delay
+    setTimeout(() => {
+      isProcessingRecognitionRef.current = false;
+    }, 1000);
   };
 
   const handleUnenrollClick = (student: Student) => {
@@ -186,8 +225,7 @@ const ProgramStudents = () => {
             : s,
           ),
         );
-        setAlertMessage("Fingerprint unenrolled successfully!");
-        setShowSuccessAlert(true);
+        showAlert("Fingerprint unenrolled successfully!", true);
       }
     } catch (err: any) {
       let errorMessage = "Failed to unenroll fingerprint";
@@ -203,8 +241,7 @@ const ProgramStudents = () => {
         }
       }
 
-      setAlertMessage(errorMessage);
-      setShowErrorAlert(true);
+      showAlert(errorMessage, false);
     } finally {
       setUnenrollingStudentId(null);
       setSelectedStudentId(null);
@@ -216,8 +253,7 @@ const ProgramStudents = () => {
     setStudents(fetchedStudents);
   }, [fetchedStudents]);
 
-  // ✅ FIXED: Removed alert calls — alerts are handled by handleRecognitionResult
-  // and confirmUnenroll separately to avoid double triggering
+  // ✅ FIXED: Added guard to prevent duplicate enrollment alerts
   const updateStudentStatus = (
     studentId: number,
     status: FingerprintStatus,
@@ -228,14 +264,35 @@ const ProgramStudents = () => {
       ),
     );
 
+    // Prevent duplicate enrollment alerts
+    if (isProcessingEnrollmentRef.current) {
+      console.log("Enrollment status already processing, skipping alert...");
+      return;
+    }
+
     if (status === "enrolled") {
-      setAlertMessage("Fingerprint enrolled successfully!");
-      setShowSuccessAlert(true);
+      isProcessingEnrollmentRef.current = true;
+      showAlert("Fingerprint enrolled successfully!", true);
+      setTimeout(() => {
+        isProcessingEnrollmentRef.current = false;
+      }, 1000);
     } else if (status === "failed") {
-      setAlertMessage("Fingerprint enrollment failed. Please try again.");
-      setShowErrorAlert(true);
+      isProcessingEnrollmentRef.current = true;
+      showAlert("Fingerprint enrollment failed. Please try again.", false);
+      setTimeout(() => {
+        isProcessingEnrollmentRef.current = false;
+      }, 1000);
     }
   };
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (alertTimeoutRef.current) {
+        clearTimeout(alertTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="students-layout">
@@ -254,6 +311,10 @@ const ProgramStudents = () => {
         onClose={() => {
           setRecognitionModalOpen(false);
           setCurrentStudent(null);
+          // Reset recognition processing flag when modal closes
+          setTimeout(() => {
+            isProcessingRecognitionRef.current = false;
+          }, 100);
         }}
         userId={currentStudent?.id}
         fingerId={currentStudent?.finger_id}
