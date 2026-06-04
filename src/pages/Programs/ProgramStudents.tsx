@@ -37,7 +37,6 @@ const FingerprintStatusBadge = ({ status }: { status: FingerprintStatus }) => {
     enrolled: { label: "Enrolled", className: "status-enrolled" },
     failed: { label: "Failed", className: "status-failed" },
   };
-
   const safeStatus = status || "not_enrolled";
   const statusInfo =
     statusMap[safeStatus as FingerprintStatus] || statusMap.not_enrolled;
@@ -77,7 +76,7 @@ const ProgramStudents = () => {
   const [alertMessage, setAlertMessage] = useState("");
 
   const [recognitionModalOpen, setRecognitionModalOpen] = useState(false);
-  const [currentStudent, setCurrentStudent] = useState<any>(null);
+  const [currentStudent, setCurrentStudent] = useState<Student | null>(null);
 
   const [unenrollingStudentId, setUnenrollingStudentId] = useState<
     number | null
@@ -120,14 +119,12 @@ const ProgramStudents = () => {
       const data = await enrollFingerprint(studentId);
 
       if (!data) {
-        console.error("No data returned from enrollFingerprint");
         setAlertMessage("Failed to start enrollment. Please try again.");
         setShowErrorAlert(true);
         return;
       }
 
       if (!data.finger_id) {
-        console.error("No finger_id in response:", data);
         setAlertMessage("Invalid enrollment response. Please try again.");
         setShowErrorAlert(true);
         return;
@@ -137,7 +134,6 @@ const ProgramStudents = () => {
       setSelectedFingerId(data.finger_id);
       setShowEnrollmentModal(true);
     } catch (err: any) {
-      console.error("Enrollment error:", err);
       const errorMessage =
         err.response?.data?.detail || err.message || "Unknown error";
       setAlertMessage(`Failed to start enrollment: ${errorMessage}`);
@@ -145,17 +141,20 @@ const ProgramStudents = () => {
     }
   };
 
-  const handleRecognizeClick = (student) => {
+  const handleRecognizeClick = (student: Student) => {
     setCurrentStudent(student);
     setRecognitionModalOpen(true);
   };
 
+  // ✅ FIXED: Only handles recognition results, no alert for enrollment
   const handleRecognitionResult = (studentId: number, success: boolean) => {
-    setAlertMessage(
-      success ? "Fingerprint recognized!" : "Recognition failed.",
-    );
-    if (success) setShowSuccessAlert(true);
-    else setShowErrorAlert(true);
+    if (success) {
+      setAlertMessage("Fingerprint recognized!");
+      setShowSuccessAlert(true);
+    } else {
+      setAlertMessage("Recognition failed.");
+      setShowErrorAlert(true);
+    }
   };
 
   const handleUnenrollClick = (student: Student) => {
@@ -191,8 +190,6 @@ const ProgramStudents = () => {
         setShowSuccessAlert(true);
       }
     } catch (err: any) {
-      console.error("Unenrollment error:", err);
-
       let errorMessage = "Failed to unenroll fingerprint";
       if (axios.isAxiosError(err)) {
         if (err.response) {
@@ -219,6 +216,8 @@ const ProgramStudents = () => {
     setStudents(fetchedStudents);
   }, [fetchedStudents]);
 
+  // ✅ FIXED: Removed alert calls — alerts are handled by handleRecognitionResult
+  // and confirmUnenroll separately to avoid double triggering
   const updateStudentStatus = (
     studentId: number,
     status: FingerprintStatus,
@@ -356,7 +355,11 @@ const ProgramStudents = () => {
                       <div className="student-avatar">
                         {student.profile_image ?
                           <img
-                            src={`${import.meta.env.VITE_API_URL}/${student.profile_image.replace(/^\//, "")}`}
+                            src={
+                              student.profile_image.startsWith("http") ?
+                                student.profile_image
+                              : `${import.meta.env.VITE_API_URL}/${student.profile_image.replace(/^\//, "")}`
+                            }
                             alt={`${student.first_name} ${student.last_name}`}
                             style={{
                               width: "64px",
