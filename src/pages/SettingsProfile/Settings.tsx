@@ -392,7 +392,11 @@ function Settings() {
                       style={{ position: "relative", display: "inline-block" }}>
                       {profile.profile_image ?
                         <img
-                          src={`${import.meta.env.VITE_API_URL}/${profile.profile_image.replace(/^\//, "")}`}
+                          src={
+                            profile.profile_image.startsWith("http") ?
+                              profile.profile_image
+                            : `${import.meta.env.VITE_API_URL}/${profile.profile_image.replace(/^\//, "")}`
+                          }
                           alt="Profile"
                           style={{
                             width: "100px",
