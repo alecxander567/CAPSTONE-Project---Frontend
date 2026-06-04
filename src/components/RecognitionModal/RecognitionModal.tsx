@@ -58,8 +58,8 @@ const RecognitionModal = ({
   const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
   const pollRef = useRef<number | null>(null);
   const timeoutRef = useRef<number | null>(null);
-  // ✅ Guard to ensure onRecognized only fires once per session
   const hasCalledRef = useRef(false);
+  const isCompletedRef = useRef(false); // ✅ Add this to track completion
 
   const clearTimers = () => {
     if (pollRef.current !== null) {
@@ -75,8 +75,9 @@ const RecognitionModal = ({
   // ✅ Safe wrapper — only calls onRecognized once per modal open
   const safeOnRecognized = useCallback(
     (id: number, success: boolean) => {
-      if (hasCalledRef.current) return;
+      if (hasCalledRef.current || isCompletedRef.current) return;
       hasCalledRef.current = true;
+      isCompletedRef.current = true;
       onRecognized(id, success);
     },
     [onRecognized],
@@ -134,8 +135,9 @@ const RecognitionModal = ({
   useEffect(() => {
     if (!isOpen) {
       clearTimers();
-      // ✅ Reset the guard when modal closes
+      // Reset guards when modal closes
       hasCalledRef.current = false;
+      isCompletedRef.current = false;
       setCurrentStep(0);
       setSteps((prev) => prev.map((s) => ({ ...s, status: "waiting" })));
       return;
@@ -144,6 +146,7 @@ const RecognitionModal = ({
     if (!userId) return;
 
     let targetFingerId: number | null = null;
+    let isResolved = false; // ✅ Local flag to prevent multiple resolutions
 
     const startRecognition = async () => {
       try {
@@ -155,18 +158,31 @@ const RecognitionModal = ({
 
         updateStepUI("place_finger");
 
+        // ✅ Clear any existing timeout first
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+
         timeoutRef.current = window.setTimeout(() => {
-          clearTimers();
-          updateStepUI("error");
-          // ✅ Safe call — won't double fire
-          safeOnRecognized(userId, false);
-          setTimeout(() => {
-            onClose?.();
-          }, 1000);
+          if (!isResolved) {
+            isResolved = true;
+            clearTimers();
+            updateStepUI("error");
+            safeOnRecognized(userId, false);
+            setTimeout(() => {
+              onClose?.();
+            }, 1000);
+          }
         }, RECOGNITION_TIMEOUT);
+
+        // ✅ Clear any existing poll interval
+        if (pollRef.current) {
+          clearInterval(pollRef.current);
+        }
 
         pollRef.current = window.setInterval(async () => {
           if (!targetFingerId) return;
+          if (isResolved) return; // ✅ Don't poll if already resolved
 
           try {
             const res = await axios.get(
@@ -175,40 +191,49 @@ const RecognitionModal = ({
 
             const { status, matched } = res.data;
 
-            if (status === "done") {
+            if (status === "done" && !isResolved) {
+              isResolved = true;
               clearTimers();
               updateStepUI(matched ? "success" : "error");
 
               setTimeout(() => {
-                // ✅ Safe call — won't double fire
                 safeOnRecognized(userId, matched);
                 onClose?.();
               }, 1000);
             }
           } catch (err) {
             console.error("Polling error:", err);
+            if (!isResolved) {
+              isResolved = true;
+              clearTimers();
+              updateStepUI("error");
+              safeOnRecognized(userId, false);
+            }
           }
         }, POLL_INTERVAL);
       } catch (err) {
-        if (axios.isAxiosError(err) && err.response?.status === 503) {
-          setCurrentStep(0);
-          setSteps((prev) =>
-            prev.map((s, idx) =>
-              idx === 0 ?
-                {
-                  ...s,
-                  status: "failed",
-                  description: "Device is offline. Please try again.",
-                }
-              : s,
-            ),
-          );
-          // ✅ Safe call — won't double fire
-          safeOnRecognized(userId, false);
-          onClose?.();
-        } else {
-          console.error("Failed to start recognition:", err);
-          updateStepUI("error");
+        if (!isResolved) {
+          isResolved = true;
+          if (axios.isAxiosError(err) && err.response?.status === 503) {
+            setCurrentStep(0);
+            setSteps((prev) =>
+              prev.map((s, idx) =>
+                idx === 0 ?
+                  {
+                    ...s,
+                    status: "failed",
+                    description: "Device is offline. Please try again.",
+                  }
+                : s,
+              ),
+            );
+            safeOnRecognized(userId, false);
+            onClose?.();
+          } else {
+            console.error("Failed to start recognition:", err);
+            updateStepUI("error");
+            safeOnRecognized(userId, false);
+          }
         }
       }
     };
