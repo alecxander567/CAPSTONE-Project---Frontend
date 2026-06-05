@@ -90,7 +90,7 @@ const StudentNotifications = () => {
         <header className="notifications-header">
           <div className="wave"></div>
 
-          <div className="notifications-header-content">
+          <div className="notifications-header-content fade-up">
             <div className="notifications-header-left">
               <div className="notifications-header-icon">
                 <i className="bi bi-bell-fill"></i>
@@ -106,8 +106,7 @@ const StudentNotifications = () => {
                 <button
                   onClick={handleMarkAllAsRead}
                   disabled={isMarkingAll}
-                  className="mark-all-btn"
-                  style={{ marginRight: "10px" }}>
+                  className="mark-all-btn">
                   <i className="bi bi-check-all"></i>
                   {isMarkingAll ? "Marking..." : "Mark All as Read"}
                 </button>
@@ -140,11 +139,20 @@ const StudentNotifications = () => {
               </div>
             : <>
                 <div className="notification-count">
-                  <strong>{sortedNotifications.length}</strong> notification
+                  <strong>{sortedNotifications.length}</strong>
+                  &nbsp;notification
                   {sortedNotifications.length !== 1 ? "s" : ""}
                   {unreadCount > 0 && (
-                    <span style={{ marginLeft: "10px", color: "#dc3545" }}>
-                      ({unreadCount} unread)
+                    <span
+                      style={{
+                        fontSize: "0.65rem",
+                        backgroundColor: "#dc3545",
+                        color: "white",
+                        padding: "0.15rem 0.55rem",
+                        borderRadius: "999px",
+                        fontWeight: "800",
+                      }}>
+                      {unreadCount} unread
                     </span>
                   )}
                 </div>
@@ -154,57 +162,45 @@ const StudentNotifications = () => {
                     key={n.id}
                     className={`notification-card ${!n.is_read ? "unread" : ""}`}>
                     <div className="notification-card-header">
+                      <div className="notification-card-icon">
+                        <i className="bi bi-bell-fill"></i>
+                      </div>
                       <div className="notification-info">
                         <h4>
                           {n.title}
-                          {!n.is_read && (
-                            <span
-                              style={{
-                                marginLeft: "10px",
-                                fontSize: "10px",
-                                backgroundColor: "#dc3545",
-                                color: "white",
-                                padding: "2px 8px",
-                                borderRadius: "12px",
-                                fontWeight: "bold",
-                              }}>
-                              NEW
-                            </span>
-                          )}
+                          {!n.is_read && <span>NEW</span>}
                         </h4>
                         <div className="notification-timestamp">
                           <i className="bi bi-clock"></i>
                           {new Date(n.timestamp).toLocaleString()}
                         </div>
                       </div>
-
-                      <div className="notification-action-group">
-                        {!n.is_read && (
-                          <button
-                            onClick={() => markAsRead(n.id)}
-                            disabled={markingIds.includes(n.id)}
-                            className="mark-read-btn"
-                            title="Mark as read">
-                            <i className="bi bi-check"></i>
-                            {markingIds.includes(n.id) ?
-                              "Marking..."
-                            : "Mark Read"}
-                          </button>
-                        )}
-                        <button
-                          onClick={() => handleDeleteClick(n.id, n.title)}
-                          disabled={deletingIds.includes(n.id)}
-                          className="delete-btn"
-                          title="Delete notification">
-                          <i className="bi bi-trash"></i>
-                          {deletingIds.includes(n.id) ?
-                            "Deleting..."
-                          : "Delete"}
-                        </button>
-                      </div>
                     </div>
 
                     <p className="notification-message">{n.message}</p>
+
+                    <div className="notification-action-group">
+                      {!n.is_read && (
+                        <button
+                          onClick={() => markAsRead(n.id)}
+                          disabled={markingIds.includes(n.id)}
+                          className="mark-read-btn"
+                          title="Mark as read">
+                          <i className="bi bi-check"></i>
+                          {markingIds.includes(n.id) ?
+                            "Marking..."
+                          : "Mark Read"}
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleDeleteClick(n.id, n.title)}
+                        disabled={deletingIds.includes(n.id)}
+                        className="delete-btn"
+                        title="Delete notification">
+                        <i className="bi bi-trash"></i>
+                        {deletingIds.includes(n.id) ? "Deleting..." : "Delete"}
+                      </button>
+                    </div>
                   </div>
                 ))}
               </>
