@@ -21,7 +21,7 @@
   .sd-main {
     margin-left: 0;
     width: 100%;
-    padding-top: 56px;
+    padding-top: 0;
   }
 }
 
@@ -107,9 +107,14 @@
   flex-shrink: 0;
 }
 
+@media (max-width: 991px) {
+  .sd-header {
+    padding-top: calc(56px + 2rem);
+  }
+}
 @media (max-width: 768px) {
   .sd-header {
-    padding: 2rem 1.5rem 50px;
+    padding: calc(56px + 2rem) 1.5rem 50px;
   }
   .sd-header-inner h1 {
     font-size: 1.5rem;
