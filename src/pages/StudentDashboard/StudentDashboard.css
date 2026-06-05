@@ -75,14 +75,24 @@
   position: relative;
   z-index: 1;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 1rem;
   max-width: 1400px;
   margin: 0 auto;
-  text-align: center;
+  text-align: left;
 }
+
+@media (max-width: 991px) {
+  .sd-header-inner {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+}
+
 .sd-header-inner h1 {
   margin: 0 0 0.5rem;
   font-size: 2rem;
