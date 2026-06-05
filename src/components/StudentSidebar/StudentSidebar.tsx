@@ -37,22 +37,26 @@ const StudentSidebar = () => {
 
   return (
     <>
-      {/* Desktop toggle button (tablet range) */}
-      <button className="sidebar-toggle" onClick={() => setOpen(!open)}>
-        <div className="toggle-left">
-          <i className="bi bi-list"></i>
+      {/* Topbar — mobile only */}
+      <header className="mobile-topbar">
+        <div className="topbar-left">
           <img
             src={logo}
             alt="Logo"
-            width="36"
-            height="36"
-            className="toggle-logo"
+            width="32"
+            height="32"
+            className="topbar-logo"
           />
+          <span className="topbar-title">ARA</span>
         </div>
-      </button>
+        <button className="topbar-logout-btn" onClick={logout}>
+          <i className="bi bi-box-arrow-right"></i>
+          <span>Logout</span>
+        </button>
+      </header>
 
       {/* Sidebar — desktop only */}
-      <aside className={`sidebar ${open ? "open" : ""}`}>
+      <aside className="sidebar">
         <div className="wave"></div>
         <div className="sidebar-content">
           <h2 className="sidebar-title">ARA</h2>
@@ -97,12 +101,6 @@ const StudentSidebar = () => {
             <span className="footer-nav-label">{item.label}</span>
           </button>
         ))}
-        <button className="footer-nav-item footer-logout" onClick={logout}>
-          <span className="footer-nav-icon-wrap">
-            <i className="bi bi-box-arrow-right"></i>
-          </span>
-          <span className="footer-nav-label">Logout</span>
-        </button>
       </nav>
     </>
   );

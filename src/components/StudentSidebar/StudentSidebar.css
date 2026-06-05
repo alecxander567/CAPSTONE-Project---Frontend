@@ -1,3 +1,4 @@
+/* ── Sidebar (desktop) ── */
 .sidebar {
   width: 260px;
   height: 100vh;
@@ -103,21 +104,6 @@
   line-height: 1;
 }
 
-.sidebar-logout {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0.75rem 1rem;
-  cursor: pointer;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.15);
-  transition: background 0.3s ease;
-}
-
-.sidebar-logout:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
 .sidebar-logout.danger {
   display: flex;
   align-items: center;
@@ -144,54 +130,81 @@
   transform: translateY(0);
 }
 
-/* Toggle button — hidden on mobile (footer nav takes over) */
-.sidebar-toggle {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  z-index: 1200;
-  background: #0f52ba;
-  border: none;
-  color: #fff;
-  padding: 1rem;
-  border-radius: 0;
-  font-size: 1rem;
+/* ── Mobile topbar ── */
+.mobile-topbar {
   display: none;
-  justify-content: space-between;
-  align-items: center;
 }
 
-.toggle-left {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.toggle-left i {
-  font-size: 1.5rem;
-}
-.toggle-logo {
-  border-radius: 50%;
-}
-
-/* ── Footer nav (mobile only) ── */
+/* ── Footer nav ── */
 .footer-nav {
   display: none;
 }
 
-/* ── Responsive breakpoints ── */
+/* ── Mobile styles ── */
 @media (max-width: 991px) {
-  /* Hide sidebar and toggle entirely */
   .sidebar {
     display: none;
   }
 
-  .sidebar-toggle {
-    display: none;
+  /* Topbar */
+  .mobile-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1200;
+    background: linear-gradient(135deg, #0a1aff, #0f52ba);
+    padding: 0.6rem 1rem;
+    box-shadow: 0 2px 12px rgba(10, 26, 255, 0.3);
   }
 
-  /* Show footer nav */
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .topbar-logo {
+    border-radius: 50%;
+  }
+
+  .topbar-title {
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+  }
+
+  .topbar-logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #dc3545;
+    border: none;
+    color: #ffffff;
+    padding: 0.4rem 0.85rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+      background 0.2s ease,
+      transform 0.15s ease;
+  }
+
+  .topbar-logout-btn:hover {
+    background: #bb2d3b;
+    transform: translateY(-1px);
+  }
+
+  .topbar-logout-btn:active {
+    transform: translateY(0);
+  }
+
+  /* Footer nav */
   .footer-nav {
     display: flex;
     position: fixed;
@@ -201,7 +214,6 @@
     z-index: 1200;
     background: linear-gradient(135deg, #0a1aff, #0f52ba);
     border-top: 1px solid rgba(255, 255, 255, 0.15);
-    padding: 0;
     box-shadow: 0 -4px 20px rgba(10, 26, 255, 0.25);
   }
 
@@ -278,27 +290,15 @@
     font-weight: bold;
     line-height: 1;
   }
-
-  .footer-logout {
-    color: rgba(255, 200, 200, 0.8);
-  }
-
-  .footer-logout:hover {
-    color: #ff6b6b;
-    background: rgba(220, 53, 69, 0.15);
-  }
 }
 
 @media (min-width: 992px) {
   .sidebar {
-    transform: translateX(0);
     display: block;
   }
-
-  .sidebar-toggle {
+  .mobile-topbar {
     display: none;
   }
-
   .footer-nav {
     display: none;
   }
