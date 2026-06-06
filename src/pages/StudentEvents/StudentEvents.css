@@ -31,7 +31,7 @@
   .content-area {
     margin-left: 0;
     width: 100%;
-    padding-top: 60px;
+    padding-top: 0; /* CHANGED: was 60px — removed gap above hero */
   }
 }
 
@@ -111,7 +111,7 @@
   max-width: 1600px;
   margin: 0 auto;
   width: 100%;
-  padding-top: 4rem;
+  padding-top: 1.5rem; /* CHANGED: was 4rem — reduced gap below hero */
 }
 
 .events-section-title {
@@ -304,7 +304,7 @@
   }
 
   .content-wrapper {
-    padding-top: 3rem;
+    padding-top: 1.5rem; 
   }
 
   .events-grid {
