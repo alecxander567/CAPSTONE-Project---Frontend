@@ -304,7 +304,7 @@
   }
 
   .content-wrapper {
-    padding-top: 1.5rem; 
+    padding-top: 1.5rem; /* CHANGED: was 3rem — kept consistent with desktop */
   }
 
   .events-grid {
