@@ -11,11 +11,14 @@ interface MyAttendance {
   attendance_time: string | null;
 }
 
+type FilterType = "all" | "present" | "absent";
+
 function StudentAttendanceHistory() {
   const { events, loading: eventsLoading } = useEvents();
   const [myAttendance, setMyAttendance] = useState<MyAttendance[]>([]);
   const [loadingAttendance, setLoadingAttendance] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeFilter, setActiveFilter] = useState<FilterType>("all");
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -97,14 +100,19 @@ function StudentAttendanceHistory() {
         new Date(b.event_date).getTime() - new Date(a.event_date).getTime(),
     );
 
-  const filteredEvents = pastAndOngoingEvents.filter((e) =>
+  const searchedEvents = pastAndOngoingEvents.filter((e) =>
     e.title.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  const presentCount = filteredEvents.filter((e) => {
-    const rec = getStatusForEvent(e.id);
-    return rec?.status === "present";
-  }).length;
+  const presentCount = searchedEvents.filter(
+    (e) => getStatusForEvent(e.id)?.status === "present",
+  ).length;
+  const absentCount = searchedEvents.length - presentCount;
+
+  const filteredEvents = searchedEvents.filter((e) => {
+    if (activeFilter === "all") return true;
+    return getStatusForEvent(e.id)?.status === activeFilter;
+  });
 
   const isLoading = eventsLoading || loadingAttendance;
 
@@ -113,7 +121,6 @@ function StudentAttendanceHistory() {
       <StudentSidebar />
 
       <main className="att-main">
-        {/* Header */}
         <header className="att-header">
           <div className="wave"></div>
           <div className="att-header-content fade-up">
@@ -128,27 +135,32 @@ function StudentAttendanceHistory() {
         </header>
 
         <div className="att-content">
-          {/* Summary + Search */}
           <div className="att-toolbar fade-up delay-1">
             <div className="att-summary">
-              <div className="summary-chip present">
+              <button
+                className={`summary-chip total ${activeFilter === "all" ? "chip-active" : ""}`}
+                onClick={() => setActiveFilter("all")}>
+                <i className="bi bi-calendar-event-fill"></i>
+                <span>
+                  <strong>{searchedEvents.length}</strong> All
+                </span>
+              </button>
+              <button
+                className={`summary-chip present ${activeFilter === "present" ? "chip-active" : ""}`}
+                onClick={() => setActiveFilter("present")}>
                 <i className="bi bi-check-circle-fill"></i>
                 <span>
                   <strong>{presentCount}</strong> Present
                 </span>
-              </div>
-              <div className="summary-chip absent">
+              </button>
+              <button
+                className={`summary-chip absent ${activeFilter === "absent" ? "chip-active" : ""}`}
+                onClick={() => setActiveFilter("absent")}>
                 <i className="bi bi-x-circle-fill"></i>
                 <span>
-                  <strong>{filteredEvents.length - presentCount}</strong> Absent
+                  <strong>{absentCount}</strong> Absent
                 </span>
-              </div>
-              <div className="summary-chip total">
-                <i className="bi bi-calendar-event-fill"></i>
-                <span>
-                  <strong>{filteredEvents.length}</strong> Events
-                </span>
-              </div>
+              </button>
             </div>
 
             <div className="att-search-wrapper">
@@ -162,7 +174,6 @@ function StudentAttendanceHistory() {
             </div>
           </div>
 
-          {/* Loading */}
           {isLoading && (
             <div className="text-center py-5">
               <div className="spinner-border text-primary" role="status"></div>
@@ -170,19 +181,18 @@ function StudentAttendanceHistory() {
             </div>
           )}
 
-          {/* Empty */}
           {!isLoading && filteredEvents.length === 0 && (
             <div className="att-empty fade-up delay-2">
               <i className="bi bi-calendar-x"></i>
               <h5>No events found</h5>
               <p>
-                Your attendance records will appear here once events are
-                completed.
+                {activeFilter === "all" ?
+                  "Your attendance records will appear here once events are completed."
+                : `No ${activeFilter} events match your search.`}
               </p>
             </div>
           )}
 
-          {/* Event Cards */}
           {!isLoading && filteredEvents.length > 0 && (
             <div className="att-cards-grid fade-up delay-2">
               {filteredEvents.map((event) => {
@@ -193,7 +203,6 @@ function StudentAttendanceHistory() {
                   <div
                     key={event.id}
                     className={`att-event-card ${isPresent ? "card-present" : "card-absent"}`}>
-                    {/* Card header */}
                     <div className="att-card-header">
                       <div className="event-header-wave"></div>
                       <div className="att-date-badge">
@@ -210,12 +219,10 @@ function StudentAttendanceHistory() {
                       <h5 className="att-card-title">{event.title}</h5>
                     </div>
 
-                    {/* Card body */}
                     <div className="att-card-body">
                       <p className="att-card-desc">
                         {event.description || "No description provided."}
                       </p>
-
                       <div className="att-card-meta">
                         <div className="att-meta-row">
                           <i className="bi bi-clock"></i>
@@ -245,7 +252,6 @@ function StudentAttendanceHistory() {
                       </div>
                     </div>
 
-                    {/* Status footer */}
                     <div
                       className={`att-card-footer ${isPresent ? "footer-present" : "footer-absent"}`}>
                       {isPresent ?
