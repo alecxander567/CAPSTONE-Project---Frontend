@@ -299,7 +299,7 @@
 
 @media (max-width: 768px) {
   .dashboard-header {
-    padding: 2rem 1.5rem;
+    padding: 1rem 1.5rem; /* was 2rem — less breathing room above the icon */
     padding-bottom: 50px;
   }
 
