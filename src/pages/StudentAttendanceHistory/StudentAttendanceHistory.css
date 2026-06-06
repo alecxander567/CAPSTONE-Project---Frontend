@@ -115,7 +115,7 @@
 }
 
 .att-content {
-  padding: 2rem;
+  padding: 2rem 2rem 6rem;
   max-width: 1400px;
   margin: 0 auto;
   width: 100%;
@@ -409,7 +409,7 @@
   }
 
   .att-content {
-    padding: 1.5rem 1rem;
+    padding: 1.5rem 1rem 6rem;
   }
 
   .att-toolbar {
