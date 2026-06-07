@@ -72,11 +72,9 @@ const ProgramStudents = () => {
   );
   const [selectedStudentName, setSelectedStudentName] = useState<string>("");
   const [selectedFingerId, setSelectedFingerId] = useState<number | null>(null);
-
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [showErrorAlert, setShowErrorAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
-
   const [recognitionModalOpen, setRecognitionModalOpen] = useState(false);
   const [currentStudent, setCurrentStudent] = useState<Student | null>(null);
   const [unenrollingStudentId, setUnenrollingStudentId] = useState<
@@ -84,7 +82,6 @@ const ProgramStudents = () => {
   >(null);
 
   const { enrollFingerprint, isLoading } = useEnrollFingerprint();
-
   const isProcessingRecognitionRef = useRef(false);
   const isProcessingEnrollmentRef = useRef(false);
   const alertTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -117,7 +114,6 @@ const ProgramStudents = () => {
         }
       });
     }, observerOptions);
-
     document
       .querySelectorAll(".students-pg-fade-up")
       .forEach((el) => observer.observe(el));
@@ -148,9 +144,10 @@ const ProgramStudents = () => {
       setSelectedFingerId(data.finger_id);
       setShowEnrollmentModal(true);
     } catch (err: any) {
-      const errorMessage =
-        err.response?.data?.detail || err.message || "Unknown error";
-      showAlert(`Failed to start enrollment: ${errorMessage}`, false);
+      showAlert(
+        `Failed to start enrollment: ${err.response?.data?.detail || err.message || "Unknown error"}`,
+        false,
+      );
     }
   };
 
@@ -261,7 +258,6 @@ const ProgramStudents = () => {
         fingerId={selectedFingerId || 0}
         updateStatus={updateStudentStatus}
       />
-
       <RecognitionModal
         isOpen={recognitionModalOpen}
         onClose={() => {
@@ -275,20 +271,17 @@ const ProgramStudents = () => {
         fingerId={currentStudent?.finger_id}
         onRecognized={handleRecognitionResult}
       />
-
       <DeleteFingerprintModal
         show={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         onConfirm={confirmUnenroll}
         studentName={selectedStudentName}
       />
-
       <SuccessAlert
         show={showSuccessAlert}
         message={alertMessage}
         onClose={() => setShowSuccessAlert(false)}
       />
-
       <ErrorAlert
         show={showErrorAlert}
         message={alertMessage}
@@ -299,7 +292,7 @@ const ProgramStudents = () => {
         <header className="students-pg-header students-pg-fade-up">
           <div className="students-pg-wave"></div>
 
-          {/* Back button — icon only on mobile via CSS */}
+          {/* Desktop: absolute. Mobile: relative in flex column flow, icon only */}
           <button
             className="students-pg-btn-back"
             onClick={() => navigate("/programs")}>
