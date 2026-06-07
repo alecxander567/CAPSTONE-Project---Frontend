@@ -32,18 +32,20 @@ const FingerprintStatusBadge = ({ status }: { status: FingerprintStatus }) => {
     FingerprintStatus,
     { label: string; className: string }
   > = {
-    not_enrolled: { label: "Not Enrolled", className: "status-not" },
-    pending: { label: "Pending", className: "status-pending" },
-    enrolled: { label: "Enrolled", className: "status-enrolled" },
-    failed: { label: "Failed", className: "status-failed" },
+    not_enrolled: {
+      label: "Not Enrolled",
+      className: "students-pg-status-not",
+    },
+    pending: { label: "Pending", className: "students-pg-status-pending" },
+    enrolled: { label: "Enrolled", className: "students-pg-status-enrolled" },
+    failed: { label: "Failed", className: "students-pg-status-failed" },
   };
   const safeStatus = status || "not_enrolled";
-  const statusInfo =
+  const { label, className } =
     statusMap[safeStatus as FingerprintStatus] || statusMap.not_enrolled;
-  const { label, className } = statusInfo;
 
   return (
-    <span className={`fingerprint_status ${className}`}>
+    <span className={`students-pg-fingerprint-status ${className}`}>
       <i className="bi bi-fingerprint"></i>
       {label}
     </span>
@@ -77,48 +79,36 @@ const ProgramStudents = () => {
 
   const [recognitionModalOpen, setRecognitionModalOpen] = useState(false);
   const [currentStudent, setCurrentStudent] = useState<Student | null>(null);
-
   const [unenrollingStudentId, setUnenrollingStudentId] = useState<
     number | null
   >(null);
 
   const { enrollFingerprint, isLoading } = useEnrollFingerprint();
 
-  // ✅ Add refs to prevent duplicate alerts
   const isProcessingRecognitionRef = useRef(false);
   const isProcessingEnrollmentRef = useRef(false);
   const alertTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // ✅ Helper function to show alerts with debounce
   const showAlert = (message: string, isSuccess: boolean) => {
-    // Clear any pending alert timeout
-    if (alertTimeoutRef.current) {
-      clearTimeout(alertTimeoutRef.current);
-    }
-
+    if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
     setAlertMessage(message);
-
     if (isSuccess) {
       setShowSuccessAlert(true);
-      // Auto-hide success alert after 3 seconds
-      alertTimeoutRef.current = setTimeout(() => {
-        setShowSuccessAlert(false);
-      }, 3000);
+      alertTimeoutRef.current = setTimeout(
+        () => setShowSuccessAlert(false),
+        3000,
+      );
     } else {
       setShowErrorAlert(true);
-      // Auto-hide error alert after 4 seconds
-      alertTimeoutRef.current = setTimeout(() => {
-        setShowErrorAlert(false);
-      }, 4000);
+      alertTimeoutRef.current = setTimeout(
+        () => setShowErrorAlert(false),
+        4000,
+      );
     }
   };
 
   useEffect(() => {
-    const observerOptions = {
-      threshold: 0.1,
-      rootMargin: "0px 0px -50px 0px",
-    };
-
+    const observerOptions = { threshold: 0.1, rootMargin: "0px 0px -50px 0px" };
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
@@ -128,9 +118,9 @@ const ProgramStudents = () => {
       });
     }, observerOptions);
 
-    const fadeElements = document.querySelectorAll(".fade-up");
-    fadeElements.forEach((el) => observer.observe(el));
-
+    document
+      .querySelectorAll(".students-pg-fade-up")
+      .forEach((el) => observer.observe(el));
     return () => observer.disconnect();
   }, [students, loading]);
 
@@ -146,17 +136,14 @@ const ProgramStudents = () => {
   const handleEnrollClick = async (studentId: number) => {
     try {
       const data = await enrollFingerprint(studentId);
-
       if (!data) {
         showAlert("Failed to start enrollment. Please try again.", false);
         return;
       }
-
       if (!data.finger_id) {
         showAlert("Invalid enrollment response. Please try again.", false);
         return;
       }
-
       setSelectedStudentId(studentId);
       setSelectedFingerId(data.finger_id);
       setShowEnrollmentModal(true);
@@ -168,29 +155,18 @@ const ProgramStudents = () => {
   };
 
   const handleRecognizeClick = (student: Student) => {
-    // ✅ Prevent opening multiple modals
     if (recognitionModalOpen) return;
     setCurrentStudent(student);
     setRecognitionModalOpen(true);
   };
 
-  // ✅ FIXED: Added guard to prevent duplicate recognition alerts
   const handleRecognitionResult = (studentId: number, success: boolean) => {
-    // Prevent duplicate calls
-    if (isProcessingRecognitionRef.current) {
-      console.log("Recognition result already processing, skipping...");
-      return;
-    }
-
+    if (isProcessingRecognitionRef.current) return;
     isProcessingRecognitionRef.current = true;
-
-    if (success) {
-      showAlert("Fingerprint recognized!", true);
-    } else {
-      showAlert("Recognition failed.", false);
-    }
-
-    // Reset after a delay
+    showAlert(
+      success ? "Fingerprint recognized!" : "Recognition failed.",
+      success,
+    );
     setTimeout(() => {
       isProcessingRecognitionRef.current = false;
     }, 1000);
@@ -204,21 +180,15 @@ const ProgramStudents = () => {
 
   const confirmUnenroll = async () => {
     if (!selectedStudentId) return;
-
     setUnenrollingStudentId(selectedStudentId);
-
     try {
       const response = await axios.post(
         `${API_BASE_URL}/fingerprints/unenroll-fingerprint/${selectedStudentId}`,
         {},
-        {
-          headers: { "Content-Type": "application/json" },
-          timeout: 10000,
-        },
+        { headers: { "Content-Type": "application/json" }, timeout: 10000 },
       );
-
       if (response.status === 200) {
-        setStudents((prev: Student[]) =>
+        setStudents((prev) =>
           prev.map((s) =>
             s.id === selectedStudentId ?
               { ...s, fingerprint_status: "not_enrolled" }
@@ -230,17 +200,14 @@ const ProgramStudents = () => {
     } catch (err: any) {
       let errorMessage = "Failed to unenroll fingerprint";
       if (axios.isAxiosError(err)) {
-        if (err.response) {
+        if (err.response)
           errorMessage =
             err.response.data?.detail || `Server error: ${err.response.status}`;
-        } else if (err.request) {
+        else if (err.request)
           errorMessage =
             "No response from server. Check if backend is running.";
-        } else {
-          errorMessage = err.message;
-        }
+        else errorMessage = err.message;
       }
-
       showAlert(errorMessage, false);
     } finally {
       setUnenrollingStudentId(null);
@@ -253,49 +220,38 @@ const ProgramStudents = () => {
     setStudents(fetchedStudents);
   }, [fetchedStudents]);
 
-  // ✅ FIXED: Added guard to prevent duplicate enrollment alerts
   const updateStudentStatus = (
     studentId: number,
     status: FingerprintStatus,
   ) => {
-    setStudents((prev: Student[]) =>
+    setStudents((prev) =>
       prev.map((s) =>
         s.id === studentId ? { ...s, fingerprint_status: status } : s,
       ),
     );
-
-    // Prevent duplicate enrollment alerts
-    if (isProcessingEnrollmentRef.current) {
-      console.log("Enrollment status already processing, skipping alert...");
-      return;
-    }
-
-    if (status === "enrolled") {
+    if (isProcessingEnrollmentRef.current) return;
+    if (status === "enrolled" || status === "failed") {
       isProcessingEnrollmentRef.current = true;
-      showAlert("Fingerprint enrolled successfully!", true);
-      setTimeout(() => {
-        isProcessingEnrollmentRef.current = false;
-      }, 1000);
-    } else if (status === "failed") {
-      isProcessingEnrollmentRef.current = true;
-      showAlert("Fingerprint enrollment failed. Please try again.", false);
+      showAlert(
+        status === "enrolled" ?
+          "Fingerprint enrolled successfully!"
+        : "Fingerprint enrollment failed. Please try again.",
+        status === "enrolled",
+      );
       setTimeout(() => {
         isProcessingEnrollmentRef.current = false;
       }, 1000);
     }
   };
 
-  // Cleanup timeouts on unmount
   useEffect(() => {
     return () => {
-      if (alertTimeoutRef.current) {
-        clearTimeout(alertTimeoutRef.current);
-      }
+      if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
     };
   }, []);
 
   return (
-    <div className="students-layout">
+    <div className="students-pg-layout">
       <Sidebar />
 
       <EnrollmentModal
@@ -311,7 +267,6 @@ const ProgramStudents = () => {
         onClose={() => {
           setRecognitionModalOpen(false);
           setCurrentStudent(null);
-          // Reset recognition processing flag when modal closes
           setTimeout(() => {
             isProcessingRecognitionRef.current = false;
           }, 100);
@@ -340,18 +295,19 @@ const ProgramStudents = () => {
         onClose={() => setShowErrorAlert(false)}
       />
 
-      <main className="students-content">
-        <header className="students-header fade-up">
-          <div className="wave"></div>
+      <main className="students-pg-content">
+        <header className="students-pg-header students-pg-fade-up">
+          <div className="students-pg-wave"></div>
 
+          {/* Back button — icon only on mobile via CSS */}
           <button
-            className="btn-back-header"
+            className="students-pg-btn-back"
             onClick={() => navigate("/programs")}>
             <i className="bi bi-arrow-left"></i>
-            <span>Back to Programs</span>
+            <span className="btn-back-label">Back to Programs</span>
           </button>
 
-          <div className="header-content">
+          <div className="students-pg-header-content">
             <div className="d-flex align-items-center gap-3">
               <i className="bi bi-people fs-2"></i>
               <div>
@@ -362,29 +318,29 @@ const ProgramStudents = () => {
           </div>
         </header>
 
-        <div className="students-list">
+        <div className="students-pg-list">
           {loading ?
-            <div className="loading-state fade-up">
-              <div className="spinner"></div>
+            <div className="students-pg-loading-state students-pg-fade-up">
+              <div className="students-pg-spinner"></div>
               <p>Loading students...</p>
             </div>
           : error ?
-            <div className="error-state fade-up">
+            <div className="students-pg-error-state students-pg-fade-up">
               <i className="bi bi-exclamation-triangle-fill"></i>
               <p>{error}</p>
             </div>
           : students.length === 0 ?
-            <div className="empty-state">
+            <div className="students-pg-empty-state">
               <i className="bi bi-inbox"></i>
               <p>No students enrolled yet</p>
             </div>
           : <>
-              <div className="students-controls fade-up">
-                <div className="students-header-info">
+              <div className="students-pg-controls students-pg-fade-up">
+                <div className="students-pg-header-info">
                   <h2>All Students ({filteredStudents.length})</h2>
                   <p>Total enrolled students in this program</p>
                 </div>
-                <div className="search-bar">
+                <div className="students-pg-search-bar">
                   <i className="bi bi-search"></i>
                   <input
                     type="text"
@@ -394,7 +350,7 @@ const ProgramStudents = () => {
                   />
                   {searchQuery && (
                     <button
-                      className="clear-search"
+                      className="students-pg-clear-search"
                       onClick={() => setSearchQuery("")}
                       aria-label="Clear search">
                       <i className="bi bi-x-lg"></i>
@@ -404,16 +360,16 @@ const ProgramStudents = () => {
               </div>
 
               {filteredStudents.length === 0 ?
-                <div className="empty-state fade-up">
+                <div className="students-pg-empty-state students-pg-fade-up">
                   <i className="bi bi-search"></i>
                   <p>No students found matching "{searchQuery}"</p>
                 </div>
-              : <div className="students-grid">
+              : <div className="students-pg-grid">
                   {filteredStudents.map((student: Student, index: number) => (
                     <div
                       key={student.id}
-                      className={`student-card fade-up fade-delay-${Math.min((index % 4) + 1, 4)}`}>
-                      <div className="student-avatar">
+                      className={`students-pg-card students-pg-fade-up students-pg-fade-delay-${Math.min((index % 4) + 1, 4)}`}>
+                      <div className="students-pg-avatar">
                         {student.profile_image ?
                           <img
                             src={
@@ -450,39 +406,38 @@ const ProgramStudents = () => {
                           </div>
                         }
                       </div>
-                      <div className="student-info">
+
+                      <div className="students-pg-info">
                         <h3>
                           {student.first_name} {student.last_name}
                         </h3>
-
                         <FingerprintStatusBadge
                           status={student.fingerprint_status}
                         />
-
-                        <div className="student-details">
-                          <span className="detail-item">
+                        <div className="students-pg-details">
+                          <span className="students-pg-detail-item">
                             <i className="bi bi-hash"></i>
                             {student.student_id_no}
                           </span>
-                          <span className="detail-item">
+                          <span className="students-pg-detail-item">
                             <i className="bi bi-calendar3"></i>
                             {student.year_level ?? "No year level"}
                           </span>
                         </div>
                       </div>
-                      <div className="student-actions">
+
+                      <div className="students-pg-actions">
                         {student.fingerprint_status === "enrolled" ?
                           <>
                             <button
-                              className="btn-recognize action-btn mb-2"
+                              className="students-pg-action-btn students-pg-btn-recognize mb-2"
                               onClick={() => handleRecognizeClick(student)}
                               title="Test Fingerprint Recognition">
                               <i className="bi bi-search"></i>
                               Recognize
                             </button>
-
                             <button
-                              className="action-btn delete-btn"
+                              className="students-pg-action-btn students-pg-delete-btn"
                               onClick={() => handleUnenrollClick(student)}
                               disabled={unenrollingStudentId === student.id}
                               title="Unenroll Fingerprint">
@@ -495,7 +450,7 @@ const ProgramStudents = () => {
                             </button>
                           </>
                         : <button
-                            className="btn btn-primary"
+                            className="students-pg-action-btn students-pg-btn-primary"
                             onClick={() => handleEnrollClick(student.id)}
                             disabled={isLoading}>
                             <i className="bi bi-fingerprint"></i>
