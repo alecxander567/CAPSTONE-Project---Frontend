@@ -15,8 +15,11 @@
   position: relative;
   background: linear-gradient(180deg, #0a1aff, #0f52ba, #00b4d8);
   color: #fff;
-  padding: 3rem 2rem 2.5rem;
+  padding: 2.5rem 2rem;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .students-pg-header .students-pg-wave {
@@ -78,6 +81,7 @@
   position: relative;
   z-index: 1;
   max-width: 1400px;
+  width: 100%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -85,6 +89,7 @@
   text-align: center;
   align-items: center;
   justify-content: center;
+  min-height: 120px;
   padding-top: 0;
 }
 
@@ -488,11 +493,10 @@
   }
 
   .students-pg-header {
-    padding: 1.5rem 1.5rem 2.5rem;
+    padding: 2.5rem 1.5rem;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    text-align: center;
+    justify-content: center;
   }
 
   .students-pg-btn-back {
@@ -507,7 +511,7 @@
   }
 
   .students-pg-header .students-pg-header-content {
-    padding-top: 2.5rem;
+    padding-top: 0;
   }
 
   .students-pg-header h1 {
