@@ -103,12 +103,12 @@ body {
   }
 }
 
-/* ── Notifications Header (matches Dashboard header) ── */
+/* ── Notifications Header ── */
 .notifications-header {
   position: relative;
   background: linear-gradient(135deg, #0a1aff 0%, #00b4d8 100%);
   color: #fff;
-  padding: 3rem 2rem 5rem 2rem;
+  padding: 1.5rem 2rem 4rem 2rem; /* reduced top from 3rem to 1.5rem */
   overflow: hidden;
   margin: 0;
   flex-shrink: 0;
@@ -116,7 +116,7 @@ body {
 
 @media (max-width: 991px) {
   .notifications-header {
-    padding-top: calc(56px + 2rem);
+    padding-top: calc(56px + 1rem); /* reduced from calc(56px + 2rem) */
     padding-right: 1.5rem;
     padding-bottom: 4rem;
     padding-left: 1.5rem;
@@ -125,7 +125,7 @@ body {
 
 @media (max-width: 768px) {
   .notifications-header {
-    padding-top: calc(56px + 1.75rem);
+    padding-top: calc(56px + 0.75rem); /* reduced from calc(56px + 1.75rem) */
     padding-right: 1rem;
     padding-bottom: 3.5rem;
     padding-left: 1rem;
@@ -172,7 +172,7 @@ body {
   }
 }
 
-/* ── Left side: icon + text (matches dashboard-header-content layout) ── */
+/* ── Left side: icon + text ── */
 .notifications-header-left {
   display: flex;
   align-items: center;
@@ -295,7 +295,7 @@ body {
   transform: none;
 }
 
-/* ── Notifications Content (matches dashboard-content with negative margin) ── */
+/* ── Notifications Content ── */
 .notifications-content {
   padding: 0 2rem 2rem 2rem;
   max-width: 1400px;
@@ -413,7 +413,6 @@ body {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
-/* Top accent bar */
 .notification-card::before {
   content: "";
   display: block;
@@ -431,7 +430,6 @@ body {
   background: linear-gradient(90deg, #0a1aff, #00b4d8);
 }
 
-/* Card header row */
 .notification-card-header {
   display: flex;
   align-items: flex-start;
@@ -446,7 +444,6 @@ body {
   }
 }
 
-/* Icon avatar */
 .notification-card-icon {
   width: 40px;
   height: 40px;
@@ -517,7 +514,6 @@ body {
   color: #0d6efd;
 }
 
-/* Message body */
 .notification-message {
   margin: 0 1.25rem;
   color: #495057;
@@ -547,7 +543,6 @@ body {
   border-left-color: #e2e8f0;
 }
 
-/* Action buttons row */
 .notification-action-group {
   display: flex;
   gap: 0.5rem;
@@ -636,7 +631,7 @@ body {
   box-shadow: none;
 }
 
-/* Print styles (if needed) */
+/* Print styles */
 @media print {
   body * {
     visibility: hidden;
