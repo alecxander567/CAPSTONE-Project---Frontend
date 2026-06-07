@@ -264,8 +264,8 @@ function Settings() {
           role="dialog"
           style={{ display: "block" }}>
           <div className="modal-dialog modal-dialog-centered" role="document">
-            <div className="modal-content modal-content-delete">
-              <div className="modal-header modal-header-delete">
+            <div className="modal-content settings-pg-modal-content-delete">
+              <div className="modal-header settings-pg-modal-header-delete">
                 <div
                   style={{
                     display: "flex",
@@ -274,7 +274,7 @@ function Settings() {
                     position: "relative",
                     zIndex: 1,
                   }}>
-                  <div className="modal-icon-delete">
+                  <div className="settings-pg-modal-icon-delete">
                     <i className="bi bi-trash-fill"></i>
                   </div>
                   <div>
@@ -307,34 +307,34 @@ function Settings() {
                 />
               </div>
 
-              <div className="modal-body modal-body-delete">
-                <div className="delete-warning-icon">
+              <div className="modal-body settings-pg-modal-body-delete">
+                <div className="settings-pg-delete-warning-icon">
                   <i className="bi bi-exclamation-lg"></i>
                 </div>
-                <p className="delete-question">
+                <p className="settings-pg-delete-question">
                   Are you sure you want to remove your profile picture?
                 </p>
-                <div className="event-title-display">
+                <div className="settings-pg-event-title-display">
                   <i className="bi bi-person-circle me-2"></i>
                   {profile?.first_name} {profile?.last_name}'s Profile Picture
                 </div>
-                <p className="delete-warning-text">
+                <p className="settings-pg-delete-warning-text">
                   Your profile picture will be permanently deleted and replaced
                   with your default initials avatar. You can upload a new
                   picture at any time.
                 </p>
               </div>
 
-              <div className="modal-footer modal-footer-delete justify-content-center">
+              <div className="modal-footer settings-pg-modal-footer-delete justify-content-center">
                 <button
                   type="button"
-                  className="btn btn-cancel-delete"
+                  className="settings-pg-btn-cancel-delete"
                   onClick={() => setShowDeleteModal(false)}>
                   <i className="bi bi-x-lg me-1"></i>Cancel
                 </button>
                 <button
                   type="button"
-                  className="btn btn-confirm-delete text-white"
+                  className="settings-pg-btn-confirm-delete text-white"
                   onClick={handleConfirmDelete}>
                   <i className="bi bi-trash-fill me-1"></i>Remove Picture
                 </button>
@@ -351,25 +351,25 @@ function Settings() {
         />
       )}
 
-      <div className="settings-page-wrapper">
-        <header className="settings-dashboard-header">
-          <div className="settings-wave"></div>
-          <div className="settings-header-content">
-            <div className="settings-header-icon">
+      <div className="settings-pg-wrapper">
+        <header className="settings-pg-header">
+          <div className="settings-pg-wave"></div>
+          <div className="settings-pg-header-content">
+            <div className="settings-pg-header-icon">
               <i className="bi bi-gear-fill"></i>
             </div>
-            <div className="settings-header-text">
-              <h1 className="settings-header-title">Settings</h1>
-              <p className="settings-header-subtitle">
+            <div className="settings-pg-header-text">
+              <h1 className="settings-pg-header-title">Settings</h1>
+              <p className="settings-pg-header-subtitle">
                 Manage your account and preferences
               </p>
             </div>
           </div>
         </header>
 
-        <div className="settings-content-wrapper">
+        <div className="settings-pg-content-wrapper">
           {loading && (
-            <div className="settings-loading-container">
+            <div className="settings-pg-loading-container">
               <div className="spinner-border text-primary" role="status"></div>
               <p className="mt-2 text-muted">Loading profile...</p>
             </div>
@@ -384,10 +384,10 @@ function Settings() {
 
           {!loading && profile && (
             <form onSubmit={handleSubmit}>
-              <div className="settings-profile-card">
-                <div className="settings-profile-header">
-                  <div className="settings-profile-header-left">
-                    {/* ── Avatar: photo upload for students, initials only for admin ── */}
+              <div className="settings-pg-profile-card">
+                <div className="settings-pg-profile-header">
+                  <div className="settings-pg-profile-header-left">
+                    {/* Avatar */}
                     <div
                       style={{ position: "relative", display: "inline-block" }}>
                       {profile.profile_image ?
@@ -407,7 +407,7 @@ function Settings() {
                             boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
                           }}
                         />
-                      : <div className="settings-avatar-circle">
+                      : <div className="settings-pg-avatar-circle">
                           {getInitials(profile.first_name, profile.last_name)}
                         </div>
                       }
@@ -459,16 +459,16 @@ function Settings() {
                       />
                     </div>
 
-                    <div className="settings-profile-header-text">
-                      <h2 className="settings-profile-name">
+                    <div className="settings-pg-profile-header-text">
+                      <h2 className="settings-pg-profile-name">
                         {profile.first_name}{" "}
                         {profile.middle_initial ?
                           `${profile.middle_initial}. `
                         : ""}
                         {profile.last_name}
                       </h2>
-                      <div className="settings-profile-role">
-                        <span className="settings-role-badge">
+                      <div className="settings-pg-profile-role">
+                        <span className="settings-pg-role-badge">
                           <i className="bi bi-person-badge"></i>
                           {profile.role.charAt(0).toUpperCase() +
                             profile.role.slice(1).toLowerCase()}
@@ -499,22 +499,22 @@ function Settings() {
                   {!isEditing ?
                     <button
                       type="button"
-                      className="settings-btn settings-btn-edit"
+                      className="settings-pg-btn settings-pg-btn-edit"
                       onClick={handleEditToggle}>
                       <i className="bi bi-pencil-square"></i>
                       Edit Profile
                     </button>
-                  : <div className="settings-button-group">
+                  : <div className="settings-pg-button-group">
                       <button
                         type="button"
-                        className="settings-btn settings-btn-cancel"
+                        className="settings-pg-btn settings-pg-btn-cancel"
                         onClick={handleEditToggle}
                         disabled={updating}>
                         <i className="bi bi-x-lg"></i>Cancel
                       </button>
                       <button
                         type="submit"
-                        className="settings-btn settings-btn-save"
+                        className="settings-pg-btn settings-pg-btn-save"
                         disabled={updating}>
                         {updating ?
                           <>
@@ -534,34 +534,34 @@ function Settings() {
                 </div>
 
                 {editError && (
-                  <div className="alert alert-danger settings-edit-error">
+                  <div className="alert alert-danger settings-pg-edit-error">
                     <i className="bi bi-exclamation-triangle-fill me-2"></i>
                     {editError}
                   </div>
                 )}
 
-                <div className="settings-profile-grid">
+                <div className="settings-pg-profile-grid">
                   {!isAdmin && (
-                    <div className="settings-profile-field">
-                      <label className="settings-field-label">
+                    <div className="settings-pg-profile-field">
+                      <label className="settings-pg-field-label">
                         Account No.
                       </label>
-                      <div className="settings-field-value">
-                        <i className="bi bi-hash settings-field-icon"></i>
+                      <div className="settings-pg-field-value">
+                        <i className="bi bi-hash settings-pg-field-icon"></i>
                         {profile.student_id_no}
                       </div>
                     </div>
                   )}
 
-                  <div className="settings-profile-field">
+                  <div className="settings-pg-profile-field">
                     <label
-                      className="settings-field-label"
+                      className="settings-pg-field-label"
                       htmlFor="first_name">
                       First Name
                     </label>
                     {isEditing ?
                       <input
-                        className="settings-form-input"
+                        className="settings-pg-form-input"
                         type="text"
                         id="first_name"
                         name="first_name"
@@ -569,20 +569,22 @@ function Settings() {
                         onChange={handleInputChange}
                         required
                       />
-                    : <div className="settings-field-value">
-                        <i className="bi bi-person settings-field-icon"></i>
+                    : <div className="settings-pg-field-value">
+                        <i className="bi bi-person settings-pg-field-icon"></i>
                         {profile.first_name}
                       </div>
                     }
                   </div>
 
-                  <div className="settings-profile-field">
-                    <label className="settings-field-label" htmlFor="last_name">
+                  <div className="settings-pg-profile-field">
+                    <label
+                      className="settings-pg-field-label"
+                      htmlFor="last_name">
                       Last Name
                     </label>
                     {isEditing ?
                       <input
-                        className="settings-form-input"
+                        className="settings-pg-form-input"
                         type="text"
                         id="last_name"
                         name="last_name"
@@ -590,17 +592,17 @@ function Settings() {
                         onChange={handleInputChange}
                         required
                       />
-                    : <div className="settings-field-value">
-                        <i className="bi bi-person settings-field-icon"></i>
+                    : <div className="settings-pg-field-value">
+                        <i className="bi bi-person settings-pg-field-icon"></i>
                         {profile.last_name}
                       </div>
                     }
                   </div>
 
                   {!isAdmin && (
-                    <div className="settings-profile-field">
+                    <div className="settings-pg-profile-field">
                       <label
-                        className="settings-field-label"
+                        className="settings-pg-field-label"
                         htmlFor="year_level">
                         Year Level
                       </label>
@@ -608,7 +610,7 @@ function Settings() {
                         <select
                           name="year_level"
                           id="year_level"
-                          className="settings-form-select"
+                          className="settings-pg-form-select"
                           value={formData.year_level}
                           onChange={handleInputChange}>
                           <option value="">Select Year Level</option>
@@ -617,7 +619,7 @@ function Settings() {
                           <option value="3">3rd Year</option>
                           <option value="4">4th Year</option>
                         </select>
-                      : <div className="settings-field-value">
+                      : <div className="settings-pg-field-value">
                           {formData.year_level ?
                             formatYearLevel(formData.year_level)
                           : "-"}
@@ -626,15 +628,15 @@ function Settings() {
                     </div>
                   )}
 
-                  <div className="settings-profile-field">
+                  <div className="settings-pg-profile-field">
                     <label
-                      className="settings-field-label"
+                      className="settings-pg-field-label"
                       htmlFor="middle_initial">
                       Middle Initial
                     </label>
                     {isEditing ?
                       <input
-                        className="settings-form-input"
+                        className="settings-pg-form-input"
                         type="text"
                         id="middle_initial"
                         name="middle_initial"
@@ -642,22 +644,22 @@ function Settings() {
                         onChange={handleInputChange}
                         maxLength={5}
                       />
-                    : <div className="settings-field-value">
-                        <i className="bi bi-person settings-field-icon"></i>
+                    : <div className="settings-pg-field-value">
+                        <i className="bi bi-person settings-pg-field-icon"></i>
                         {profile.middle_initial || "N/A"}
                       </div>
                     }
                   </div>
 
-                  <div className="settings-profile-field">
+                  <div className="settings-pg-profile-field">
                     <label
-                      className="settings-field-label"
+                      className="settings-pg-field-label"
                       htmlFor="mobile_phone">
                       Mobile Phone Number
                     </label>
                     {isEditing ?
                       <input
-                        className="settings-form-input"
+                        className="settings-pg-form-input"
                         type="tel"
                         id="mobile_phone"
                         name="mobile_phone"
@@ -665,20 +667,22 @@ function Settings() {
                         onChange={handleInputChange}
                         required
                       />
-                    : <div className="settings-field-value">
-                        <i className="bi bi-phone settings-field-icon"></i>
+                    : <div className="settings-pg-field-value">
+                        <i className="bi bi-phone settings-pg-field-icon"></i>
                         {profile.mobile_phone}
                       </div>
                     }
                   </div>
 
-                  <div className="settings-profile-field">
-                    <label className="settings-field-label" htmlFor="program">
+                  <div className="settings-pg-profile-field">
+                    <label
+                      className="settings-pg-field-label"
+                      htmlFor="program">
                       Program
                     </label>
                     {isEditing ?
                       <select
-                        className="settings-form-select"
+                        className="settings-pg-form-select"
                         id="program"
                         name="program"
                         value={formData.program}
@@ -692,27 +696,29 @@ function Settings() {
                         <option value="BEED">BEED</option>
                         <option value="BHumServ">BHumServ</option>
                       </select>
-                    : <div className="settings-field-value">
-                        <i className="bi bi-mortarboard settings-field-icon"></i>
+                    : <div className="settings-pg-field-value">
+                        <i className="bi bi-mortarboard settings-pg-field-icon"></i>
                         {profile.program}
                       </div>
                     }
                   </div>
 
-                  <div className="settings-profile-field">
-                    <label className="settings-field-label">
+                  <div className="settings-pg-profile-field">
+                    <label className="settings-pg-field-label">
                       Account Created
                     </label>
-                    <div className="settings-field-value">
-                      <i className="bi bi-calendar-check settings-field-icon"></i>
+                    <div className="settings-pg-field-value">
+                      <i className="bi bi-calendar-check settings-pg-field-icon"></i>
                       {formatDate(profile.created_at)}
                     </div>
                   </div>
 
-                  <div className="settings-profile-field">
-                    <label className="settings-field-label">Last Updated</label>
-                    <div className="settings-field-value">
-                      <i className="bi bi-clock-history settings-field-icon"></i>
+                  <div className="settings-pg-profile-field">
+                    <label className="settings-pg-field-label">
+                      Last Updated
+                    </label>
+                    <div className="settings-pg-field-value">
+                      <i className="bi bi-clock-history settings-pg-field-icon"></i>
                       {formatDate(profile.updated_at)}
                     </div>
                   </div>
