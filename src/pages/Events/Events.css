@@ -31,14 +31,14 @@
   .content-area {
     margin-left: 0;
     width: 100%;
-    padding-top: 0; /* header handles topbar offset */
-    padding-bottom: 90px; /* clears footer nav */
+    padding-top: 0;
+    padding-bottom: 90px;
   }
 }
 
 @media (max-width: 576px) {
   .content-area {
-    padding-bottom: 100px; /* extra safety on small screens */
+    padding-bottom: 100px;
   }
 }
 
@@ -73,7 +73,13 @@
 
 @media (max-width: 991px) {
   .dashboard-header {
-    padding: calc(56px + 2rem) 1.5rem 4rem 1.5rem;
+    padding: calc(56px + 3.5rem) 1.5rem 4rem 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-header {
+    padding: calc(56px + 3rem) 1rem 3.5rem 1rem;
   }
 }
 
@@ -339,28 +345,6 @@
 .btn-delete:hover {
   background: #fef2f2;
   border-color: #dc2626;
-}
-
-@media (max-width: 768px) {
-  .dashboard-header {
-    padding: calc(56px + 1.75rem) 1rem 3.5rem 1rem;
-  }
-
-  .content-wrapper {
-    padding-top: 3rem;
-  }
-
-  .events-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .event-card-footer {
-    flex-wrap: wrap;
-  }
-
-  .btn-action {
-    flex: 1 1 100%;
-  }
 }
 
 .search-wrapper {
