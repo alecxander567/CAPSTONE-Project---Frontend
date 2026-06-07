@@ -104,11 +104,12 @@ body {
 }
 
 /* ── Notifications Header ── */
+/* ── Notifications Header ── */
 .notifications-header {
   position: relative;
   background: linear-gradient(135deg, #0a1aff 0%, #00b4d8 100%);
   color: #fff;
-  padding: 1.5rem 2rem 4rem 2rem; /* reduced top from 3rem to 1.5rem */
+  padding: 3rem 2rem 5rem 2rem; /* restored to original */
   overflow: hidden;
   margin: 0;
   flex-shrink: 0;
@@ -116,7 +117,7 @@ body {
 
 @media (max-width: 991px) {
   .notifications-header {
-    padding-top: calc(56px + 1rem); /* reduced from calc(56px + 2rem) */
+    padding-top: 1rem;
     padding-right: 1.5rem;
     padding-bottom: 4rem;
     padding-left: 1.5rem;
@@ -125,7 +126,7 @@ body {
 
 @media (max-width: 768px) {
   .notifications-header {
-    padding-top: calc(56px + 0.75rem); /* reduced from calc(56px + 1.75rem) */
+    padding-top: 0.75rem;
     padding-right: 1rem;
     padding-bottom: 3.5rem;
     padding-left: 1rem;
