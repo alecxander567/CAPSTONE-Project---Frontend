@@ -444,11 +444,8 @@
 }
 
 @media (max-width: 768px) {
-  .ss-wrapper {
-    padding-top: 72px;
-  }
   .ss-header {
-    padding: 0 1.5rem 50px;
+    padding: 1.5rem 1.5rem 50px;
   }
   .ss-content-wrapper {
     padding: 1.5rem 1.5rem 3.5rem;
@@ -480,13 +477,19 @@
   }
 }
 
-@media (max-width: 576px) {
-  /* KEY FIX: matches the actual fixed navbar height */
+@media (max-width: 991px) {
+  /* Match the exact mobile-topbar height: 32px logo + 0.6rem*2 padding ≈ 52px */
   .ss-wrapper {
-    padding-top: 72px;
+    padding-top: 52px;
+  }
+}
+
+@media (max-width: 576px) {
+  .ss-wrapper {
+    padding-top: 52px;
   }
   .ss-header {
-    padding: 0 1.5rem 40px;
+    padding: 1.5rem 1.5rem 40px;
   }
   .ss-content-wrapper {
     padding: 1rem 1rem 3rem;
@@ -573,7 +576,7 @@
 
 @media (max-width: 400px) {
   .ss-header {
-    padding: 0.5rem 1rem 40px;
+    padding: 1.5rem 1rem 40px;
   }
   .ss-header-icon {
     width: 48px;
