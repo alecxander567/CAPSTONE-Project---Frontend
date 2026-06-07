@@ -444,8 +444,11 @@
 }
 
 @media (max-width: 768px) {
+  .ss-wrapper {
+    padding-top: 72px;
+  }
   .ss-header {
-    padding: 2rem 1.5rem 50px;
+    padding: 0 1.5rem 50px;
   }
   .ss-content-wrapper {
     padding: 1.5rem 1.5rem 3.5rem;
@@ -478,9 +481,9 @@
 }
 
 @media (max-width: 576px) {
-  /* KEY FIX: accounts for the fixed topbar height */
+  /* KEY FIX: matches the actual fixed navbar height */
   .ss-wrapper {
-    padding-top: 56px;
+    padding-top: 72px;
   }
   .ss-header {
     padding: 0 1.5rem 40px;
@@ -570,7 +573,7 @@
 
 @media (max-width: 400px) {
   .ss-header {
-    padding: 0 1rem 40px;
+    padding: 0.5rem 1rem 40px;
   }
   .ss-header-icon {
     width: 48px;
