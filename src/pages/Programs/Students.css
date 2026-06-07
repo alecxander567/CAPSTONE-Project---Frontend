@@ -40,7 +40,6 @@
   }
 }
 
-/* Desktop: absolute back button, title centered and padded to clear it */
 .students-pg-btn-back {
   position: absolute;
   top: 1rem;
@@ -71,12 +70,10 @@
   font-size: 1.1rem;
 }
 
-/* Label visible on desktop, hidden on mobile */
 .students-pg-btn-back .btn-back-label {
   display: inline;
 }
 
-/* Centered title content — padded down to clear the absolute back button */
 .students-pg-header .students-pg-header-content {
   position: relative;
   z-index: 1;
@@ -87,7 +84,8 @@
   gap: 1rem;
   text-align: center;
   align-items: center;
-  padding-top: 2rem; /* clears the absolute back button */
+  justify-content: center;
+  padding-top: 0;
 }
 
 .students-pg-header .students-pg-header-content .d-flex {
@@ -485,7 +483,7 @@
 @media (max-width: 991px) {
   .students-pg-content {
     margin-left: 0;
-    padding-top: 56px; /* clear topbar */
+    padding-top: 56px;
     padding-bottom: 6rem;
   }
 
@@ -497,24 +495,19 @@
     text-align: center;
   }
 
-  /* Switch to relative flow on mobile */
   .students-pg-btn-back {
-    position: relative !important;
-    top: auto !important;
-    left: auto !important;
-    align-self: flex-start;
-    margin-bottom: 1rem;
+    position: absolute !important;
+    top: 1rem !important;
+    left: 1rem !important;
     padding: 0.5rem 0.75rem;
   }
 
-  /* Hide label — icon only */
   .students-pg-btn-back .btn-back-label {
     display: none;
   }
 
-  /* Reset desktop padding-top since button is now in flow */
   .students-pg-header .students-pg-header-content {
-    padding-top: 0;
+    padding-top: 2.5rem;
   }
 
   .students-pg-header h1 {
