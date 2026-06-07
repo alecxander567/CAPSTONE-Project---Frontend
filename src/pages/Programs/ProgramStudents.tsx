@@ -292,7 +292,6 @@ const ProgramStudents = () => {
         <header className="students-pg-header students-pg-fade-up">
           <div className="students-pg-wave"></div>
 
-          {/* Desktop: absolute. Mobile: relative in flex column flow, icon only */}
           <button
             className="students-pg-btn-back"
             onClick={() => navigate("/programs")}>
@@ -301,7 +300,7 @@ const ProgramStudents = () => {
           </button>
 
           <div className="students-pg-header-content">
-            <div className="d-flex align-items-center gap-3">
+            <div className="d-flex flex-column align-items-center justify-content-center gap-2">
               <i className="bi bi-people fs-2"></i>
               <div>
                 <h1>{programCode} Students</h1>
