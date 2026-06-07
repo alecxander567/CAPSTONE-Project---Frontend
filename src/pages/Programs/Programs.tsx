@@ -110,7 +110,13 @@ const Programs = () => {
                 key={i}
                 className={`programs-pg-stat-card programs-pg-fade-up programs-pg-fade-delay-${i + 1}`}>
                 <i
-                  className={`bi programs-pg-stat-icon ${["bi-mortarboard-fill", "bi-people-fill", "bi-graph-up-arrow"][i]}`}></i>
+                  className={`bi programs-pg-stat-icon ${
+                    [
+                      "bi-mortarboard-fill programs-pg-icon-primary",
+                      "bi-people-fill programs-pg-icon-success",
+                      "bi-graph-up-arrow programs-pg-icon-warning",
+                    ][i]
+                  }`}></i>
                 <div className="stat-info">
                   <h3>
                     {loading ?
