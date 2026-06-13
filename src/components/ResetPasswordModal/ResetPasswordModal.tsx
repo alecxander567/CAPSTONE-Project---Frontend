@@ -1,18 +1,18 @@
 import { Modal, Button, Form } from "react-bootstrap";
 import { useState } from "react";
-import { usePassword } from "../../hooks/Password";
+import { usePassword } from "../../hooks/Password"; 
 import AnimatedAlert from "../AnimatedAlert/AnimatedAlert";
 
 interface ResetPasswordModalProps {
   show: boolean;
   onClose: () => void;
-  token: string;
+  token: string; 
 }
 
 const ResetPasswordModal = ({
   show,
   onClose,
-  token,
+  token, 
 }: ResetPasswordModalProps) => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -37,7 +37,7 @@ const ResetPasswordModal = ({
     }
 
     try {
-      await resetPassword(token, password);
+      await resetPassword(token, password); 
       setSuccessMessage("Password reset successful!");
       setTimeout(() => {
         onClose();
@@ -55,6 +55,18 @@ const ResetPasswordModal = ({
       handleReset();
     }
   };
+
+  // Calculate password strength
+  const getPasswordStrength = () => {
+    if (password.length === 0) return null;
+    if (password.length < 6)
+      return { text: "Weak", color: "danger", width: "33%" };
+    if (password.length < 10)
+      return { text: "Good", color: "warning", width: "66%" };
+    return { text: "Strong", color: "success", width: "100%" };
+  };
+
+  const strength = getPasswordStrength();
 
   return (
     <Modal show={show} onHide={onClose} centered backdrop="static">
@@ -75,95 +87,85 @@ const ResetPasswordModal = ({
       </Modal.Header>
 
       <Modal.Body className="px-4 pb-4">
-        <Form onKeyPress={handleKeyPress}>
-          {/* New Password */}
-          <Form.Group className="mb-3">
-            <Form.Label className="fw-semibold small text-secondary">
-              <i className="bi bi-lock me-2"></i>New Password
-            </Form.Label>
-            <div className="position-relative">
-              <Form.Control
-                type={showPassword ? "text" : "password"}
-                placeholder="Enter new password (min 8 characters)"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="py-2 border-2 pe-5"
-                style={{ fontSize: "0.95rem" }}
-                autoFocus
-              />
-              <i
-                className={`bi ${
-                  showPassword ? "bi-eye-slash-fill" : "bi-eye-fill"
-                } position-absolute top-50 end-0 translate-middle-y me-3 text-secondary`}
-                style={{ cursor: "pointer", fontSize: "1.1rem" }}
-                onClick={() => setShowPassword(!showPassword)}
-                role="button"
-                tabIndex={0}
-              />
-            </div>
-          </Form.Group>
-
-          {/* Confirm Password */}
-          <Form.Group className="mb-3">
-            <Form.Label className="fw-semibold small text-secondary">
-              <i className="bi bi-lock-fill me-2"></i>Confirm Password
-            </Form.Label>
-            <div className="position-relative">
-              <Form.Control
-                type={showConfirmPassword ? "text" : "password"}
-                placeholder="Re-enter your password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="py-2 border-2 pe-5"
-                style={{ fontSize: "0.95rem" }}
-              />
-              <i
-                className={`bi ${
-                  showConfirmPassword ? "bi-eye-slash-fill" : "bi-eye-fill"
-                } position-absolute top-50 end-0 translate-middle-y me-3 text-secondary`}
-                style={{ cursor: "pointer", fontSize: "1.1rem" }}
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                role="button"
-                tabIndex={0}
-              />
-            </div>
-          </Form.Group>
-
-          {/* Password Strength Indicator */}
-          {password && (
-            <div className="mb-3">
-              <small className="text-muted">Password strength:</small>
-              <div className="progress" style={{ height: "5px" }}>
-                <div
-                  className={`progress-bar ${
-                    password.length < 6 ? "bg-danger"
-                    : password.length < 10 ? "bg-warning"
-                    : "bg-success"
-                  }`}
-                  style={{
-                    width: `${Math.min((password.length / 12) * 100, 100)}%`,
-                  }}></div>
+        {!successMessage ?
+          <Form onKeyPress={handleKeyPress}>
+            {/* New Password */}
+            <Form.Group className="mb-3">
+              <Form.Label className="fw-semibold small text-secondary">
+                <i className="bi bi-lock me-2"></i>New Password
+              </Form.Label>
+              <div className="position-relative">
+                <Form.Control
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter new password (min 6 characters)"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="py-2 border-2 pe-5"
+                  style={{ fontSize: "0.95rem" }}
+                  autoFocus
+                  disabled={loading}
+                />
+                <i
+                  className={`bi ${
+                    showPassword ? "bi-eye-slash-fill" : "bi-eye-fill"
+                  } position-absolute top-50 end-0 translate-middle-y me-3 text-secondary`}
+                  style={{ cursor: "pointer", fontSize: "1.1rem" }}
+                  onClick={() => setShowPassword(!showPassword)}
+                  role="button"
+                  tabIndex={0}
+                />
               </div>
-              <small
-                className={`${
-                  password.length < 6 ? "text-danger"
-                  : password.length < 10 ? "text-warning"
-                  : "text-success"
-                }`}>
-                {password.length < 6 ?
-                  "Weak"
-                : password.length < 10 ?
-                  "Good"
-                : "Strong"}
-              </small>
-            </div>
-          )}
-        </Form>
+            </Form.Group>
 
-        {/* Alerts */}
-        {successMessage && (
-          <AnimatedAlert type="success" message={successMessage} />
-        )}
+            {/* Confirm Password */}
+            <Form.Group className="mb-3">
+              <Form.Label className="fw-semibold small text-secondary">
+                <i className="bi bi-lock-fill me-2"></i>Confirm Password
+              </Form.Label>
+              <div className="position-relative">
+                <Form.Control
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Re-enter your password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="py-2 border-2 pe-5"
+                  style={{ fontSize: "0.95rem" }}
+                  disabled={loading}
+                />
+                <i
+                  className={`bi ${
+                    showConfirmPassword ? "bi-eye-slash-fill" : "bi-eye-fill"
+                  } position-absolute top-50 end-0 translate-middle-y me-3 text-secondary`}
+                  style={{ cursor: "pointer", fontSize: "1.1rem" }}
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  role="button"
+                  tabIndex={0}
+                />
+              </div>
+            </Form.Group>
+
+            {/* Password Strength Indicator */}
+            {password && strength && (
+              <div className="mb-3">
+                <div className="d-flex justify-content-between mb-1">
+                  <small className="text-muted">Password strength:</small>
+                  <small className={`text-${strength.color}`}>
+                    {strength.text}
+                  </small>
+                </div>
+                <div className="progress" style={{ height: "5px" }}>
+                  <div
+                    className={`progress-bar bg-${strength.color}`}
+                    style={{
+                      width: strength.width,
+                      transition: "width 0.3s ease",
+                    }}></div>
+                </div>
+              </div>
+            )}
+          </Form>
+        : <AnimatedAlert type="success" message={successMessage} />}
+
         {validationError && (
           <AnimatedAlert type="error" message={validationError} />
         )}
@@ -183,7 +185,9 @@ const ResetPasswordModal = ({
             <Button
               variant="primary"
               onClick={handleReset}
-              disabled={loading || !password || !confirmPassword}
+              disabled={
+                loading || !password || !confirmPassword || !!successMessage
+              }
               className="flex-fill py-2 fw-semibold">
               {loading ?
                 <>

@@ -18,9 +18,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [showForgot, setShowForgot] = useState(false);
-  const [showReset, setShowReset] = useState(false);
-  const [resetToken, setResetToken] = useState("");
-  const [showRegister, setShowRegister] = useState(false);
+  const [showRegister, setShowRegister] = useState(false); 
 
   const { login, loading, error } = useLogin();
   const navigate = useNavigate();
@@ -193,22 +191,14 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
         </div>
       </Modal.Footer>
 
-      {/* Password Modals */}
+      {/* Password Modals - Simplified */}
       <ForgotPasswordModal
         show={showForgot}
         onClose={() => setShowForgot(false)}
-        onSuccess={(token) => {
-          setResetToken(token);
-          setShowForgot(false);
-          setShowReset(true);
-        }}
+        // ✅ Removed onSuccess prop - ForgotPasswordModal now handles the reset flow internally
       />
 
-      <ResetPasswordModal
-        show={showReset}
-        token={resetToken}
-        onClose={() => setShowReset(false)}
-      />
+      {/* ✅ Removed ResetPasswordModal from here - it's now called inside ForgotPasswordModal */}
 
       {/* Register Modal */}
       <RegisterModal show={showRegister} handleClose={handleCloseRegister} />

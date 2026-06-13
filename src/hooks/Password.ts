@@ -10,12 +10,19 @@ export const usePassword = () => {
     setError(null);
 
     try {
+      // Clean the phone number (remove spaces, dashes, etc.)
+      const cleanedPhone = mobilePhone
+        .trim()
+        .replace(/\s/g, "")
+        .replace(/-/g, "");
+
       const res = await axios.post(
-        "http://localhost:8000/auth/forgot-password",
-        { mobile_phone: mobilePhone.trim() },
+        `${import.meta.env.VITE_API_URL}/auth/forgot-password`,
+        { mobile_phone: cleanedPhone },
       );
 
-      return res.data;
+      // Return the full response which contains the token
+      return res.data; // { message: "...", token: "..." }
     } catch (err: unknown) {
       let message = "Phone number not found";
 
@@ -37,12 +44,17 @@ export const usePassword = () => {
     setError(null);
 
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/auth/reset-password`, {
-        token,
-        new_password: newPassword,
-      });
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/auth/reset-password`,
+        {
+          token: token,
+          new_password: newPassword,
+        },
+      );
+
+      return response.data;
     } catch (err: unknown) {
-      let message = "Reset failed";
+      let message = "Reset failed. Please try again.";
 
       if (axios.isAxiosError(err)) {
         message = err.response?.data?.detail ?? message;
