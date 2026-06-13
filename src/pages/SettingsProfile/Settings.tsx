@@ -122,44 +122,49 @@ function Settings() {
         updateData.middle_initial = formData.middle_initial;
       }
 
-      // Only include program if it exists
-      if (formData.program && formData.program.trim() !== "") {
-        updateData.program = formData.program;
-      }
+      // ✅ IMPORTANT: For ADMIN users - DO NOT send program or year_level at all
+      const isAdmin = profile?.role?.toUpperCase() === "ADMIN";
 
-      // Handle year_level correctly - convert to string number "1", "2", "3", "4"
-      if (formData.year_level && formData.year_level !== "") {
-        // Map various formats to "1", "2", "3", "4"
-        const yearMap: Record<string, string> = {
-          "1": "1",
-          "2": "2",
-          "3": "3",
-          "4": "4",
-          FIRST: "1",
-          SECOND: "2",
-          THIRD: "3",
-          FOURTH: "4",
-          "1st Year": "1",
-          "2nd Year": "2",
-          "3rd Year": "3",
-          "4th Year": "4",
-        };
+      if (!isAdmin) {
+        // Only include program if it exists (for students only)
+        if (formData.program && formData.program.trim() !== "") {
+          updateData.program = formData.program;
+        }
 
-        const yearValue = formData.year_level.toString().toUpperCase();
-        updateData.year_level =
-          yearMap[yearValue] || formData.year_level.toString();
+        // Handle year_level correctly - convert to string number "1", "2", "3", "4" (for students only)
+        if (formData.year_level && formData.year_level !== "") {
+          const yearMap: Record<string, string> = {
+            "1": "1",
+            "2": "2",
+            "3": "3",
+            "4": "4",
+            FIRST: "1",
+            SECOND: "2",
+            THIRD: "3",
+            FOURTH: "4",
+            "1st Year": "1",
+            "2nd Year": "2",
+            "3rd Year": "3",
+            "4th Year": "4",
+          };
+
+          const yearValue = formData.year_level.toString().toUpperCase();
+          updateData.year_level =
+            yearMap[yearValue] || formData.year_level.toString();
+        }
       }
 
       console.log("Sending update data:", updateData);
+      console.log("Is Admin:", profile?.role?.toUpperCase() === "ADMIN");
 
       await updateProfile(updateData);
       setIsEditing(false);
       setShowSuccess(true);
 
-      // Refresh the page after 1 second to show updated data
+      // Refresh the page after 1.5 seconds to show updated data
       setTimeout(() => {
         window.location.reload();
-      }, 1000);
+      }, 1500);
     } catch (err: unknown) {
       let message = "Failed to update profile";
       if (err instanceof Error) {
@@ -205,7 +210,7 @@ function Settings() {
       setShowSuccess(true);
       setTimeout(() => {
         window.location.reload();
-      }, 1000);
+      }, 1500);
     } catch (err: unknown) {
       let message = "Failed to upload profile picture";
       if (err instanceof Error) {
@@ -229,7 +234,7 @@ function Settings() {
       setShowSuccess(true);
       setTimeout(() => {
         window.location.reload();
-      }, 1000);
+      }, 1500);
     } catch (err: unknown) {
       let message = "Failed to delete profile picture";
       if (err instanceof Error) {
@@ -592,6 +597,7 @@ function Settings() {
                 )}
 
                 <div className="settings-pg-profile-grid">
+                  {/* Student ID - Only show for non-admin users */}
                   {!isAdmin && (
                     <div className="settings-pg-profile-field">
                       <label className="settings-pg-field-label">
@@ -604,6 +610,7 @@ function Settings() {
                     </div>
                   )}
 
+                  {/* First Name - Always shown */}
                   <div className="settings-pg-profile-field">
                     <label
                       className="settings-pg-field-label"
@@ -627,6 +634,7 @@ function Settings() {
                     }
                   </div>
 
+                  {/* Last Name - Always shown */}
                   <div className="settings-pg-profile-field">
                     <label
                       className="settings-pg-field-label"
@@ -650,6 +658,7 @@ function Settings() {
                     }
                   </div>
 
+                  {/* Year Level - Only show for students */}
                   {!isAdmin && (
                     <div className="settings-pg-profile-field">
                       <label
@@ -679,6 +688,7 @@ function Settings() {
                     </div>
                   )}
 
+                  {/* Middle Initial - Always shown */}
                   <div className="settings-pg-profile-field">
                     <label
                       className="settings-pg-field-label"
@@ -702,6 +712,7 @@ function Settings() {
                     }
                   </div>
 
+                  {/* Mobile Phone - Always shown */}
                   <div className="settings-pg-profile-field">
                     <label
                       className="settings-pg-field-label"
@@ -717,6 +728,7 @@ function Settings() {
                         value={formData.mobile_phone}
                         onChange={handleInputChange}
                         required
+                        placeholder="e.g., 09123456789"
                       />
                     : <div className="settings-pg-field-value">
                         <i className="bi bi-phone settings-pg-field-icon"></i>
@@ -725,38 +737,42 @@ function Settings() {
                     }
                   </div>
 
-                  <div className="settings-pg-profile-field">
-                    <label
-                      className="settings-pg-field-label"
-                      htmlFor="program">
-                      Program
-                    </label>
-                    {isEditing ?
-                      <select
-                        className="settings-pg-form-select"
-                        id="program"
-                        name="program"
-                        value={formData.program}
-                        onChange={handleInputChange}
-                        required>
-                        <option value="">Select Program</option>
-                        <option value="BSED">BSED</option>
-                        <option value="BSBA">BSBA</option>
-                        <option value="BSIT">BSIT</option>
-                        <option value="BSCRIM">BSCRIM</option>
-                        <option value="BPED">BPED</option>
-                        <option value="BEED">BEED</option>
-                        <option value="BHumServ">BHumServ</option>
-                      </select>
-                    : <div className="settings-pg-field-value">
-                        <i className="bi bi-mortarboard settings-pg-field-icon"></i>
-                        {typeof profile.program === "object" ?
-                          profile.program?.code
-                        : profile.program}
-                      </div>
-                    }
-                  </div>
+                  {/* Program - Only show for students */}
+                  {!isAdmin && (
+                    <div className="settings-pg-profile-field">
+                      <label
+                        className="settings-pg-field-label"
+                        htmlFor="program">
+                        Program
+                      </label>
+                      {isEditing ?
+                        <select
+                          className="settings-pg-form-select"
+                          id="program"
+                          name="program"
+                          value={formData.program}
+                          onChange={handleInputChange}
+                          required>
+                          <option value="">Select Program</option>
+                          <option value="BSED">BSED</option>
+                          <option value="BSBA">BSBA</option>
+                          <option value="BSIT">BSIT</option>
+                          <option value="BSCRIM">BSCRIM</option>
+                          <option value="BPED">BPED</option>
+                          <option value="BEED">BEED</option>
+                          <option value="BHumServ">BHumServ</option>
+                        </select>
+                      : <div className="settings-pg-field-value">
+                          <i className="bi bi-mortarboard settings-pg-field-icon"></i>
+                          {typeof profile.program === "object" ?
+                            profile.program?.code
+                          : profile.program}
+                        </div>
+                      }
+                    </div>
+                  )}
 
+                  {/* Account Created - Always shown */}
                   <div className="settings-pg-profile-field">
                     <label className="settings-pg-field-label">
                       Account Created
@@ -767,6 +783,7 @@ function Settings() {
                     </div>
                   </div>
 
+                  {/* Last Updated - Always shown */}
                   <div className="settings-pg-profile-field">
                     <label className="settings-pg-field-label">
                       Last Updated
