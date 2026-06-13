@@ -35,6 +35,16 @@ export const useUserProfile = () => {
   const [updateError, setUpdateError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
+  // Get the base URL safely
+  const getApiUrl = () => {
+    const url = import.meta.env.VITE_API_URL;
+    if (!url) {
+      console.error("VITE_API_URL is not defined!");
+      return "http://localhost:8000";
+    }
+    return url.replace(/\/$/, "");
+  };
+
   const fetchUserProfile = async () => {
     try {
       setLoading(true);
@@ -47,21 +57,25 @@ export const useUserProfile = () => {
         return;
       }
 
-      const response = await axios.get<UserProfile>(
-        `${import.meta.env.VITE_API_URL}/auth/profile`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      const apiUrl = getApiUrl();
+      const response = await axios.get<UserProfile>(`${apiUrl}/auth/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      );
+      });
 
       setProfile(response.data);
     } catch (err: unknown) {
       console.error("Error fetching user profile:", err);
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to load user profile";
-      setError(errorMessage);
+      if (axios.isAxiosError(err)) {
+        const errorMessage =
+          err.response?.data?.detail ||
+          err.message ||
+          "Failed to load user profile";
+        setError(errorMessage);
+      } else {
+        setError("Failed to load user profile");
+      }
     } finally {
       setLoading(false);
     }
@@ -77,25 +91,36 @@ export const useUserProfile = () => {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No authentication token found");
 
-      const filteredPayload = Object.fromEntries(
-        Object.entries(profileData).filter(([_, v]) => v !== undefined),
-      );
+      // Clean the data - remove undefined, null, and empty strings
+      const filteredPayload: any = {};
+      Object.entries(profileData).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          filteredPayload[key] = value;
+        }
+      });
 
-      const response = await axios.put<UserProfile>(
-        `${import.meta.env.VITE_API_URL}/auth/profile`,
-        filteredPayload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
+      const apiUrl = getApiUrl();
+      const url = `${apiUrl}/auth/profile`;
+
+      const response = await axios.put<UserProfile>(url, filteredPayload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-      );
+      });
 
       setProfile(response.data);
       return response.data;
     } catch (err: unknown) {
       console.error("Error updating profile:", err);
+      if (axios.isAxiosError(err)) {
+        const errorMessage =
+          err.response?.data?.detail ||
+          err.message ||
+          "Failed to update profile";
+        setUpdateError(errorMessage);
+        throw new Error(errorMessage);
+      }
       const errorMessage =
         err instanceof Error ? err.message : "Failed to update profile";
       setUpdateError(errorMessage);
@@ -116,20 +141,26 @@ export const useUserProfile = () => {
       const formData = new FormData();
       formData.append("file", file);
 
-      await axios.post(
-        `${import.meta.env.VITE_API_URL}/auth/profile/upload-picture`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
+      const apiUrl = getApiUrl();
+
+      await axios.post(`${apiUrl}/auth/profile/upload-picture`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
         },
-      );
+      });
 
       await fetchUserProfile();
     } catch (err: unknown) {
       console.error("Error uploading profile picture:", err);
+      if (axios.isAxiosError(err)) {
+        const errorMessage =
+          err.response?.data?.detail ||
+          err.message ||
+          "Failed to upload profile picture";
+        setUpdateError(errorMessage);
+        throw new Error(errorMessage);
+      }
       const errorMessage =
         err instanceof Error ? err.message : "Failed to upload profile picture";
       setUpdateError(errorMessage);
@@ -147,18 +178,25 @@ export const useUserProfile = () => {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No authentication token found");
 
-      await axios.delete(
-        `${import.meta.env.VITE_API_URL}/auth/profile/delete-picture`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      const apiUrl = getApiUrl();
+
+      await axios.delete(`${apiUrl}/auth/profile/delete-picture`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      );
+      });
 
       await fetchUserProfile();
     } catch (err: unknown) {
       console.error("Error deleting profile picture:", err);
+      if (axios.isAxiosError(err)) {
+        const errorMessage =
+          err.response?.data?.detail ||
+          err.message ||
+          "Failed to delete profile picture";
+        setUpdateError(errorMessage);
+        throw new Error(errorMessage);
+      }
       const errorMessage =
         err instanceof Error ? err.message : "Failed to delete profile picture";
       setUpdateError(errorMessage);

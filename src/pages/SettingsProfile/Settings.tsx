@@ -66,20 +66,17 @@ function Settings() {
 
   useEffect(() => {
     if (profile) {
-      const id = setTimeout(() => {
-        setFormData({
-          first_name: profile.first_name || "",
-          last_name: profile.last_name || "",
-          middle_initial: profile.middle_initial || "",
-          mobile_phone: profile.mobile_phone || "",
-          program:
-            typeof profile.program === "object" ?
-              (profile.program as any)?.code
-            : profile.program || "",
-          year_level: profile.year_level || "",
-        });
-      }, 0);
-      return () => clearTimeout(id);
+      setFormData({
+        first_name: profile.first_name || "",
+        last_name: profile.last_name || "",
+        middle_initial: profile.middle_initial || "",
+        mobile_phone: profile.mobile_phone || "",
+        program:
+          typeof profile.program === "object" ?
+            (profile.program as any)?.code
+          : profile.program || "",
+        year_level: profile.year_level || "",
+      });
     }
   }, [profile]);
 
@@ -111,10 +108,58 @@ function Settings() {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setEditError(null);
+
     try {
-      await updateProfile(formData);
+      // Prepare data correctly for backend
+      const updateData: any = {
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        mobile_phone: formData.mobile_phone,
+      };
+
+      // Only include middle_initial if it has value
+      if (formData.middle_initial && formData.middle_initial.trim() !== "") {
+        updateData.middle_initial = formData.middle_initial;
+      }
+
+      // Only include program if it exists
+      if (formData.program && formData.program.trim() !== "") {
+        updateData.program = formData.program;
+      }
+
+      // Handle year_level correctly - convert to string number "1", "2", "3", "4"
+      if (formData.year_level && formData.year_level !== "") {
+        // Map various formats to "1", "2", "3", "4"
+        const yearMap: Record<string, string> = {
+          "1": "1",
+          "2": "2",
+          "3": "3",
+          "4": "4",
+          FIRST: "1",
+          SECOND: "2",
+          THIRD: "3",
+          FOURTH: "4",
+          "1st Year": "1",
+          "2nd Year": "2",
+          "3rd Year": "3",
+          "4th Year": "4",
+        };
+
+        const yearValue = formData.year_level.toString().toUpperCase();
+        updateData.year_level =
+          yearMap[yearValue] || formData.year_level.toString();
+      }
+
+      console.log("Sending update data:", updateData);
+
+      await updateProfile(updateData);
       setIsEditing(false);
       setShowSuccess(true);
+
+      // Refresh the page after 1 second to show updated data
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } catch (err: unknown) {
       let message = "Failed to update profile";
       if (err instanceof Error) {
@@ -158,6 +203,9 @@ function Settings() {
     try {
       await uploadProfilePicture(file);
       setShowSuccess(true);
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } catch (err: unknown) {
       let message = "Failed to upload profile picture";
       if (err instanceof Error) {
@@ -179,6 +227,9 @@ function Settings() {
     try {
       await deleteProfilePicture();
       setShowSuccess(true);
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } catch (err: unknown) {
       let message = "Failed to delete profile picture";
       if (err instanceof Error) {
@@ -688,6 +739,7 @@ function Settings() {
                         value={formData.program}
                         onChange={handleInputChange}
                         required>
+                        <option value="">Select Program</option>
                         <option value="BSED">BSED</option>
                         <option value="BSBA">BSBA</option>
                         <option value="BSIT">BSIT</option>
@@ -698,7 +750,9 @@ function Settings() {
                       </select>
                     : <div className="settings-pg-field-value">
                         <i className="bi bi-mortarboard settings-pg-field-icon"></i>
-                        {profile.program}
+                        {typeof profile.program === "object" ?
+                          profile.program?.code
+                        : profile.program}
                       </div>
                     }
                   </div>
