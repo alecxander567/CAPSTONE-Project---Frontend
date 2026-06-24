@@ -47,16 +47,20 @@ function Settings() {
     return wordMap[year] ?? wordMap[year.toUpperCase()] ?? year;
   };
 
+  const isAdmin = profile?.role?.toUpperCase() === "ADMIN";
+
   const [formData, setFormData] = useState(() => ({
+    student_id_no: profile?.student_id_no || "",
     first_name: profile?.first_name || "",
     last_name: profile?.last_name || "",
     middle_initial: profile?.middle_initial || "",
     mobile_phone: profile?.mobile_phone || "",
+    // For admin, these will be undefined/empty
     program:
-      typeof profile?.program === "object" ?
-        profile?.program?.code
+      isAdmin ? ""
+      : typeof profile?.program === "object" ? profile?.program?.code
       : profile?.program || "",
-    year_level: profile?.year_level || "",
+    year_level: isAdmin ? "" : profile?.year_level || "",
   }));
 
   useEffect(() => {
@@ -66,32 +70,37 @@ function Settings() {
 
   useEffect(() => {
     if (profile) {
+      const isAdminUser = profile?.role?.toUpperCase() === "ADMIN";
       setFormData({
+        student_id_no: profile.student_id_no || "",
         first_name: profile.first_name || "",
         last_name: profile.last_name || "",
         middle_initial: profile.middle_initial || "",
         mobile_phone: profile.mobile_phone || "",
+        // For admin, these fields are intentionally empty
         program:
-          typeof profile.program === "object" ?
-            (profile.program as any)?.code
+          isAdminUser ? ""
+          : typeof profile.program === "object" ? (profile.program as any)?.code
           : profile.program || "",
-        year_level: profile.year_level || "",
+        year_level: isAdminUser ? "" : profile.year_level || "",
       });
     }
   }, [profile]);
 
   const handleEditToggle = () => {
     if (isEditing && profile) {
+      const isAdminUser = profile?.role?.toUpperCase() === "ADMIN";
       setFormData({
+        student_id_no: profile.student_id_no || "",
         first_name: profile.first_name || "",
         last_name: profile.last_name || "",
         middle_initial: profile.middle_initial || "",
         mobile_phone: profile.mobile_phone || "",
         program:
-          typeof profile.program === "object" ?
-            (profile.program as any)?.code
+          isAdminUser ? ""
+          : typeof profile.program === "object" ? (profile.program as any)?.code
           : profile.program || "",
-        year_level: profile.year_level || "",
+        year_level: isAdminUser ? "" : profile.year_level || "",
       });
       setEditError(null);
     }
@@ -112,6 +121,7 @@ function Settings() {
     try {
       // Prepare data correctly for backend
       const updateData: any = {
+        student_id_no: formData.student_id_no,
         first_name: formData.first_name,
         last_name: formData.last_name,
         mobile_phone: formData.mobile_phone,
@@ -123,39 +133,23 @@ function Settings() {
       }
 
       // ✅ IMPORTANT: For ADMIN users - DO NOT send program or year_level at all
-      const isAdmin = profile?.role?.toUpperCase() === "ADMIN";
+      const isAdminUser = profile?.role?.toUpperCase() === "ADMIN";
 
-      if (!isAdmin) {
+      if (!isAdminUser) {
         // Only include program if it exists (for students only)
         if (formData.program && formData.program.trim() !== "") {
           updateData.program = formData.program;
         }
 
-        // Handle year_level correctly - convert to string number "1", "2", "3", "4" (for students only)
+        // Send year_level straight through — the backend's YEAR_LEVEL_MAP
+        // already normalizes both "1"-"4" and word forms like "1st year"
         if (formData.year_level && formData.year_level !== "") {
-          const yearMap: Record<string, string> = {
-            "1": "1",
-            "2": "2",
-            "3": "3",
-            "4": "4",
-            FIRST: "1",
-            SECOND: "2",
-            THIRD: "3",
-            FOURTH: "4",
-            "1st Year": "1",
-            "2nd Year": "2",
-            "3rd Year": "3",
-            "4th Year": "4",
-          };
-
-          const yearValue = formData.year_level.toString().toUpperCase();
-          updateData.year_level =
-            yearMap[yearValue] || formData.year_level.toString();
+          updateData.year_level = formData.year_level.toString();
         }
       }
 
       console.log("Sending update data:", updateData);
-      console.log("Is Admin:", profile?.role?.toUpperCase() === "ADMIN");
+      console.log("Is Admin:", isAdminUser);
 
       await updateProfile(updateData);
       setIsEditing(false);
@@ -293,7 +287,8 @@ function Settings() {
     });
   };
 
-  const isAdmin = profile?.role?.toUpperCase() === "ADMIN";
+  // Determine if user is admin - used throughout component
+  const isAdminUser = profile?.role?.toUpperCase() === "ADMIN";
 
   return (
     <>
@@ -597,18 +592,30 @@ function Settings() {
                 )}
 
                 <div className="settings-pg-profile-grid">
-                  {/* Student ID - Only show for non-admin users */}
-                  {!isAdmin && (
-                    <div className="settings-pg-profile-field">
-                      <label className="settings-pg-field-label">
-                        Account No.
-                      </label>
-                      <div className="settings-pg-field-value">
+                  {/* Account No. (Student ID) - Always shown and editable for all users */}
+                  <div className="settings-pg-profile-field">
+                    <label
+                      className="settings-pg-field-label"
+                      htmlFor="student_id_no">
+                      {isAdminUser ? "Admin ID" : "Student ID"}
+                    </label>
+                    {isEditing ?
+                      <input
+                        className="settings-pg-form-input"
+                        type="text"
+                        id="student_id_no"
+                        name="student_id_no"
+                        value={formData.student_id_no}
+                        onChange={handleInputChange}
+                        required
+                        placeholder={`Enter ${isAdminUser ? "admin" : "student"} ID`}
+                      />
+                    : <div className="settings-pg-field-value">
                         <i className="bi bi-hash settings-pg-field-icon"></i>
-                        {profile.student_id_no}
+                        {profile.student_id_no || "-"}
                       </div>
-                    </div>
-                  )}
+                    }
+                  </div>
 
                   {/* First Name - Always shown */}
                   <div className="settings-pg-profile-field">
@@ -658,8 +665,8 @@ function Settings() {
                     }
                   </div>
 
-                  {/* Year Level - Only show for students */}
-                  {!isAdmin && (
+                  {/* Year Level - ONLY shown for students, COMPLETELY EXCLUDED for admin */}
+                  {!isAdminUser && (
                     <div className="settings-pg-profile-field">
                       <label
                         className="settings-pg-field-label"
@@ -737,8 +744,8 @@ function Settings() {
                     }
                   </div>
 
-                  {/* Program - Only show for students */}
-                  {!isAdmin && (
+                  {/* Program - ONLY shown for students, COMPLETELY EXCLUDED for admin */}
+                  {!isAdminUser && (
                     <div className="settings-pg-profile-field">
                       <label
                         className="settings-pg-field-label"
