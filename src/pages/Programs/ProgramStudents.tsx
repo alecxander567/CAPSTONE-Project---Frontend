@@ -195,23 +195,75 @@ const ProgramStudents = () => {
 
   const confirmUnenroll = async () => {
     if (!selectedStudentId) return;
-    setUnenrollingStudentId(selectedStudentId);
+    const studentId = selectedStudentId;
+    setUnenrollingStudentId(studentId);
+
+    // find the finger_id we need to poll on
+    const student = students.find((s) => s.id === studentId);
+    const fingerId = student?.finger_id;
+
     try {
-      const response = await axios.post(
-        `${API_BASE_URL}/fingerprints/unenroll-fingerprint/${selectedStudentId}`,
+      await axios.post(
+        `${API_BASE_URL}/fingerprints/unenroll-fingerprint/${studentId}`,
         {},
         { headers: { "Content-Type": "application/json" }, timeout: 10000 },
       );
-      if (response.status === 200) {
+
+      if (!fingerId) {
+        // no finger_id to poll on, fall back to old behavior
         setStudents((prev) =>
           prev.map((s) =>
-            s.id === selectedStudentId ?
+            s.id === studentId ?
               { ...s, fingerprint_status: "not_enrolled" }
             : s,
           ),
         );
         showAlert("Fingerprint unenrolled successfully!", true);
+        return;
       }
+
+      // poll get-status until the device confirms the delete
+      const POLL_INTERVAL = 500;
+      const TIMEOUT = 10000;
+      const startTime = Date.now();
+
+      await new Promise<void>((resolve, reject) => {
+        const poll = setInterval(async () => {
+          if (Date.now() - startTime > TIMEOUT) {
+            clearInterval(poll);
+            reject(new Error("Delete timed out. Check device connection."));
+            return;
+          }
+          try {
+            const res = await axios.get(
+              `${API_BASE_URL}/fingerprints/get-status?finger_id=${fingerId}`,
+            );
+            const { status, step, message } = res.data;
+
+            // After delete_success, the backend clears the user's finger_id,
+            // so looking them up by the OLD finger_id will start failing
+            // with "User not found" — that failure IS the success signal.
+            const deletedAlready =
+              status === "failed" &&
+              step === "error" &&
+              message === "User not found";
+
+            if (status === "not_enrolled" || deletedAlready) {
+              clearInterval(poll);
+              resolve();
+            }
+          } catch {
+            // ignore transient network errors, keep polling until timeout
+          }
+        }, POLL_INTERVAL);
+      });
+
+      setStudents((prev) =>
+        prev.map((s) =>
+          s.id === studentId ? { ...s, fingerprint_status: "not_enrolled" } : s,
+        ),
+      );
+      showAlert("Fingerprint unenrolled successfully!", true);
     } catch (err) {
       let errorMessage = "Failed to unenroll fingerprint";
       if (axios.isAxiosError(err)) {
@@ -222,6 +274,8 @@ const ProgramStudents = () => {
           errorMessage =
             "No response from server. Check if backend is running.";
         else errorMessage = err.message;
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
       }
       showAlert(errorMessage, false);
     } finally {

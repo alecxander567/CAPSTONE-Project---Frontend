@@ -68,6 +68,7 @@ function Attendance() {
     startAttendance,
     stopAttendance,
     loading: attendanceLoading,
+    error: attendanceError,
   } = useAttendance();
 
   const [attendanceActive, setAttendanceActive] = useState(false);
@@ -305,6 +306,18 @@ function Attendance() {
               }
             </div>
           </div>
+
+          {attendanceError && (
+            <div
+              className="attendance-alert-danger"
+              style={{ marginBottom: "1rem" }}>
+              <i
+                className="bi bi-exclamation-triangle-fill"
+                style={{ marginRight: "0.5rem" }}
+              />
+              {attendanceError}
+            </div>
+          )}
 
           {loadingPrograms && (
             <div className="attendance-loading-state">

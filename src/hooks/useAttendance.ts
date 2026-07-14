@@ -19,13 +19,9 @@ export const useAttendance = () => {
     setError(null);
 
     try {
+      // Backend enforces the mode guard (ensure_device_free) and returns
+      // a 409 with a descriptive detail message if another mode is active.
       const res = await axios.post(`${API_URL}/start-attendance`);
-
-      // Kept as a fire-and-forget check — the response isn't used, but if
-      // you do need the device mode later, capture it with:
-      // const { data: modeCheck } = await axios.get(`${API_URL}/device-mode`);
-      await axios.get(`${API_URL}/device-mode`);
-
       return res.data;
     } catch (err) {
       console.error("Failed to start attendance:", err);
