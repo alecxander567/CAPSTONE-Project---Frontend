@@ -57,22 +57,47 @@ function AttendanceHistory() {
   useEffect(() => {
     if (!events.length) return;
     const recent = getRecentEvent(events);
-    if (recent) setSelectedEventId(recent.id);
+    if (!recent) return;
+
+    // Deferred so we're not calling setState synchronously in the effect
+    // body — runs on the next tick instead.
+    const id = window.setTimeout(() => {
+      setSelectedEventId(recent.id);
+    }, 0);
+
+    return () => clearTimeout(id);
   }, [events]);
 
   useEffect(() => {
     if (!selectedEventId) {
-      setAttendanceRecords([]);
-      return;
+      const id = window.setTimeout(() => {
+        setAttendanceRecords([]);
+      }, 0);
+      return () => clearTimeout(id);
     }
-    setLoadingAttendance(true);
-    axios
-      .get<AttendanceRecord[]>(
-        `${import.meta.env.VITE_API_URL}/attendance/by-event/${selectedEventId}`,
-      )
-      .then((res) => setAttendanceRecords(res.data))
-      .catch(console.error)
-      .finally(() => setLoadingAttendance(false));
+
+    let cancelled = false;
+
+    const id = window.setTimeout(() => {
+      if (cancelled) return;
+      setLoadingAttendance(true);
+      axios
+        .get<AttendanceRecord[]>(
+          `${import.meta.env.VITE_API_URL}/attendance/by-event/${selectedEventId}`,
+        )
+        .then((res) => {
+          if (!cancelled) setAttendanceRecords(res.data);
+        })
+        .catch(console.error)
+        .finally(() => {
+          if (!cancelled) setLoadingAttendance(false);
+        });
+    }, 0);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(id);
+    };
   }, [selectedEventId]);
 
   const selectedEvent = events.find((e) => e.id === selectedEventId) ?? null;

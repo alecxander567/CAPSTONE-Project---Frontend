@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 import { useAddProgram, useEditProgram } from "../../hooks/useProgram";
 import type { ProgramData } from "../../hooks/useProgram";
 import SuccessAlert from "../SuccessAlert/SuccessAlert";
 import ErrorAlert from "../SuccessAlert/ErrorAlert";
+import axios from "axios";
 
 interface AddProgramModalProps {
   show: boolean;
@@ -20,8 +21,12 @@ const AddProgramModal: React.FC<AddProgramModalProps> = ({
   editProgram = null,
   onProgramEdited,
 }) => {
-  const [code, setCode] = useState("");
-  const [name, setName] = useState("");
+  // Initializers only run once per mount. The parent passes a `key` tied
+  // to editProgram (see usage note at the bottom of this file), so React
+  // remounts this component fresh whenever you switch between "add" and
+  // "edit <specific program>" — replacing the old effect-based reset.
+  const [code, setCode] = useState(editProgram?.code ?? "");
+  const [name, setName] = useState(editProgram?.name ?? "");
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -31,16 +36,6 @@ const AddProgramModal: React.FC<AddProgramModalProps> = ({
 
   const loading = addLoading || editLoading;
   const isEditMode = !!editProgram;
-
-  useEffect(() => {
-    if (editProgram) {
-      setCode(editProgram.code);
-      setName(editProgram.name);
-    } else {
-      setCode("");
-      setName("");
-    }
-  }, [editProgram, show]);
 
   const handleSubmit = async () => {
     if (!code.trim() || !name.trim()) {
@@ -68,10 +63,11 @@ const AddProgramModal: React.FC<AddProgramModalProps> = ({
       setCode("");
       setName("");
       setShowSuccess(true);
-    } catch (err: any) {
+    } catch (err) {
       const message =
-        err?.response?.data?.detail ??
-        "Something went wrong. Please try again.";
+        axios.isAxiosError(err) && err.response?.data?.detail ?
+          String(err.response.data.detail)
+        : "Something went wrong. Please try again.";
       setErrorMessage(message);
       setShowError(true);
     }
@@ -236,3 +232,23 @@ const AddProgramModal: React.FC<AddProgramModalProps> = ({
 };
 
 export default AddProgramModal;
+
+/*
+USAGE NOTE — required change in the parent component:
+
+Give the modal a `key` derived from which record it's editing (or "new"
+when adding), so React remounts it fresh instead of relying on an effect
+to reset its fields:
+
+  <AddProgramModal
+    key={editProgram?.id ?? "new"}
+    show={show}
+    handleClose={handleClose}
+    onProgramAdded={onProgramAdded}
+    editProgram={editProgram}
+    onProgramEdited={onProgramEdited}
+  />
+
+Without this key, switching between editing different programs (or from
+edit back to add) will keep showing stale field values.
+*/

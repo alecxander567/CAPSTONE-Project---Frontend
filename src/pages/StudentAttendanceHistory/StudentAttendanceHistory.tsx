@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import StudentSidebar from "../../components/StudentSidebar/StudentSidebar";
 import { useEvents } from "../../hooks/useEvents";
-import type { Event } from "../../hooks/useEvents";
+import type { AppEvent } from "../../hooks/useEvents";
 import "./StudentAttendanceHistory.css";
 
 interface MyAttendance {
@@ -19,6 +19,43 @@ function StudentAttendanceHistory() {
   const [loadingAttendance, setLoadingAttendance] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
+
+  // Declared with useCallback BEFORE the effects that use it, so it's
+  // available immediately (no "used before declaration" issue) and has
+  // a stable identity across renders.
+  const fetchAllAttendance = useCallback(
+    async (evts: AppEvent[], studentId: string, token: string) => {
+      const results: MyAttendance[] = [];
+      for (const event of evts) {
+        try {
+          const res = await axios.get<
+            {
+              student_id_no: string;
+              status: string;
+              attendance_time: string | null;
+            }[]
+          >(`${import.meta.env.VITE_API_URL}/attendance/by-event/${event.id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const mine = res.data.find((r) => r.student_id_no === studentId);
+          results.push({
+            event_id: event.id,
+            status: mine ? (mine.status as "present" | "absent") : "absent",
+            attendance_time: mine?.attendance_time ?? null,
+          });
+        } catch {
+          results.push({
+            event_id: event.id,
+            status: "absent",
+            attendance_time: null,
+          });
+        }
+      }
+      setMyAttendance(results);
+      setLoadingAttendance(false);
+    },
+    [],
+  );
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -41,42 +78,9 @@ function StudentAttendanceHistory() {
         fetchAllAttendance(events, studentId, token);
       })
       .finally(() => setLoadingAttendance(false));
+    // Intentionally run once on mount only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const fetchAllAttendance = async (
-    evts: Event[],
-    studentId: string,
-    token: string,
-  ) => {
-    const results: MyAttendance[] = [];
-    for (const event of evts) {
-      try {
-        const res = await axios.get<
-          {
-            student_id_no: string;
-            status: string;
-            attendance_time: string | null;
-          }[]
-        >(`${import.meta.env.VITE_API_URL}/attendance/by-event/${event.id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const mine = res.data.find((r) => r.student_id_no === studentId);
-        results.push({
-          event_id: event.id,
-          status: mine ? (mine.status as "present" | "absent") : "absent",
-          attendance_time: mine?.attendance_time ?? null,
-        });
-      } catch {
-        results.push({
-          event_id: event.id,
-          status: "absent",
-          attendance_time: null,
-        });
-      }
-    }
-    setMyAttendance(results);
-    setLoadingAttendance(false);
-  };
 
   useEffect(() => {
     if (!eventsLoading && events.length > 0 && myAttendance.length === 0) {
@@ -87,6 +91,8 @@ function StudentAttendanceHistory() {
         fetchAllAttendance(events, studentId, token);
       }
     }
+    // Intentionally exclude myAttendance/fetchAllAttendance to avoid loops.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventsLoading, events]);
 
   const getStatusForEvent = (eventId: number) => {

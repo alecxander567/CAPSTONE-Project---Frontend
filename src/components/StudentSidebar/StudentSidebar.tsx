@@ -1,7 +1,6 @@
 import "./StudentSidebar.css";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useLogout } from "../../hooks/Logout";
-import { useState } from "react";
 import { useNotifications } from "../../hooks/useNotifyEvents";
 import logo from "../../assets/logo.jpg";
 
@@ -11,13 +10,10 @@ const StudentSidebar = () => {
   const { logout } = useLogout();
   const { notifications } = useNotifications();
 
-  const [open, setOpen] = useState(false);
-
   const isActive = (path: string) => location.pathname === path;
 
   const handleNavigate = (path: string) => {
     navigate(path);
-    setOpen(false);
   };
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;

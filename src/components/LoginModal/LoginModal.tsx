@@ -4,7 +4,6 @@ import { useLogin } from "../../hooks/Login";
 import AnimatedAlert from "../AnimatedAlert/AnimatedAlert";
 import { useNavigate } from "react-router-dom";
 import RegisterModal from "../RegisterModal/RegisterModal";
-import ResetPasswordModal from "../ResetPasswordModal/ResetPasswordModal";
 import ForgotPasswordModal from "../ForgotPasswordModal/ForgotPasswordModal";
 
 interface LoginModalProps {

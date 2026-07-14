@@ -84,7 +84,10 @@ const ProgramStudents = () => {
   const { enrollFingerprint, isLoading } = useEnrollFingerprint();
   const isProcessingRecognitionRef = useRef(false);
   const isProcessingEnrollmentRef = useRef(false);
-  const alertTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // NodeJS.Timeout isn't available in a browser/Vite project (it's a Node
+  // type). ReturnType<typeof setTimeout> resolves correctly in both
+  // browser and Node typings.
+  const alertTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showAlert = (message: string, isSuccess: boolean) => {
     if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
@@ -143,11 +146,12 @@ const ProgramStudents = () => {
       setSelectedStudentId(studentId);
       setSelectedFingerId(data.finger_id);
       setShowEnrollmentModal(true);
-    } catch (err: any) {
-      showAlert(
-        `Failed to start enrollment: ${err.response?.data?.detail || err.message || "Unknown error"}`,
-        false,
-      );
+    } catch (err) {
+      const message =
+        axios.isAxiosError(err) ?
+          err.response?.data?.detail || err.message || "Unknown error"
+        : "Unknown error";
+      showAlert(`Failed to start enrollment: ${message}`, false);
     }
   };
 
@@ -194,7 +198,7 @@ const ProgramStudents = () => {
         );
         showAlert("Fingerprint unenrolled successfully!", true);
       }
-    } catch (err: any) {
+    } catch (err) {
       let errorMessage = "Failed to unenroll fingerprint";
       if (axios.isAxiosError(err)) {
         if (err.response)
@@ -214,7 +218,22 @@ const ProgramStudents = () => {
   };
 
   useEffect(() => {
-    setStudents(fetchedStudents);
+    // NOTE: `useProgramStudents` returns its own `Student` type that
+    // doesn't include `year_level` / `finger_id`, so it doesn't structurally
+    // match this file's local `Student` interface. Normalizing here keeps
+    // the page working, but the real fix is to have both files import one
+    // shared `Student` type (e.g. from a `types/student.ts`) so they can't
+    // drift apart like this again.
+    setStudents(
+      fetchedStudents.map((s) => {
+        const partial = s as Partial<Student>;
+        return {
+          ...s,
+          year_level: partial.year_level ?? null,
+          finger_id: partial.finger_id ?? null,
+        } as Student;
+      }),
+    );
   }, [fetchedStudents]);
 
   const updateStudentStatus = (

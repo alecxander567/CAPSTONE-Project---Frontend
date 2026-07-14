@@ -3,6 +3,13 @@ import axios from "axios";
 
 const API_URL = `${import.meta.env.VITE_API_URL}/fingerprints`;
 
+const getErrorMessage = (err: unknown, fallback: string): string => {
+  if (axios.isAxiosError(err) && err.response?.data?.detail) {
+    return String(err.response.data.detail);
+  }
+  return fallback;
+};
+
 export const useAttendance = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -14,12 +21,16 @@ export const useAttendance = () => {
     try {
       const res = await axios.post(`${API_URL}/start-attendance`);
 
-      const modeCheck = await axios.get(`${API_URL}/device-mode`);
+      // Kept as a fire-and-forget check — the response isn't used, but if
+      // you do need the device mode later, capture it with:
+      // const { data: modeCheck } = await axios.get(`${API_URL}/device-mode`);
+      await axios.get(`${API_URL}/device-mode`);
 
       return res.data;
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to start attendance:", err);
-      setError(err.response?.data?.detail || "Failed to start attendance");
+      const message = getErrorMessage(err, "Failed to start attendance");
+      setError(message);
       throw err;
     } finally {
       setLoading(false);
@@ -33,9 +44,10 @@ export const useAttendance = () => {
     try {
       const res = await axios.post(`${API_URL}/stop-attendance`);
       return res.data;
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to stop attendance:", err);
-      setError(err.response?.data?.detail || "Failed to stop attendance");
+      const message = getErrorMessage(err, "Failed to stop attendance");
+      setError(message);
       throw err;
     } finally {
       setLoading(false);

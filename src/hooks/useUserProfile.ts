@@ -92,10 +92,14 @@ export const useUserProfile = () => {
       if (!token) throw new Error("No authentication token found");
 
       // Clean the data - remove undefined, null, and empty strings
-      const filteredPayload: any = {};
-      Object.entries(profileData).forEach(([key, value]) => {
+      const filteredPayload: Partial<ProfileUpdateData> = {};
+      (
+        Object.entries(profileData) as [keyof ProfileUpdateData, unknown][]
+      ).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== "") {
-          filteredPayload[key] = value;
+          // Cast is safe here: `key` is a keyof ProfileUpdateData and
+          // `value` came directly from that same field on profileData.
+          (filteredPayload as Record<string, unknown>)[key] = value;
         }
       });
 

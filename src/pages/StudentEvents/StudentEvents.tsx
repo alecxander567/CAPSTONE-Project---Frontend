@@ -1,7 +1,7 @@
 import { useState } from "react";
 import StudentSidebar from "../../components/StudentSidebar/StudentSidebar";
 import { useEvents } from "../../hooks/useEvents";
-import type { Event } from "../../hooks/useEvents";
+import type { AppEvent } from "../../hooks/useEvents";
 import "./StudentEvents.css";
 
 function StudentEvents() {
@@ -100,7 +100,7 @@ function StudentEvents() {
 
           {filteredEvents.length > 0 && !loading && (
             <div className="events-grid fade-up delay-2">
-              {filteredEvents.map((event: Event) => (
+              {filteredEvents.map((event: AppEvent) => (
                 <div key={event.id} className="event-card">
                   <div className="event-card-header">
                     <div className="event-header-wave"></div>

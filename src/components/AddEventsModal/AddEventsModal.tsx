@@ -38,6 +38,12 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
 }) => {
   const [visible, setVisible] = useState(false);
   const [active, setActive] = useState(false);
+
+  // These initializers only run once per mount. Because the parent now
+  // passes a `key` tied to initialData (see usage note below), React
+  // remounts this component fresh whenever you switch between "add" and
+  // "edit <specific event>", so these always start with the right values
+  // without needing an effect to reset them.
   const [title, setTitle] = useState(initialData?.title || "");
   const [description, setDescription] = useState(
     initialData?.description || "",
@@ -58,26 +64,30 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
       .catch(console.error);
   }, []);
 
-  useEffect(() => {
-    setTitle(initialData?.title || "");
-    setDescription(initialData?.description || "");
-    setEventDate(initialData?.event_date || "");
-    setStartTime(initialData?.start_time || "");
-    setEndTime(initialData?.end_time || "");
-    setLocation(initialData?.location || "");
-    setProgramId(initialData?.program_id ?? null);
-  }, [initialData, show]);
+  // NOTE: the old "reset form fields from initialData" effect has been
+  // removed. That responsibility now lives in the `key` prop the parent
+  // passes to this component (see usage note at the bottom of this file).
 
   useEffect(() => {
-    let timeout: number;
+    let showTimeout: number;
+    let activeTimeout: number;
+    let deactivateTimeout: number;
+    let hideTimeout: number;
+
     if (show) {
-      setVisible(true);
-      timeout = window.setTimeout(() => setActive(true), 10);
+      showTimeout = window.setTimeout(() => setVisible(true), 0);
+      activeTimeout = window.setTimeout(() => setActive(true), 10);
     } else {
-      setActive(false);
-      timeout = window.setTimeout(() => setVisible(false), 300);
+      deactivateTimeout = window.setTimeout(() => setActive(false), 0);
+      hideTimeout = window.setTimeout(() => setVisible(false), 300);
     }
-    return () => clearTimeout(timeout);
+
+    return () => {
+      clearTimeout(showTimeout);
+      clearTimeout(activeTimeout);
+      clearTimeout(deactivateTimeout);
+      clearTimeout(hideTimeout);
+    };
   }, [show]);
 
   const handleSubmit = (e: FormEvent) => {
@@ -266,3 +276,25 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
 };
 
 export default AddEventModal;
+
+/*
+USAGE NOTE — required change in the parent component:
+
+Give the modal a `key` derived from which record it's editing (or "new"
+when adding). This tells React to treat "editing event 5" and "editing
+event 8" (or "adding a new event") as different component instances, so
+it unmounts/remounts and re-runs the useState initializers with fresh
+values — replacing the old effect-based reset:
+
+  <AddEventModal
+    key={initialData?.id ?? "new"}
+    show={show}
+    onClose={onClose}
+    onSave={onSave}
+    initialData={initialData}
+  />
+
+Without this key, switching between editing different events (or from
+edit back to add) will keep showing stale field values, since there's no
+longer an effect syncing state from props.
+*/

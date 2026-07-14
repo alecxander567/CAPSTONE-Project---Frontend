@@ -21,6 +21,13 @@ const getAuthHeaders = () => ({
   Authorization: `Bearer ${localStorage.getItem("token")}`,
 });
 
+const getErrorMessage = (err: unknown, fallback: string): string => {
+  if (axios.isAxiosError(err) && err.response?.data?.detail) {
+    return String(err.response.data.detail);
+  }
+  return fallback;
+};
+
 export const usePrograms = () => {
   const [programs, setPrograms] = useState<ProgramData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -80,8 +87,8 @@ export const useAddProgram = () => {
         { withCredentials: true, headers: getAuthHeaders() },
       );
       return data;
-    } catch (err: any) {
-      const message = err.response?.data?.detail ?? "Something went wrong";
+    } catch (err) {
+      const message = getErrorMessage(err, "Something went wrong");
       setError(message);
       throw err;
     } finally {
@@ -107,8 +114,8 @@ export const useEditProgram = () => {
         { withCredentials: true, headers: getAuthHeaders() },
       );
       return data;
-    } catch (err: any) {
-      const message = err.response?.data?.detail ?? "Something went wrong";
+    } catch (err) {
+      const message = getErrorMessage(err, "Something went wrong");
       setError(message);
       throw err;
     } finally {
@@ -132,8 +139,8 @@ export const useDeleteProgram = () => {
         withCredentials: true,
         headers: getAuthHeaders(),
       });
-    } catch (err: any) {
-      const message = err.response?.data?.detail ?? "Something went wrong";
+    } catch (err) {
+      const message = getErrorMessage(err, "Something went wrong");
       setError(message);
       throw err;
     } finally {

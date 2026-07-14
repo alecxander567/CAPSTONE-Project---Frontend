@@ -1,12 +1,13 @@
 import "./StudentDashboard.css";
 import StudentSidebar from "../../components/StudentSidebar/StudentSidebar";
 import { useEvents } from "../../hooks/useEvents";
+import type { AppEvent } from "../../hooks/useEvents";
 import { useAttendancePerProgram } from "../../hooks/useAttendancePerProgram";
 import { useUserProfile } from "../../hooks/useUserProfile";
 import { requestDeviceToken, listenMessages } from "../../firebase";
 import { useEffect } from "react";
 
-function getUpcomingEvent(events: any[]) {
+function getUpcomingEvent(events: AppEvent[]) {
   const now = new Date();
   return (
     events
@@ -21,7 +22,7 @@ function getUpcomingEvent(events: any[]) {
   );
 }
 
-function generateCalendar(events: any[]) {
+function generateCalendar(events: AppEvent[]) {
   const now = new Date();
   const year = now.getFullYear();
   const month = now.getMonth();

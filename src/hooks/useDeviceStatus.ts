@@ -11,7 +11,7 @@ export const useDeviceStatus = () => {
         );
         const data = await res.json();
         setConnected(data.connected);
-      } catch (error) {
+      } catch {
         setConnected(false);
       }
     };

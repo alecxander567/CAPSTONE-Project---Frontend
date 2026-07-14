@@ -22,6 +22,8 @@ type EnrollmentStepUI = {
   status: "waiting" | "active" | "completed" | "failed";
 };
 
+const TOTAL_TIMEOUT_SECONDS = 60;
+
 const EnrollmentModal = ({
   isOpen,
   onClose,
@@ -30,11 +32,15 @@ const EnrollmentModal = ({
   updateStatus,
 }: EnrollmentModalProps) => {
   const [currentStep, setCurrentStep] = useState(0);
-  const [timeoutSeconds, setTimeoutSeconds] = useState(60);
+  const [timeoutSeconds, setTimeoutSeconds] = useState(TOTAL_TIMEOUT_SECONDS);
+  // Replaces the old console.log calls — shown in the modal so you can see
+  // what's happening without opening devtools.
+  const [statusMessage, setStatusMessage] = useState("");
 
   const pollRef = useRef<number | null>(null);
   const timeoutRef = useRef<number | null>(null);
   const countdownRef = useRef<number | null>(null);
+  const resetRef = useRef<number | null>(null);
 
   const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -89,6 +95,10 @@ const EnrollmentModal = ({
       clearInterval(countdownRef.current);
       countdownRef.current = null;
     }
+    if (resetRef.current) {
+      clearTimeout(resetRef.current);
+      resetRef.current = null;
+    }
   }, []);
 
   const updateStepUI = useCallback((step: string) => {
@@ -116,7 +126,7 @@ const EnrollmentModal = ({
         failed = true;
         break;
       default:
-        console.warn("Unknown step:", step);
+        setStatusMessage(`Unknown step received: ${step}`);
         stepIndex = 0;
         break;
     }
@@ -139,8 +149,6 @@ const EnrollmentModal = ({
           newStatus = "waiting";
         }
 
-        console.log(`  Step ${idx}: ${newStatus}`);
-
         return {
           ...s,
           status: newStatus,
@@ -159,40 +167,46 @@ const EnrollmentModal = ({
   }, [currentStep]);
 
   useEffect(() => {
-    console.log("🎬 Modal isOpen changed:", isOpen);
-
     if (!isOpen) {
       clearTimers();
-      setCurrentStep(0);
-      setSteps((prev) =>
-        prev.map((s) => ({
-          ...s,
-          status: "waiting",
-        })),
-      );
-      return;
+      // Deferred so we're not calling setState synchronously in the
+      // effect body — runs on the next tick instead.
+      resetRef.current = window.setTimeout(() => {
+        setCurrentStep(0);
+        setSteps((prev) =>
+          prev.map((s) => ({
+            ...s,
+            status: "waiting",
+          })),
+        );
+        setStatusMessage("");
+      }, 0);
+
+      return () => {
+        if (resetRef.current) {
+          clearTimeout(resetRef.current);
+          resetRef.current = null;
+        }
+      };
     }
 
     clearTimers();
-    setTimeoutSeconds(60);
-    setCurrentStep(0);
 
-    console.log("⏱️ Starting countdown timer...");
+    resetRef.current = window.setTimeout(() => {
+      setTimeoutSeconds(TOTAL_TIMEOUT_SECONDS);
+      setCurrentStep(0);
+      setStatusMessage("Waiting for fingerprint sensor...");
+    }, 0);
+
     countdownRef.current = window.setInterval(() => {
-      setTimeoutSeconds((prev) => {
-        const newValue = prev <= 1 ? 0 : prev - 1;
-        if (newValue <= 10 && newValue > 0) {
-          return;
-        }
-        return newValue;
-      });
+      setTimeoutSeconds((prev) => (prev <= 1 ? 0 : prev - 1));
     }, 1000);
 
     timeoutRef.current = window.setTimeout(() => {
       updateStatus(userId, "failed");
       onClose?.();
       clearTimers();
-    }, 60000);
+    }, TOTAL_TIMEOUT_SECONDS * 1000);
 
     pollRef.current = window.setInterval(async () => {
       try {
@@ -207,19 +221,21 @@ const EnrollmentModal = ({
         if (status === "enrolled") {
           clearTimers();
           updateStatus(userId, "enrolled");
+          setStatusMessage("Fingerprint enrolled successfully!");
           setTimeout(() => onClose?.(), 800);
         } else if (status === "failed") {
           clearTimers();
           updateStatus(userId, "failed");
+          setStatusMessage("Enrollment failed. Please try again.");
           setTimeout(() => onClose?.(), 800);
         }
       } catch (err) {
         console.error("Enrollment polling error:", err);
+        setStatusMessage("Connection error while checking status...");
       }
     }, 500);
 
     return () => {
-      console.log("Cleanup - clearing all timers");
       clearTimers();
     };
   }, [
@@ -244,6 +260,18 @@ const EnrollmentModal = ({
           <h2>Fingerprint Enrollment</h2>
           <p>Please follow the steps below</p>
 
+          <div className="enrollment-timer">
+            <i className="bi bi-stopwatch"></i>
+            <span>Time remaining: {timeoutSeconds}s</span>
+          </div>
+
+          {statusMessage && (
+            <div className="enrollment-status-message">
+              <i className="bi bi-info-circle"></i>
+              <span>{statusMessage}</span>
+            </div>
+          )}
+
           {timeoutSeconds <= 10 && timeoutSeconds > 0 && (
             <div className="timeout-warning">
               <i className="bi bi-exclamation-triangle"></i>
@@ -263,7 +291,9 @@ const EnrollmentModal = ({
           {steps.map((step, index) => (
             <div
               key={step.id}
-              ref={(el) => (stepRefs.current[index] = el)}
+              ref={(el) => {
+                stepRefs.current[index] = el;
+              }}
               className={`enrollment-step ${step.status}`}>
               <div className="step-indicator">
                 {step.status === "completed" ?

@@ -6,6 +6,7 @@ import { usePrograms, useDeleteProgram } from "../../hooks/useProgram";
 import type { ProgramData } from "../../hooks/useProgram";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import axios from "axios";
 import SuccessAlert from "../../components/SuccessAlert/SuccessAlert";
 import ErrorAlert from "../../components/SuccessAlert/ErrorAlert";
 
@@ -41,7 +42,15 @@ const Programs = () => {
   }, [programList, loading]);
 
   useEffect(() => {
-    setProgramList(programs.filter((p) => p.code !== "OSA"));
+    // Deferred so we're not calling setState synchronously in the effect
+    // body — runs on the next tick instead. programList is seeded from
+    // `programs` here but then locally mutated by add/edit/delete
+    // handlers below, so it can't simply be a derived/computed value.
+    const id = window.setTimeout(() => {
+      setProgramList(programs.filter((p) => p.code !== "OSA"));
+    }, 0);
+
+    return () => clearTimeout(id);
   }, [programs]);
 
   const handleProgramAdded = (newProgram: ProgramData) => {
@@ -64,10 +73,12 @@ const Programs = () => {
       setProgramList((prev) => prev.filter((p) => p.id !== deleteTarget.id));
       setAlertMessage("Program deleted successfully!");
       setShowSuccess(true);
-    } catch (err: any) {
-      setAlertMessage(
-        err?.response?.data?.detail ?? "Failed to delete program.",
-      );
+    } catch (err) {
+      const message =
+        axios.isAxiosError(err) && err.response?.data?.detail ?
+          String(err.response.data.detail)
+        : "Failed to delete program.";
+      setAlertMessage(message);
       setShowError(true);
     }
   };

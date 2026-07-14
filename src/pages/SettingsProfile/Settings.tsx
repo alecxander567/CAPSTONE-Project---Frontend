@@ -8,6 +8,16 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import "./Settings.css";
 
+interface ProfileUpdatePayload {
+  student_id_no: string;
+  first_name: string;
+  last_name: string;
+  mobile_phone: string;
+  middle_initial?: string;
+  program?: string;
+  year_level?: string;
+}
+
 function Settings() {
   const {
     profile,
@@ -69,8 +79,12 @@ function Settings() {
   }, [loading, navigate]);
 
   useEffect(() => {
-    if (profile) {
-      const isAdminUser = profile?.role?.toUpperCase() === "ADMIN";
+    if (!profile) return;
+
+    // Deferred so we're not calling setState synchronously in the effect
+    // body — runs on the next tick instead.
+    const id = window.setTimeout(() => {
+      const isAdminUser = profile.role?.toUpperCase() === "ADMIN";
       setFormData({
         student_id_no: profile.student_id_no || "",
         first_name: profile.first_name || "",
@@ -80,11 +94,13 @@ function Settings() {
         // For admin, these fields are intentionally empty
         program:
           isAdminUser ? ""
-          : typeof profile.program === "object" ? (profile.program as any)?.code
+          : typeof profile.program === "object" ? profile.program?.code
           : profile.program || "",
         year_level: isAdminUser ? "" : profile.year_level || "",
       });
-    }
+    }, 0);
+
+    return () => clearTimeout(id);
   }, [profile]);
 
   const handleEditToggle = () => {
@@ -98,7 +114,7 @@ function Settings() {
         mobile_phone: profile.mobile_phone || "",
         program:
           isAdminUser ? ""
-          : typeof profile.program === "object" ? (profile.program as any)?.code
+          : typeof profile.program === "object" ? profile.program?.code
           : profile.program || "",
         year_level: isAdminUser ? "" : profile.year_level || "",
       });
@@ -120,7 +136,7 @@ function Settings() {
 
     try {
       // Prepare data correctly for backend
-      const updateData: any = {
+      const updateData: ProfileUpdatePayload = {
         student_id_no: formData.student_id_no,
         first_name: formData.first_name,
         last_name: formData.last_name,

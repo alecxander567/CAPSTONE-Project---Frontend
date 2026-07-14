@@ -58,6 +58,7 @@ const RecognitionModal = ({
   const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
   const pollRef = useRef<number | null>(null);
   const timeoutRef = useRef<number | null>(null);
+  const resetRef = useRef<number | null>(null);
   const hasCalledRef = useRef(false);
   const isCompletedRef = useRef(false); // ✅ Add this to track completion
 
@@ -69,6 +70,10 @@ const RecognitionModal = ({
     if (timeoutRef.current !== null) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
+    }
+    if (resetRef.current !== null) {
+      clearTimeout(resetRef.current);
+      resetRef.current = null;
     }
   };
 
@@ -138,9 +143,20 @@ const RecognitionModal = ({
       // Reset guards when modal closes
       hasCalledRef.current = false;
       isCompletedRef.current = false;
-      setCurrentStep(0);
-      setSteps((prev) => prev.map((s) => ({ ...s, status: "waiting" })));
-      return;
+
+      // Deferred so we're not calling setState synchronously in the
+      // effect body — runs on the next tick instead.
+      resetRef.current = window.setTimeout(() => {
+        setCurrentStep(0);
+        setSteps((prev) => prev.map((s) => ({ ...s, status: "waiting" })));
+      }, 0);
+
+      return () => {
+        if (resetRef.current !== null) {
+          clearTimeout(resetRef.current);
+          resetRef.current = null;
+        }
+      };
     }
 
     if (!userId) return;
@@ -269,7 +285,9 @@ const RecognitionModal = ({
           {steps.map((step, index) => (
             <div
               key={step.id}
-              ref={(el) => (stepRefs.current[index] = el)}
+              ref={(el) => {
+                stepRefs.current[index] = el;
+              }}
               className={`enrollment-step ${step.status}`}>
               <div className="step-indicator">
                 {step.status === "completed" ?

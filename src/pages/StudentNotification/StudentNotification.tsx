@@ -53,13 +53,17 @@ const StudentNotifications = () => {
       } else if (deleteTarget.id) {
         await deleteNotification(deleteTarget.id);
       }
-    } catch {}
+    } catch (err) {
+      console.error("Failed to delete notification(s):", err);
+    }
   };
 
   const handleMarkAllAsRead = async () => {
     try {
       await markAllAsRead();
-    } catch {}
+    } catch (err) {
+      console.error("Failed to mark all notifications as read:", err);
+    }
   };
 
   return (
