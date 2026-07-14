@@ -123,12 +123,26 @@ const ProgramStudents = () => {
     return () => observer.disconnect();
   }, [students, loading]);
 
+  // FIXED: previously this only checked first_name and last_name
+  // *separately*, so typing a full name like "Juan Dela Cruz" never
+  // matched anything (neither field alone contains the whole string).
+  // It also called .toLowerCase() directly on possibly-undefined fields,
+  // which throws and can blank out the whole list if any student record
+  // is missing a name/ID. Both are fixed below.
   const filteredStudents = students.filter((student: Student) => {
-    const query = searchQuery.toLowerCase();
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return true;
+
+    const firstName = student.first_name?.toLowerCase() ?? "";
+    const lastName = student.last_name?.toLowerCase() ?? "";
+    const fullName = `${firstName} ${lastName}`.trim();
+    const idNo = student.student_id_no?.toLowerCase() ?? "";
+
     return (
-      student.first_name.toLowerCase().includes(query) ||
-      student.last_name.toLowerCase().includes(query) ||
-      student.student_id_no.toLowerCase().includes(query)
+      firstName.includes(query) ||
+      lastName.includes(query) ||
+      fullName.includes(query) ||
+      idNo.includes(query)
     );
   });
 
@@ -355,7 +369,7 @@ const ProgramStudents = () => {
                   <i className="bi bi-search"></i>
                   <input
                     type="text"
-                    placeholder="Search by name, ID, or email..."
+                    placeholder="Search by name or ID..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
