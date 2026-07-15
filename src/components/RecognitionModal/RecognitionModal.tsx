@@ -4,7 +4,12 @@ import "../EnrollmentModal/EnrollmentModal.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 const RECOGNITION_TIMEOUT = 10000;
+const RECOGNITION_TIMEOUT_SECONDS = RECOGNITION_TIMEOUT / 1000;
 const POLL_INTERVAL = 500;
+
+// Same ring geometry as EnrollmentModal so both modals' timers look identical.
+const RING_RADIUS = 34;
+const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
 interface RecognitionModalProps {
   isOpen: boolean;
@@ -31,6 +36,9 @@ const RecognitionModal = ({
   onRecognized,
 }: RecognitionModalProps) => {
   const [currentStep, setCurrentStep] = useState(0);
+  const [timeoutSeconds, setTimeoutSeconds] = useState(
+    RECOGNITION_TIMEOUT_SECONDS,
+  );
   const [steps, setSteps] = useState<StepUI[]>([
     {
       id: 0,
@@ -58,6 +66,7 @@ const RecognitionModal = ({
   const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
   const pollRef = useRef<number | null>(null);
   const timeoutRef = useRef<number | null>(null);
+  const countdownRef = useRef<number | null>(null);
   const resetRef = useRef<number | null>(null);
   const hasCalledRef = useRef(false);
   const isCompletedRef = useRef(false); // ✅ Add this to track completion
@@ -70,6 +79,10 @@ const RecognitionModal = ({
     if (timeoutRef.current !== null) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
+    }
+    if (countdownRef.current !== null) {
+      clearInterval(countdownRef.current);
+      countdownRef.current = null;
     }
     if (resetRef.current !== null) {
       clearTimeout(resetRef.current);
@@ -149,6 +162,7 @@ const RecognitionModal = ({
       resetRef.current = window.setTimeout(() => {
         setCurrentStep(0);
         setSteps((prev) => prev.map((s) => ({ ...s, status: "waiting" })));
+        setTimeoutSeconds(RECOGNITION_TIMEOUT_SECONDS);
       }, 0);
 
       return () => {
@@ -162,7 +176,17 @@ const RecognitionModal = ({
     if (!userId) return;
 
     let targetFingerId: number | null = null;
-    let isResolved = false; // ✅ Local flag to prevent multiple resolutions
+    let isResolved = false;
+
+    // Deferred so we're not calling setState synchronously in the effect
+    // body — runs on the next tick instead, same pattern used on close.
+    window.setTimeout(() => {
+      setTimeoutSeconds(RECOGNITION_TIMEOUT_SECONDS);
+    }, 0);
+
+    countdownRef.current = window.setInterval(() => {
+      setTimeoutSeconds((prev) => (prev <= 1 ? 0 : prev - 1));
+    }, 1000);
 
     const startRecognition = async () => {
       try {
@@ -265,13 +289,55 @@ const RecognitionModal = ({
 
   const progress = ((currentStep + 1) / steps.length) * 100;
 
+  // Ring fill drains from full to empty as time runs out.
+  const timeFraction = timeoutSeconds / RECOGNITION_TIMEOUT_SECONDS;
+  const ringOffset = RING_CIRCUMFERENCE * (1 - timeFraction);
+  const timerState =
+    timeoutSeconds <= 3 ? "critical"
+    : timeoutSeconds <= 5 ? "warning"
+    : "normal";
+
   return (
     <div className="enrollment-modal-overlay">
       <div className="enrollment-modal-content">
         <div className="enrollment-header">
-          <i className="bi bi-fingerprint enrollment-icon"></i>
-          <h2>Fingerprint Recognition</h2>
-          <p>Please place your finger on the sensor</p>
+          <div className="enrollment-header-top">
+            <div className="enrollment-header-titles">
+              <i className="bi bi-fingerprint enrollment-icon"></i>
+              <h2>Fingerprint Recognition</h2>
+              <p>Please place your finger on the sensor</p>
+            </div>
+
+            <div
+              className="enrollment-timer-ring"
+              data-state={timerState}
+              role="timer"
+              aria-live="polite"
+              aria-label={`${timeoutSeconds} seconds remaining`}>
+              <svg viewBox="0 0 80 80" className="timer-ring-svg">
+                <circle
+                  className="timer-ring-track"
+                  cx="40"
+                  cy="40"
+                  r={RING_RADIUS}
+                />
+                <circle
+                  className="timer-ring-progress"
+                  cx="40"
+                  cy="40"
+                  r={RING_RADIUS}
+                  style={{
+                    strokeDasharray: RING_CIRCUMFERENCE,
+                    strokeDashoffset: ringOffset,
+                  }}
+                />
+              </svg>
+              <div className="timer-ring-label">
+                <span className="timer-ring-seconds">{timeoutSeconds}</span>
+                <span className="timer-ring-unit">sec</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="progress-bar-container">

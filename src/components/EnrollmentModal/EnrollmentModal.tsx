@@ -22,7 +22,11 @@ type EnrollmentStepUI = {
   status: "waiting" | "active" | "completed" | "failed";
 };
 
-const TOTAL_TIMEOUT_SECONDS = 60;
+const TOTAL_TIMEOUT_SECONDS = 30;
+
+// Countdown ring geometry — radius chosen to keep the SVG viewBox tidy at 80x80.
+const RING_RADIUS = 34;
+const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
 const EnrollmentModal = ({
   isOpen,
@@ -252,30 +256,60 @@ const EnrollmentModal = ({
 
   const progress = ((currentStep + 1) / steps.length) * 100;
 
+  // Ring fill drains from full to empty as time runs out.
+  const timeFraction = timeoutSeconds / TOTAL_TIMEOUT_SECONDS;
+  const ringOffset = RING_CIRCUMFERENCE * (1 - timeFraction);
+  const timerState =
+    timeoutSeconds <= 5 ? "critical"
+    : timeoutSeconds <= 10 ? "warning"
+    : "normal";
+
   return (
     <div className="enrollment-modal-overlay">
       <div className="enrollment-modal-content">
         <div className="enrollment-header">
-          <i className="bi bi-fingerprint enrollment-icon"></i>
-          <h2>Fingerprint Enrollment</h2>
-          <p>Please follow the steps below</p>
+          <div className="enrollment-header-top">
+            <div className="enrollment-header-titles">
+              <i className="bi bi-fingerprint enrollment-icon"></i>
+              <h2>Fingerprint Enrollment</h2>
+              <p>Please follow the steps below</p>
+            </div>
 
-          <div className="enrollment-timer">
-            <i className="bi bi-stopwatch"></i>
-            <span>Time remaining: {timeoutSeconds}s</span>
+            <div
+              className="enrollment-timer-ring"
+              data-state={timerState}
+              role="timer"
+              aria-live="polite"
+              aria-label={`${timeoutSeconds} seconds remaining`}>
+              <svg viewBox="0 0 80 80" className="timer-ring-svg">
+                <circle
+                  className="timer-ring-track"
+                  cx="40"
+                  cy="40"
+                  r={RING_RADIUS}
+                />
+                <circle
+                  className="timer-ring-progress"
+                  cx="40"
+                  cy="40"
+                  r={RING_RADIUS}
+                  style={{
+                    strokeDasharray: RING_CIRCUMFERENCE,
+                    strokeDashoffset: ringOffset,
+                  }}
+                />
+              </svg>
+              <div className="timer-ring-label">
+                <span className="timer-ring-seconds">{timeoutSeconds}</span>
+                <span className="timer-ring-unit">sec</span>
+              </div>
+            </div>
           </div>
 
           {statusMessage && (
             <div className="enrollment-status-message">
               <i className="bi bi-info-circle"></i>
               <span>{statusMessage}</span>
-            </div>
-          )}
-
-          {timeoutSeconds <= 10 && timeoutSeconds > 0 && (
-            <div className="timeout-warning">
-              <i className="bi bi-exclamation-triangle"></i>
-              <span>Auto-closing in {timeoutSeconds}s...</span>
             </div>
           )}
         </div>
