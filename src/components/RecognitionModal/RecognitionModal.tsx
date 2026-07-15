@@ -3,7 +3,7 @@ import axios from "axios";
 import "../EnrollmentModal/EnrollmentModal.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
-const RECOGNITION_TIMEOUT = 10000;
+const RECOGNITION_TIMEOUT = 15000;
 const RECOGNITION_TIMEOUT_SECONDS = RECOGNITION_TIMEOUT / 1000;
 const POLL_INTERVAL = 500;
 
@@ -69,7 +69,7 @@ const RecognitionModal = ({
   const countdownRef = useRef<number | null>(null);
   const resetRef = useRef<number | null>(null);
   const hasCalledRef = useRef(false);
-  const isCompletedRef = useRef(false); // ✅ Add this to track completion
+  const isCompletedRef = useRef(false); 
 
   const clearTimers = () => {
     if (pollRef.current !== null) {
@@ -176,7 +176,7 @@ const RecognitionModal = ({
     if (!userId) return;
 
     let targetFingerId: number | null = null;
-    let isResolved = false;
+    let isResolved = false; // ✅ Local flag to prevent multiple resolutions
 
     // Deferred so we're not calling setState synchronously in the effect
     // body — runs on the next tick instead, same pattern used on close.

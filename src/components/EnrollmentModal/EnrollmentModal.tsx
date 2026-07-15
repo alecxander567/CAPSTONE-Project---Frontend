@@ -22,7 +22,7 @@ type EnrollmentStepUI = {
   status: "waiting" | "active" | "completed" | "failed";
 };
 
-const TOTAL_TIMEOUT_SECONDS = 30;
+const TOTAL_TIMEOUT_SECONDS = 35;
 
 // Countdown ring geometry — radius chosen to keep the SVG viewBox tidy at 80x80.
 const RING_RADIUS = 34;
@@ -199,7 +199,7 @@ const EnrollmentModal = ({
     resetRef.current = window.setTimeout(() => {
       setTimeoutSeconds(TOTAL_TIMEOUT_SECONDS);
       setCurrentStep(0);
-      setStatusMessage("Waiting for fingerprint sensor...");
+      setStatusMessage("Waiting for fingerprint to scan...");
     }, 0);
 
     countdownRef.current = window.setInterval(() => {
