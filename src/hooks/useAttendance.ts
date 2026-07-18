@@ -14,14 +14,18 @@ export const useAttendance = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const startAttendance = async () => {
+  const startAttendance = async (eventId: number) => {
     setLoading(true);
     setError(null);
 
     try {
       // Backend enforces the mode guard (ensure_device_free) and returns
       // a 409 with a descriptive detail message if another mode is active.
-      const res = await axios.post(`${API_URL}/start-attendance`);
+      // event_id pins the fleet to this specific event so mark-attendance
+      // knows exactly where to write, instead of guessing by date.
+      const res = await axios.post(`${API_URL}/start-attendance`, {
+        event_id: eventId,
+      });
       return res.data;
     } catch (err) {
       console.error("Failed to start attendance:", err);

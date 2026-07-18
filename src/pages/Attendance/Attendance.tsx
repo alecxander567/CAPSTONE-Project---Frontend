@@ -269,8 +269,9 @@ function Attendance() {
                   }}
                   disabled={attendanceLoading}
                   onClick={async () => {
+                    if (!eventId) return;
                     try {
-                      await startAttendance();
+                      await startAttendance(Number(eventId));
                       setAttendanceActive(true);
                     } catch (err) {
                       console.error("Failed to start attendance:", err);
