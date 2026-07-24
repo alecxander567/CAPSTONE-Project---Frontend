@@ -115,39 +115,52 @@ Focus on:
 
 Return ONLY valid JSON, no markdown or extra text.`;
 
-        // Use gemini-2.5-pro (stable and available model)
-        const model = "gemini-2.5-pro";
+        // Try multiple models in case of quota limits
+        const models = ["gemini-2.5-pro", "gemini-2.0-flash", "gemini-2.5-flash-lite"];
+        let response: Response | null = null;
+        let lastError: string | null = null;
 
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              contents: [
-                {
-                  parts: [
+        for (const model of models) {
+          try {
+            response = await fetch(
+              `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  contents: [
                     {
-                      text: prompt,
+                      parts: [
+                        {
+                          text: prompt,
+                        },
+                      ],
                     },
                   ],
-                },
-              ],
-              generationConfig: {
-                temperature: 0.7,
-                maxOutputTokens: 1024,
+                  generationConfig: {
+                    temperature: 0.7,
+                    maxOutputTokens: 1024,
+                  },
+                }),
               },
-            }),
-          },
-        );
+            );
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error("AI API Error:", response.status, errorText);
+            if (response.ok) break;
+
+            const errorText = await response.text();
+            lastError = `Model ${model}: ${response.status} - ${errorText}`;
+            console.warn(lastError);
+          } catch (err) {
+            lastError = `Model ${model}: ${err instanceof Error ? err.message : "Network error"}`;
+            console.warn(lastError);
+          }
+        }
+
+        if (!response || !response.ok) {
           throw new Error(
-            `AI API error (${response.status}): ${response.statusText}`,
+            `All models failed. Last error: ${lastError}. You may have exceeded your free tier quota. Please check your Google Cloud Console billing or wait 24 hours for quota reset.`,
           );
         }
 
