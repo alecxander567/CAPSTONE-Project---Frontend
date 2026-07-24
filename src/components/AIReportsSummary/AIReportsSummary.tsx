@@ -115,8 +115,17 @@ Focus on:
 
 Return ONLY valid JSON, no markdown or extra text.`;
 
-        // Try multiple models in case of quota limits
-        const models = ["gemini-2.5-pro", "gemini-2.0-flash", "gemini-2.5-flash-lite"];
+        // Try multiple models in case of quota limits.
+        // NOTE: gemini-2.0-flash was shut down by Google, and
+        // gemini-2.5-flash-lite is no longer issued to new API keys — that's
+        // why both were failing. Using currently-served models below, with
+        // "latest" aliases as a safety net so this list doesn't silently
+        // go stale again the next time Google renames/retires a model.
+        const models = [
+          "gemini-2.5-pro",
+          "gemini-2.5-flash",
+          "gemini-flash-latest",
+        ];
         let response: Response | null = null;
         let lastError: string | null = null;
 
