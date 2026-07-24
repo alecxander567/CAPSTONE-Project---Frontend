@@ -107,7 +107,7 @@ Focus on:
 Return ONLY valid JSON, no markdown or extra text.`;
 
         const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`,
+          `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`,
           {
             method: "POST",
             headers: {
@@ -132,7 +132,9 @@ Return ONLY valid JSON, no markdown or extra text.`;
         );
 
         if (!response.ok) {
-          throw new Error("Failed to fetch AI insights");
+          const errorText = await response.text();
+          console.error("AI API Error:", response.status, errorText);
+          throw new Error(`AI API error (${response.status}): ${response.statusText}`);
         }
 
         const result = await response.json();
