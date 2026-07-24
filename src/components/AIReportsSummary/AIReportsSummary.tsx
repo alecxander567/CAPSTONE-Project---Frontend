@@ -56,13 +56,22 @@ export default function AIReportsSummary({
         const totalStudents = allStudents.length;
         const totalEvents = events.length;
         const avgAttendance =
-          allStudents.reduce((sum, s) => sum + (s.present / s.total_events || 0), 0) /
-          totalStudents;
-        const atRiskStudents = allStudents.filter((s) => s.absences >= 3).length;
-        const perfectAttendance = allStudents.filter((s) => s.absences === 0).length;
+          allStudents.reduce(
+            (sum, s) => sum + (s.present / s.total_events || 0),
+            0,
+          ) / totalStudents;
+        const atRiskStudents = allStudents.filter(
+          (s) => s.absences >= 3,
+        ).length;
+        const perfectAttendance = allStudents.filter(
+          (s) => s.absences === 0,
+        ).length;
 
         const programStats = programAttendanceData
-          .map((p) => `${p.program}: ${p.percentage}% attendance (${p.present}/${p.total_students})`)
+          .map(
+            (p) =>
+              `${p.program}: ${p.percentage}% attendance (${p.present}/${p.total_students})`,
+          )
           .join("\n");
 
         const eventStats = eventAttendanceData
@@ -106,35 +115,61 @@ Focus on:
 
 Return ONLY valid JSON, no markdown or extra text.`;
 
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              contents: [
-                {
-                  parts: [
+        // Try gemini-1.5-flash first, fallback to gemini-1.5-pro
+        const models = ["gemini-1.5-flash", "gemini-1.5-pro"];
+        let response;
+        let lastError;
+
+        for (const model of models) {
+          try {
+            response = await fetch(
+              `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  contents: [
                     {
-                      text: prompt,
+                      parts: [
+                        {
+                          text: prompt,
+                        },
+                      ],
                     },
                   ],
-                },
-              ],
-              generationConfig: {
-                temperature: 0.7,
-                maxOutputTokens: 1024,
+                  generationConfig: {
+                    temperature: 0.7,
+                    maxOutputTokens: 1024,
+                  },
+                }),
               },
-            }),
-          },
-        );
+            );
+
+            if (response.ok) break;
+
+            const errorText = await response.text();
+            lastError = `Model ${model}: ${response.status} - ${errorText}`;
+            console.warn(lastError);
+          } catch (err) {
+            lastError = `Model ${model}: ${err instanceof Error ? err.message : "Network error"}`;
+            console.warn(lastError);
+          }
+        }
+
+        if (!response || !response.ok) {
+          throw new Error(
+            `All models failed. Last error: ${lastError}. Please enable Generative Language API in Google Cloud Console.`,
+          );
+        }
 
         if (!response.ok) {
           const errorText = await response.text();
           console.error("AI API Error:", response.status, errorText);
-          throw new Error(`AI API error (${response.status}): ${response.statusText}`);
+          throw new Error(
+            `AI API error (${response.status}): ${response.statusText}`,
+          );
         }
 
         const result = await response.json();
@@ -153,7 +188,9 @@ Return ONLY valid JSON, no markdown or extra text.`;
           throw new Error("No response from AI");
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to generate insights");
+        setError(
+          err instanceof Error ? err.message : "Failed to generate insights",
+        );
       } finally {
         setLoading(false);
       }
@@ -236,7 +273,9 @@ Return ONLY valid JSON, no markdown or extra text.`;
 
       {!loading && !error && insights.length === 0 && (
         <div className="text-center py-5 text-muted">
-          <i className="bi bi-inbox" style={{ fontSize: "2rem", opacity: 0.3 }}></i>
+          <i
+            className="bi bi-inbox"
+            style={{ fontSize: "2rem", opacity: 0.3 }}></i>
           <p className="mt-2 small">No insights available yet</p>
         </div>
       )}
@@ -254,9 +293,14 @@ Return ONLY valid JSON, no markdown or extra text.`;
               <div className="ai-insight-header">
                 <i
                   className={`bi ${getIcon(insight.type)} me-2`}
-                  style={{ color: getTypeColor(insight.type), fontSize: "1.1rem" }}
+                  style={{
+                    color: getTypeColor(insight.type),
+                    fontSize: "1.1rem",
+                  }}
                 />
-                <h6 className="ai-insight-title" style={{ color: getTypeColor(insight.type), margin: 0 }}>
+                <h6
+                  className="ai-insight-title"
+                  style={{ color: getTypeColor(insight.type), margin: 0 }}>
                   {insight.title}
                 </h6>
               </div>
