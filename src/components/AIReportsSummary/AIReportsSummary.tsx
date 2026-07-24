@@ -115,54 +115,33 @@ Focus on:
 
 Return ONLY valid JSON, no markdown or extra text.`;
 
-        // Try gemini-1.5-flash first, fallback to gemini-1.5-pro
-        const models = ["gemini-1.5-flash", "gemini-1.5-pro"];
-        let response;
-        let lastError;
+        // Use gemini-2.5-flash (latest stable model from available models list)
+        const model = "gemini-2.5-flash";
 
-        for (const model of models) {
-          try {
-            response = await fetch(
-              `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  contents: [
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              contents: [
+                {
+                  parts: [
                     {
-                      parts: [
-                        {
-                          text: prompt,
-                        },
-                      ],
+                      text: prompt,
                     },
                   ],
-                  generationConfig: {
-                    temperature: 0.7,
-                    maxOutputTokens: 1024,
-                  },
-                }),
+                },
+              ],
+              generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 1024,
               },
-            );
-
-            if (response.ok) break;
-
-            const errorText = await response.text();
-            lastError = `Model ${model}: ${response.status} - ${errorText}`;
-            console.warn(lastError);
-          } catch (err) {
-            lastError = `Model ${model}: ${err instanceof Error ? err.message : "Network error"}`;
-            console.warn(lastError);
-          }
-        }
-
-        if (!response || !response.ok) {
-          throw new Error(
-            `All models failed. Last error: ${lastError}. Please enable Generative Language API in Google Cloud Console.`,
-          );
-        }
+            }),
+          },
+        );
 
         if (!response.ok) {
           const errorText = await response.text();
