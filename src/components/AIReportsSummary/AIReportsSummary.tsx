@@ -113,6 +113,8 @@ Focus on:
 4. At-risk student interventions
 5. Overall system improvements
 
+Keep every "suggestion" a management or administrative action — things a coordinator or program head can actually do (e.g. adjust event scheduling, coordinate with program advisers, set up reminders or follow-ups, reach out to specific programs/students, adjust policies). Do NOT suggest technical, engineering, or software changes (e.g. do not suggest building apps, adding notification systems, changing the biometric hardware, or other IT/development work).
+
 Return ONLY valid JSON, no markdown or extra text.`;
 
         // Try multiple models in case of quota limits.
