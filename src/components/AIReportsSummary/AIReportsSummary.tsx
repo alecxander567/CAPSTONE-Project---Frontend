@@ -149,7 +149,7 @@ Return ONLY valid JSON, no markdown or extra text.`;
                   ],
                   generationConfig: {
                     temperature: 0.7,
-                    maxOutputTokens: 1024,
+                    maxOutputTokens: 2048,
                     responseMimeType: "application/json",
                   },
                 }),
