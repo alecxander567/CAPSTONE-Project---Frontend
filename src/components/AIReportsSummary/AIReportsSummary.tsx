@@ -116,14 +116,13 @@ Focus on:
 Return ONLY valid JSON, no markdown or extra text.`;
 
         // Try multiple models in case of quota limits.
-        // NOTE: gemini-2.0-flash was shut down by Google, and
-        // gemini-2.5-flash-lite is no longer issued to new API keys — that's
-        // why both were failing. Using currently-served models below, with
-        // "latest" aliases as a safety net so this list doesn't silently
-        // go stale again the next time Google renames/retires a model.
+        // NOTE: the 2.x Gemini line (2.0 Flash, 2.5 Flash, 2.5 Pro) has been
+        // progressively cut off for new API keys through 2026. Current GA
+        // models are the 3.x line. "gemini-flash-latest" is kept as a final
+        // fallback alias so this list self-updates on Google's next rename.
         const models = [
-          "gemini-2.5-pro",
-          "gemini-2.5-flash",
+          "gemini-3.6-flash",
+          "gemini-3.5-flash-lite",
           "gemini-flash-latest",
         ];
         let response: Response | null = null;
@@ -151,6 +150,7 @@ Return ONLY valid JSON, no markdown or extra text.`;
                   generationConfig: {
                     temperature: 0.7,
                     maxOutputTokens: 1024,
+                    responseMimeType: "application/json",
                   },
                 }),
               },
@@ -183,6 +183,7 @@ Return ONLY valid JSON, no markdown or extra text.`;
             const parsed = JSON.parse(jsonMatch[0]);
             setInsights(parsed.insights || []);
           } else {
+            console.warn("Unparseable AI response:", aiText);
             throw new Error("Invalid AI response format");
           }
         } else {
