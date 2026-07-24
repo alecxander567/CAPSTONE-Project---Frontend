@@ -8,6 +8,7 @@ import { useAttendancePerProgram } from "../../hooks/useAttendancePerProgram";
 import { useStudentsPerProgram } from "../../hooks/useStudentsPerProgram";
 import { requestDeviceToken, listenMessages } from "../../firebase";
 import { useAllStudentsAttendance } from "../../hooks/useAllStudentAttendance";
+import AIReportsSummary from "../../components/AIReportsSummary/AIReportsSummary";
 import "./Dashboard.css";
 import {
   BarChart,
@@ -79,61 +80,9 @@ function Dashboard() {
     return matchesSearch && matchesAbsence && matchesProgram;
   });
 
-  const generateCalendar = () => {
-    const today = new Date();
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
-    const firstDay = new Date(currentYear, currentMonth, 1);
-    const lastDay = new Date(currentYear, currentMonth + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay();
-    const calendarDays = [];
-
-    const prevMonthLastDay = new Date(currentYear, currentMonth, 0).getDate();
-    for (let i = startingDayOfWeek - 1; i >= 0; i--) {
-      calendarDays.push({
-        day: prevMonthLastDay - i,
-        isCurrentMonth: false,
-        isToday: false,
-        hasEvent: false,
-      });
-    }
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-      const hasEvent = events.some((event) =>
-        event.event_date.startsWith(dateStr),
-      );
-      calendarDays.push({
-        day,
-        isCurrentMonth: true,
-        isToday: day === today.getDate(),
-        hasEvent,
-      });
-    }
-    const remainingDays = 35 - calendarDays.length;
-    for (let day = 1; day <= remainingDays; day++) {
-      calendarDays.push({
-        day,
-        isCurrentMonth: false,
-        isToday: false,
-        hasEvent: false,
-      });
-    }
-    return calendarDays;
-  };
-
-  const getCurrentMonthYear = () => {
-    return new Date().toLocaleDateString("en-US", {
-      month: "long",
-      year: "numeric",
-    });
-  };
-
   const handlePrintAnalytics = () => {
     window.print();
   };
-
-  const calendarDays = generateCalendar();
 
   useEffect(() => {
     const setupNotifications = async () => {
@@ -879,66 +828,18 @@ function Dashboard() {
               }
             </div>
 
-            {/* Right column: calendar + print button */}
+            {/* Right column: AI Reports Summary + print button */}
             <div
               className="fade-up delay-6"
               style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              {/* Calendar Card */}
-              <div className="lower-card" style={{ flex: "0 0 auto" }}>
-                <h4 className="card-title">
-                  <i className="bi bi-calendar3 text-primary me-2"></i>
-                  Calendar
-                </h4>
-                {/* ↓ All calendar classes now use dash-cal- prefix */}
-                <div className="dash-cal-view">
-                  <div className="dash-cal-header">
-                    <div className="dash-cal-month">
-                      {getCurrentMonthYear()}
-                    </div>
-                  </div>
-                  <div className="dash-cal-grid">
-                    {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
-                      (d) => (
-                        <div key={d} className="dash-cal-weekday">
-                          {d}
-                        </div>
-                      ),
-                    )}
-                    {calendarDays.map((dayInfo, idx) => (
-                      <div
-                        key={idx}
-                        className={`dash-cal-day ${!dayInfo.isCurrentMonth ? "dash-cal-other-month" : ""} ${dayInfo.isToday ? "dash-cal-today" : ""}`}
-                        style={{
-                          backgroundColor:
-                            dayInfo.isToday ? "#0d6efd"
-                            : dayInfo.hasEvent ? "#fd7e14"
-                            : "transparent",
-                          color:
-                            dayInfo.isToday ? "#fff"
-                            : dayInfo.hasEvent ? "#fff"
-                            : !dayInfo.isCurrentMonth ? "#cbd5e1"
-                            : "#1e293b",
-                          borderRadius: "8px",
-                          fontWeight:
-                            dayInfo.isToday || dayInfo.hasEvent ? 700 : 400,
-                        }}>
-                        {dayInfo.day}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="dash-cal-footer mt-3">
-                    <div className="dash-cal-legend">
-                      <span className="dash-cal-legend-item">
-                        <span className="dash-cal-legend-dot dash-cal-today-dot"></span>
-                        Today
-                      </span>
-                      <span className="dash-cal-legend-item">
-                        <span className="dash-cal-legend-dot dash-cal-event-dot"></span>
-                        Event
-                      </span>
-                    </div>
-                  </div>
-                </div>
+              {/* AI Reports Summary Card */}
+              <div style={{ flex: 1, minHeight: 0 }}>
+                <AIReportsSummary
+                  allStudents={allStudents}
+                  events={events}
+                  eventAttendanceData={eventAttendanceData}
+                  programAttendanceData={programAttendanceData}
+                />
               </div>
 
               {/* Print Analytics Button */}
