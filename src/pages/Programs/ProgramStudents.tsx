@@ -287,21 +287,15 @@ const ProgramStudents = () => {
   };
 
   useEffect(() => {
-    // NOTE: `useProgramStudents` returns its own `Student` type that
-    // doesn't include `year_level` / `finger_id`, so it doesn't structurally
-    // match this file's local `Student` interface. Normalizing here keeps
-    // the page working, but the real fix is to have both files import one
-    // shared `Student` type (e.g. from a `types/student.ts`) so they can't
-    // drift apart like this again.
+    // `useProgramStudents` now returns a Student type that includes
+    // `year_level` and `finger_id`, so we can use the data directly
+    // without the old normalization workaround.
     setStudents(
-      fetchedStudents.map((s) => {
-        const partial = s as Partial<Student>;
-        return {
-          ...s,
-          year_level: partial.year_level ?? null,
-          finger_id: partial.finger_id ?? null,
-        } as Student;
-      }),
+      fetchedStudents.map((s) => ({
+        ...s,
+        year_level: s.year_level ?? null,
+        finger_id: s.finger_id ?? null,
+      })),
     );
   }, [fetchedStudents]);
 
