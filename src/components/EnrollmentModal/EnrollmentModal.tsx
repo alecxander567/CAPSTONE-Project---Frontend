@@ -3,6 +3,7 @@ import axios from "axios";
 import "./EnrollmentModal.css";
 
 const API_BASE_URL = `${import.meta.env.VITE_API_URL}`;
+const DEFAULT_DEVICE_ID = "esp32-default";
 
 type FingerprintStatus = "not_enrolled" | "pending" | "enrolled" | "failed";
 
@@ -215,7 +216,7 @@ const EnrollmentModal = ({
     pollRef.current = window.setInterval(async () => {
       try {
         const response = await axios.get(
-          `${API_BASE_URL}/fingerprints/get-status?finger_id=${fingerId}`,
+          `${API_BASE_URL}/fingerprints/get-status?finger_id=${fingerId}&device_id=${DEFAULT_DEVICE_ID}`,
         );
 
         const { status, step } = response.data;

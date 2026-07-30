@@ -8,6 +8,8 @@ export interface Student {
   last_name: string;
   program: string;
   email: string;
+  year_level: string | null;
+  finger_id: number | null;
   fingerprint_status: "not_enrolled" | "pending" | "enrolled" | "failed";
 }
 

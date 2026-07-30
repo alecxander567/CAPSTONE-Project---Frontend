@@ -16,6 +16,7 @@ interface EnrollResponse {
 
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL}`;
+const DEFAULT_DEVICE_ID = "esp32-default";
 
 export const useEnrollFingerprint = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -32,7 +33,7 @@ export const useEnrollFingerprint = () => {
     try {
       const { data } = await axios.post<EnrollResponse>(
         `${API_BASE_URL}/fingerprints/start-enrollment`,
-        { user_id: userId },
+        { user_id: userId, device_id: DEFAULT_DEVICE_ID },
         {
           headers: {
             "Content-Type": "application/json",

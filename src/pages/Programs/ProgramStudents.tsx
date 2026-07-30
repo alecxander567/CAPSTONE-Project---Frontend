@@ -26,6 +26,7 @@ interface Student {
 type FingerprintStatus = "not_enrolled" | "pending" | "enrolled" | "failed";
 
 const API_BASE_URL = `${import.meta.env.VITE_API_URL}`;
+const DEFAULT_DEVICE_ID = "esp32-default";
 
 const FingerprintStatusBadge = ({ status }: { status: FingerprintStatus }) => {
   const statusMap: Record<
@@ -236,7 +237,7 @@ const ProgramStudents = () => {
           }
           try {
             const res = await axios.get(
-              `${API_BASE_URL}/fingerprints/get-status?finger_id=${fingerId}`,
+              `${API_BASE_URL}/fingerprints/get-status?finger_id=${fingerId}&device_id=${DEFAULT_DEVICE_ID}`,
             );
             const { status, step, message } = res.data;
 

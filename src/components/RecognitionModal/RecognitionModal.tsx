@@ -3,6 +3,7 @@ import axios from "axios";
 import "../EnrollmentModal/EnrollmentModal.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
+const DEFAULT_DEVICE_ID = "esp32-default";
 const RECOGNITION_TIMEOUT = 15000;
 const RECOGNITION_TIMEOUT_SECONDS = RECOGNITION_TIMEOUT / 1000;
 const POLL_INTERVAL = 500;
@@ -226,7 +227,7 @@ const RecognitionModal = ({
 
           try {
             const res = await axios.get(
-              `${API_BASE_URL}/fingerprints/get-recognition-result?finger_id=${targetFingerId}`,
+              `${API_BASE_URL}/fingerprints/get-recognition-result?finger_id=${targetFingerId}&device_id=${DEFAULT_DEVICE_ID}`,
             );
 
             const { status, matched } = res.data;
