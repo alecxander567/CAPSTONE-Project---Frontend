@@ -236,11 +236,8 @@ const RecognitionModal = ({
               isResolved = true;
               clearTimers();
               updateStepUI(matched ? "success" : "error");
-
-              setTimeout(() => {
-                safeOnRecognized(userId, matched);
-                onClose?.();
-              }, 1000);
+              safeOnRecognized(userId, matched);
+              onClose?.();
             }
           } catch (err) {
             console.error("Polling error:", err);
