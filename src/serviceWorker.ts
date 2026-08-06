@@ -1,6 +1,6 @@
 // src/serviceWorker.ts
 export const registerSW = async () => {
   if ("serviceWorker" in navigator) {
-    await navigator.serviceWorker.register("/sw.js");
+    await navigator.serviceWorker.register("/firebase-messaging-sw.js");
   }
 };

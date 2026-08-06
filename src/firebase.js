@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getMessaging, getToken, onMessage } from "firebase/messaging"; // ✅ added
+import { getMessaging, getToken, onMessage } from "firebase/messaging";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCXI-bQjmGaXggjtE1UO1EE2lC7vvUC4xo",
@@ -21,10 +21,19 @@ export const requestDeviceToken = async () => {
       console.warn("Notification permission denied");
       return null;
     }
+
+    // Register (or reuse) the Firebase messaging service worker.
+    // Must match the actual filename served at your site root.
+    const registration = await navigator.serviceWorker.register(
+      "/firebase-messaging-sw.js",
+    );
+
     const token = await getToken(messaging, {
       vapidKey:
         "BH7lk2UeUbyHP_vsI9P2Q_FC-Bi_-NqPOplS0ZAXntIGL6gOBmROfsHcVqYyYGC1VwTTSwAof88WtVG-syjVzT8",
+      serviceWorkerRegistration: registration,
     });
+
     console.log("Device token:", token);
     return token;
   } catch (err) {
