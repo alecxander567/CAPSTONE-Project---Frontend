@@ -81,13 +81,15 @@ const ProgramStudents = () => {
   const [unenrollingStudentId, setUnenrollingStudentId] = useState<
     number | null
   >(null);
+  // Tracks which student's "stuck pending" enrollment is currently being
+  // cleared, so we can disable just that button and show a spinner label.
+  const [clearingPendingId, setClearingPendingId] = useState<number | null>(
+    null,
+  );
 
   const { enrollFingerprint, isLoading } = useEnrollFingerprint();
   const isProcessingRecognitionRef = useRef(false);
   const isProcessingEnrollmentRef = useRef(false);
-  // NodeJS.Timeout isn't available in a browser/Vite project (it's a Node
-  // type). ReturnType<typeof setTimeout> resolves correctly in both
-  // browser and Node typings.
   const alertTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showAlert = (message: string, isSuccess: boolean) => {
@@ -124,12 +126,6 @@ const ProgramStudents = () => {
     return () => observer.disconnect();
   }, [students, loading]);
 
-  // FIXED: previously this only checked first_name and last_name
-  // *separately*, so typing a full name like "Juan Dela Cruz" never
-  // matched anything (neither field alone contains the whole string).
-  // It also called .toLowerCase() directly on possibly-undefined fields,
-  // which throws and can blank out the whole list if any student record
-  // is missing a name/ID. Both are fixed below.
   const filteredStudents = students.filter((student: Student) => {
     const query = searchQuery.trim().toLowerCase();
     if (!query) return true;
@@ -194,12 +190,46 @@ const ProgramStudents = () => {
     setShowDeleteModal(true);
   };
 
+  // Clears a student stuck in "pending" (e.g. WiFi dropped mid-enroll) back
+  // to not_enrolled, and idles any device that was left in "enroll" mode.
+  // This hits the same /reset-enrollment/{user_id} endpoint the backend
+  // already exposes — no new backend route needed for the per-row case.
+  const handleClearPending = async (student: Student) => {
+    setClearingPendingId(student.id);
+    try {
+      await axios.post(
+        `${API_BASE_URL}/fingerprints/reset-enrollment/${student.id}`,
+        {},
+        { headers: { "Content-Type": "application/json" }, timeout: 10000 },
+      );
+
+      setStudents((prev) =>
+        prev.map((s) =>
+          s.id === student.id ?
+            { ...s, fingerprint_status: "not_enrolled", finger_id: null }
+          : s,
+        ),
+      );
+      showAlert(
+        `Cleared stuck enrollment for ${student.first_name} ${student.last_name}.`,
+        true,
+      );
+    } catch (err) {
+      const message =
+        axios.isAxiosError(err) ?
+          err.response?.data?.detail || err.message || "Unknown error"
+        : "Unknown error";
+      showAlert(`Failed to clear pending enrollment: ${message}`, false);
+    } finally {
+      setClearingPendingId(null);
+    }
+  };
+
   const confirmUnenroll = async () => {
     if (!selectedStudentId) return;
     const studentId = selectedStudentId;
     setUnenrollingStudentId(studentId);
 
-    // find the finger_id we need to poll on
     const student = students.find((s) => s.id === studentId);
     const fingerId = student?.finger_id;
 
@@ -211,7 +241,6 @@ const ProgramStudents = () => {
       );
 
       if (!fingerId) {
-        // no finger_id to poll on, fall back to old behavior
         setStudents((prev) =>
           prev.map((s) =>
             s.id === studentId ?
@@ -223,7 +252,6 @@ const ProgramStudents = () => {
         return;
       }
 
-      // poll get-status until the device confirms the delete
       const POLL_INTERVAL = 500;
       const TIMEOUT = 10000;
       const startTime = Date.now();
@@ -241,9 +269,6 @@ const ProgramStudents = () => {
             );
             const { status, step, message } = res.data;
 
-            // After delete_success, the backend clears the user's finger_id,
-            // so looking them up by the OLD finger_id will start failing
-            // with "User not found" — that failure IS the success signal.
             const deletedAlready =
               status === "failed" &&
               step === "error" &&
@@ -287,9 +312,6 @@ const ProgramStudents = () => {
   };
 
   useEffect(() => {
-    // `useProgramStudents` now returns a Student type that includes
-    // `year_level` and `finger_id`, so we can use the data directly
-    // without the old normalization workaround.
     setStudents(
       fetchedStudents.map((s) => ({
         ...s,
@@ -520,6 +542,28 @@ const ProgramStudents = () => {
                                 {unenrollingStudentId === student.id ?
                                   "Unenrolling..."
                                 : "Unenroll"}
+                              </span>
+                            </button>
+                          </>
+                        : student.fingerprint_status === "pending" ?
+                          <>
+                            <button
+                              className="students-pg-action-btn students-pg-btn-primary mb-2"
+                              onClick={() => handleEnrollClick(student.id)}
+                              disabled={isLoading}>
+                              <i className="bi bi-fingerprint"></i>
+                              Resume/Retry
+                            </button>
+                            <button
+                              className="students-pg-action-btn students-pg-delete-btn"
+                              onClick={() => handleClearPending(student)}
+                              disabled={clearingPendingId === student.id}
+                              title="Clear stuck pending enrollment (e.g. after a dropped connection)">
+                              <i className="bi bi-x-circle"></i>
+                              <span>
+                                {clearingPendingId === student.id ?
+                                  "Clearing..."
+                                : "Clear Pending"}
                               </span>
                             </button>
                           </>
