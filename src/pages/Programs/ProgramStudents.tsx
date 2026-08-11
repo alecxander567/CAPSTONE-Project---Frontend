@@ -546,27 +546,18 @@ const ProgramStudents = () => {
                             </button>
                           </>
                         : student.fingerprint_status === "pending" ?
-                          <>
-                            <button
-                              className="students-pg-action-btn students-pg-btn-primary mb-2"
-                              onClick={() => handleEnrollClick(student.id)}
-                              disabled={isLoading}>
-                              <i className="bi bi-fingerprint"></i>
-                              Resume/Retry
-                            </button>
-                            <button
-                              className="students-pg-action-btn students-pg-delete-btn"
-                              onClick={() => handleClearPending(student)}
-                              disabled={clearingPendingId === student.id}
-                              title="Clear stuck pending enrollment (e.g. after a dropped connection)">
-                              <i className="bi bi-x-circle"></i>
-                              <span>
-                                {clearingPendingId === student.id ?
-                                  "Clearing..."
-                                : "Clear Pending"}
-                              </span>
-                            </button>
-                          </>
+                          <button
+                            className="students-pg-action-btn students-pg-delete-btn"
+                            onClick={() => handleClearPending(student)}
+                            disabled={clearingPendingId === student.id}
+                            title="Clear stuck pending enrollment (e.g. after a dropped connection)">
+                            <i className="bi bi-x-circle"></i>
+                            <span>
+                              {clearingPendingId === student.id ?
+                                "Clearing..."
+                              : "Clear Pending"}
+                            </span>
+                          </button>
                         : <button
                             className="students-pg-action-btn students-pg-btn-primary"
                             onClick={() => handleEnrollClick(student.id)}
