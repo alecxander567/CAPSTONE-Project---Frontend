@@ -7,7 +7,7 @@ import DeleteFingerprintModal from "../../components/DeleteFingerprintModal/Dele
 import RecognitionModal from "../../components/RecognitionModal/RecognitionModal";
 import SuccessAlert from "../../components/SuccessAlert/SuccessAlert";
 import ErrorAlert from "../../components/SuccessAlert/ErrorAlert";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import axios from "axios";
 import "./Students.css";
 
@@ -81,8 +81,6 @@ const ProgramStudents = () => {
   const [unenrollingStudentId, setUnenrollingStudentId] = useState<
     number | null
   >(null);
-  // Tracks which student's "stuck pending" enrollment is currently being
-  // cleared, so we can disable just that button and show a spinner label.
   const [clearingPendingId, setClearingPendingId] = useState<number | null>(
     null,
   );
@@ -110,38 +108,38 @@ const ProgramStudents = () => {
     }
   };
 
-  useEffect(() => {
-    const observerOptions = { threshold: 0.1, rootMargin: "0px 0px -50px 0px" };
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("show");
-          observer.unobserve(entry.target);
-        }
-      });
-    }, observerOptions);
-    document
-      .querySelectorAll(".students-pg-fade-up")
-      .forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
-  }, [students, loading]);
+  // Normalize string for search (remove accents, trim, lowercase)
+  const normalizeString = (str: string) => {
+    return str
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim();
+  };
 
-  const filteredStudents = students.filter((student: Student) => {
+  // Memoized filtered students with improved search logic
+  const filteredStudents = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    if (!query) return true;
+    if (!query) return students;
 
-    const firstName = student.first_name?.toLowerCase() ?? "";
-    const lastName = student.last_name?.toLowerCase() ?? "";
-    const fullName = `${firstName} ${lastName}`.trim();
-    const idNo = student.student_id_no?.toLowerCase() ?? "";
+    const normalizedQuery = normalizeString(query);
 
-    return (
-      firstName.includes(query) ||
-      lastName.includes(query) ||
-      fullName.includes(query) ||
-      idNo.includes(query)
-    );
-  });
+    return students.filter((student: Student) => {
+      const firstName = normalizeString(student.first_name || "");
+      const lastName = normalizeString(student.last_name || "");
+      const fullName = normalizeString(
+        `${student.first_name} ${student.last_name}`,
+      );
+      const idNo = normalizeString(student.student_id_no || "");
+
+      return (
+        firstName.includes(normalizedQuery) ||
+        lastName.includes(normalizedQuery) ||
+        fullName.includes(normalizedQuery) ||
+        idNo.includes(normalizedQuery)
+      );
+    });
+  }, [students, searchQuery]);
 
   const handleEnrollClick = async (studentId: number) => {
     try {
@@ -190,10 +188,6 @@ const ProgramStudents = () => {
     setShowDeleteModal(true);
   };
 
-  // Clears a student stuck in "pending" (e.g. WiFi dropped mid-enroll) back
-  // to not_enrolled, and idles any device that was left in "enroll" mode.
-  // This hits the same /reset-enrollment/{user_id} endpoint the backend
-  // already exposes — no new backend route needed for the per-row case.
   const handleClearPending = async (student: Student) => {
     setClearingPendingId(student.id);
     try {
@@ -346,6 +340,26 @@ const ProgramStudents = () => {
   };
 
   useEffect(() => {
+    const observerOptions = { threshold: 0.1, rootMargin: "0px 0px -50px 0px" };
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("show");
+          observer.unobserve(entry.target);
+        }
+      });
+    }, observerOptions);
+
+    setTimeout(() => {
+      document
+        .querySelectorAll(".students-pg-fade-up:not(.show)")
+        .forEach((el) => observer.observe(el));
+    }, 100);
+
+    return () => observer.disconnect();
+  }, [filteredStudents, loading]);
+
+  useEffect(() => {
     return () => {
       if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
     };
@@ -443,6 +457,7 @@ const ProgramStudents = () => {
                     placeholder="Search by name or ID..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    aria-label="Search students"
                   />
                   {searchQuery && (
                     <button
@@ -465,7 +480,7 @@ const ProgramStudents = () => {
                     <div
                       key={student.id}
                       className={`students-pg-card students-pg-fade-up students-pg-fade-delay-${Math.min((index % 4) + 1, 4)}`}>
-                      <div className="students-pg-avatar">
+                      <div className="students-pg-avatar-wrapper">
                         {student.profile_image ?
                           <img
                             src={
@@ -474,37 +489,16 @@ const ProgramStudents = () => {
                               : `${import.meta.env.VITE_API_URL}/${student.profile_image.replace(/^\//, "")}`
                             }
                             alt={`${student.first_name} ${student.last_name}`}
-                            style={{
-                              width: "64px",
-                              height: "64px",
-                              borderRadius: "50%",
-                              objectFit: "cover",
-                              border: "3px solid #fff",
-                              boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                            }}
+                            className="students-pg-avatar-image"
                           />
-                        : <div
-                            style={{
-                              width: "64px",
-                              height: "64px",
-                              borderRadius: "50%",
-                              background:
-                                "linear-gradient(135deg, #0a1aff 0%, #00b4d8 100%)",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontSize: "1.25rem",
-                              fontWeight: "700",
-                              color: "#fff",
-                              flexShrink: 0,
-                            }}>
+                        : <div className="students-pg-avatar-initials">
                             {getInitials(student.first_name, student.last_name)}
                           </div>
                         }
                       </div>
 
                       <div className="students-pg-info">
-                        <h3>
+                        <h3 className="students-pg-student-name">
                           {student.first_name} {student.last_name}
                         </h3>
                         <FingerprintStatusBadge
@@ -513,11 +507,15 @@ const ProgramStudents = () => {
                         <div className="students-pg-details">
                           <span className="students-pg-detail-item">
                             <i className="bi bi-hash"></i>
-                            {student.student_id_no}
+                            <span className="students-pg-detail-text">
+                              {student.student_id_no}
+                            </span>
                           </span>
                           <span className="students-pg-detail-item">
                             <i className="bi bi-calendar3"></i>
-                            {student.year_level ?? "No year level"}
+                            <span className="students-pg-detail-text">
+                              {student.year_level ?? "No year level"}
+                            </span>
                           </span>
                         </div>
                       </div>
@@ -526,7 +524,7 @@ const ProgramStudents = () => {
                         {student.fingerprint_status === "enrolled" ?
                           <>
                             <button
-                              className="students-pg-action-btn students-pg-btn-recognize mb-2"
+                              className="students-pg-action-btn students-pg-btn-recognize"
                               onClick={() => handleRecognizeClick(student)}
                               title="Test Fingerprint Recognition">
                               <i className="bi bi-search"></i>
