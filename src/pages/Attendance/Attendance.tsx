@@ -14,6 +14,14 @@ interface Event {
   program_id?: number | null;
 }
 
+type SortOption =
+  | "lastname-asc"
+  | "lastname-desc"
+  | "firstname-asc"
+  | "firstname-desc"
+  | "id-asc"
+  | "id-desc";
+
 // ── Fetch attendance records and update state ─────────────────────────────────
 async function fetchAttendanceRecords(
   eventId: string,
@@ -80,6 +88,7 @@ function Attendance() {
   );
   const [studentTime, setStudentTime] = useState<Record<string, string>>({});
   const [yearLevelFilter, setYearLevelFilter] = useState<string>("ALL");
+  const [sortOption, setSortOption] = useState<SortOption>("lastname-asc");
   const attendanceActiveRef = useRef(false);
 
   useEffect(() => {
@@ -142,6 +151,48 @@ function Attendance() {
     return () => clearInterval(interval);
   }, [eventId]);
 
+  // ── Sort comparator ───────────────────────────────────────────────────────
+  const sortStudents = <
+    T extends { first_name: string; last_name: string; student_id_no: string },
+  >(
+    students: T[],
+  ): T[] => {
+    const sorted = [...students];
+    sorted.sort((a, b) => {
+      switch (sortOption) {
+        case "lastname-asc":
+          return a.last_name.localeCompare(b.last_name, undefined, {
+            sensitivity: "base",
+          });
+        case "lastname-desc":
+          return b.last_name.localeCompare(a.last_name, undefined, {
+            sensitivity: "base",
+          });
+        case "firstname-asc":
+          return a.first_name.localeCompare(b.first_name, undefined, {
+            sensitivity: "base",
+          });
+        case "firstname-desc":
+          return b.first_name.localeCompare(a.first_name, undefined, {
+            sensitivity: "base",
+          });
+        case "id-asc":
+          return a.student_id_no.localeCompare(b.student_id_no, undefined, {
+            numeric: true,
+            sensitivity: "base",
+          });
+        case "id-desc":
+          return b.student_id_no.localeCompare(a.student_id_no, undefined, {
+            numeric: true,
+            sensitivity: "base",
+          });
+        default:
+          return 0;
+      }
+    });
+    return sorted;
+  };
+
   const programsToShow =
     event?.program_id ?
       programs.filter((p) => p.id === event.program_id)
@@ -162,7 +213,7 @@ function Attendance() {
           String(student.year_level) === yearLevelFilter;
         return matchesSearch && matchesYear;
       });
-      return { ...program, studentList: filteredStudents };
+      return { ...program, studentList: sortStudents(filteredStudents) };
     })
     .filter((program) => program.studentList && program.studentList.length > 0);
 
@@ -248,6 +299,20 @@ function Attendance() {
                   <option value="2nd year">2nd Year</option>
                   <option value="3rd year">3rd Year</option>
                   <option value="4th year">4th Year</option>
+                </select>
+                <select
+                  className="attendance-sort-select"
+                  value={sortOption}
+                  onChange={(e) =>
+                    setSortOption(e.target.value as SortOption)
+                  }
+                  aria-label="Sort students">
+                  <option value="lastname-asc">Last Name (A–Z)</option>
+                  <option value="lastname-desc">Last Name (Z–A)</option>
+                  <option value="firstname-asc">First Name (A–Z)</option>
+                  <option value="firstname-desc">First Name (Z–A)</option>
+                  <option value="id-asc">ID Number (Asc)</option>
+                  <option value="id-desc">ID Number (Desc)</option>
                 </select>
                 <div className="attendance-search-wrapper">
                   <i className="bi bi-search attendance-search-icon" />

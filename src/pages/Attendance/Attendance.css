@@ -188,6 +188,19 @@
   appearance: auto;
 }
 
+.attendance-sort-select {
+  width: 180px;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  font-size: 0.9rem;
+  padding: 0 2rem 0 0.85rem;
+  background-color: #fff;
+  cursor: pointer;
+  appearance: auto;
+  flex-shrink: 0;
+}
+
 .attendance-search-wrapper {
   position: relative;
   width: 280px;
@@ -480,6 +493,7 @@
   }
 
   .attendance-year-select,
+  .attendance-sort-select,
   .attendance-search-wrapper {
     width: 100% !important;
     flex: 1 1 140px !important;
