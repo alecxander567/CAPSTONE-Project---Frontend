@@ -2,9 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import axios, { AxiosError } from "axios";
 
 const API_BASE_URL = `${import.meta.env.VITE_API_URL}`;
-const WS_BASE_URL = API_BASE_URL.replace(/^http/, "ws");
-const POLLING_INTERVAL = 30000; // now a fallback, not the primary channel
-const RECONNECT_DELAY = 3000;
+const POLLING_INTERVAL = 15000; // primary channel now
 
 export interface Notification {
   id: number;
@@ -19,9 +17,6 @@ const sharedListeners = new Set<(notifications: Notification[]) => void>();
 
 let isFetchingNotifications = false;
 let pollingIntervalId: number | null = null;
-let socket: WebSocket | null = null;
-let reconnectTimeoutId: number | null = null;
-let activeSubscribers = 0;
 
 const notifyAllListeners = () => {
   const allNotifications = Array.from(sharedNotificationsMap.values()).sort(
@@ -74,58 +69,6 @@ const stopPolling = () => {
   }
 };
 
-const connectSocket = () => {
-  const token = localStorage.getItem("token");
-  if (!token) return;
-
-  socket = new WebSocket(`${WS_BASE_URL}/ws/notifications/?token=${token}`);
-
-  socket.onopen = () => {
-    console.log("Notifications socket connected");
-    if (reconnectTimeoutId !== null) {
-      clearTimeout(reconnectTimeoutId);
-      reconnectTimeoutId = null;
-    }
-  };
-
-  socket.onmessage = (event) => {
-    if (event.data === "pong") return;
-    try {
-      const incoming: Notification = JSON.parse(event.data);
-      sharedNotificationsMap.set(incoming.id, incoming);
-      notifyAllListeners();
-    } catch (e) {
-      console.error("Failed to parse notification payload:", e);
-    }
-  };
-
-  socket.onclose = (event) => {
-    console.log("Notifications socket closed", event.code);
-    socket = null;
-    // Don't reconnect if the server closed it due to bad/expired auth (4401)
-    if (event.code === 4401) return;
-    if (activeSubscribers > 0 && reconnectTimeoutId === null) {
-      reconnectTimeoutId = window.setTimeout(() => {
-        reconnectTimeoutId = null;
-        connectSocket();
-      }, RECONNECT_DELAY);
-    }
-  };
-
-  socket.onerror = () => {
-    socket?.close();
-  };
-};
-
-const disconnectSocket = () => {
-  if (reconnectTimeoutId !== null) {
-    clearTimeout(reconnectTimeoutId);
-    reconnectTimeoutId = null;
-  }
-  socket?.close();
-  socket = null;
-};
-
 export const useNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>(
     Array.from(sharedNotificationsMap.values()).sort((a, b) => b.id - a.id),
@@ -146,19 +89,17 @@ export const useNotifications = () => {
       if (isMountedRef.current) setNotifications(newNotifications);
     };
     sharedListeners.add(updateLocalState);
-    activeSubscribers += 1;
+    // removed: activeSubscribers += 1;
 
-    startPolling(); // fallback / initial load
-    connectSocket(); // primary real-time channel
+    startPolling();
 
     return () => {
       isMountedRef.current = false;
       sharedListeners.delete(updateLocalState);
-      activeSubscribers -= 1;
+      // removed: activeSubscribers -= 1;
 
       if (sharedListeners.size === 0) {
         stopPolling();
-        disconnectSocket();
         sharedNotificationsMap.clear();
       }
     };
