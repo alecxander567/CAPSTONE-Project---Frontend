@@ -78,7 +78,7 @@ const ForgotPasswordModal = ({ show, onClose }: ForgotPasswordModalProps) => {
           </Form>
         : <AnimatedAlert
             type="success"
-            message="If that email is registered, a reset link has been sent. Please check your inbox."
+            message="Password reset request sent to admin. Please wait for the admin to forward the password reset link to your email."
           />
         }
 
