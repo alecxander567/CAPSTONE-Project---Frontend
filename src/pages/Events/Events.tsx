@@ -186,6 +186,7 @@ function Events() {
   const modals = ReactDOM.createPortal(
     <>
       <AddEventModal
+        key={editingEvent?.id ?? "new"}
         show={showModal}
         onClose={() => {
           handleCloseModal();

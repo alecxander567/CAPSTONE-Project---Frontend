@@ -36,6 +36,20 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
 
   const adminExists = useAdminExists();
 
+  const resetForm = () => {
+    setStudentId("");
+    setFirstName("");
+    setMiddleInitial("");
+    setLastName("");
+    setProgramId("");
+    setRole("STUDENT");
+    setMobilePhone("");
+    setPassword("");
+    setShowPassword(false);
+    setYearLevel("");
+    setLocalError("");
+  };
+
   const handleRegister = async () => {
     setLocalError("");
 
@@ -45,6 +59,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
     if (!password.trim()) return setLocalError("Password is required");
 
     if (role === "STUDENT") {
+      if (!studentId.trim()) return setLocalError("Student ID is required");
       if (!programId) return setLocalError("Program is required");
       if (!yearLevel) return setLocalError("Year level is required");
     }
@@ -66,11 +81,17 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
       setSuccessMessage("Registration successful!");
       setTimeout(() => {
         setSuccessMessage("");
+        resetForm();
         handleClose();
       }, 1500);
     } catch (err) {
       console.error("Registration failed:", err);
     }
+  };
+
+  const handleModalClose = () => {
+    resetForm();
+    handleClose();
   };
 
   return (
@@ -161,7 +182,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
 
       <Modal
         show={show}
-        onHide={handleClose}
+        onHide={handleModalClose}
         centered
         size="lg"
         backdrop="static"
@@ -194,6 +215,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
                 <Form.Group>
                   <Form.Label className="fw-semibold small text-secondary mb-1">
                     <i className="bi bi-credit-card me-1"></i>Student ID
+                    {role === "STUDENT" ? " *" : ""}
                   </Form.Label>
                   <Form.Control
                     type="text"
@@ -202,6 +224,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
                     onChange={(e) => setStudentId(e.target.value)}
                     className="border-2"
                     style={{ fontSize: "0.9rem" }}
+                    required={role === "STUDENT"}
                   />
                 </Form.Group>
               </Col>
@@ -401,7 +424,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
           <div className="w-100 d-flex gap-2">
             <Button
               variant="outline-secondary"
-              onClick={handleClose}
+              onClick={handleModalClose}
               className="flex-fill py-2 fw-semibold"
               disabled={loading}>
               Cancel
