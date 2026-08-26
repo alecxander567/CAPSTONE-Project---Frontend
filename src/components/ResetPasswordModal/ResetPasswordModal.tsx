@@ -1,19 +1,14 @@
-import { Modal, Button, Form } from "react-bootstrap";
 import { useState } from "react";
-import { usePassword } from "../../hooks/Password"; 
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { Button, Form } from "react-bootstrap";
+import { usePassword } from "../../hooks/Password";
 import AnimatedAlert from "../AnimatedAlert/AnimatedAlert";
 
-interface ResetPasswordModalProps {
-  show: boolean;
-  onClose: () => void;
-  token: string; 
-}
+const ResetPasswordModal = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const token = searchParams.get("token") || "";
 
-const ResetPasswordModal = ({
-  show,
-  onClose,
-  token, 
-}: ResetPasswordModalProps) => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -37,14 +32,11 @@ const ResetPasswordModal = ({
     }
 
     try {
-      await resetPassword(token, password); 
-      setSuccessMessage("Password reset successful!");
+      await resetPassword(token, password);
+      setSuccessMessage("Password reset successful! You can now log in.");
       setTimeout(() => {
-        onClose();
-        setPassword("");
-        setConfirmPassword("");
-        setSuccessMessage("");
-      }, 1500);
+        navigate("/", { replace: true });
+      }, 2000);
     } catch {
       // error already handled by hook
     }
@@ -68,25 +60,49 @@ const ResetPasswordModal = ({
 
   const strength = getPasswordStrength();
 
-  return (
-    <Modal show={show} onHide={onClose} centered backdrop="static">
-      <Modal.Header closeButton className="border-0 pb-0">
-        <Modal.Title className="w-100 text-center">
-          <div className="d-flex flex-column align-items-center">
-            <div
-              className="bg-primary bg-opacity-10 rounded-circle p-3 mb-3"
-              style={{ width: "70px", height: "70px" }}>
-              <i className="bi bi-shield-lock-fill text-primary fs-1"></i>
-            </div>
-            <h4 className="mb-1 fw-bold">Create New Password</h4>
-            <p className="text-muted small mb-0">
-              Enter a strong password for your account
-            </p>
+  if (!token) {
+    return (
+      <div
+        className="d-flex align-items-center justify-content-center"
+        style={{ minHeight: "100vh" }}>
+        <div className="text-center px-4">
+          <div
+            className="bg-danger bg-opacity-10 rounded-circle p-3 mb-3 mx-auto d-flex align-items-center justify-content-center"
+            style={{ width: "70px", height: "70px" }}>
+            <i className="bi bi-exclamation-triangle-fill text-danger fs-1"></i>
           </div>
-        </Modal.Title>
-      </Modal.Header>
+          <h4 className="fw-bold mb-2">Invalid Reset Link</h4>
+          <p className="text-muted mb-4">
+            This password reset link is missing or malformed. Please request a
+            new one.
+          </p>
+          <Button variant="primary" onClick={() => navigate("/")}>
+            Back to Login
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
-      <Modal.Body className="px-4 pb-4">
+  return (
+    <div
+      className="d-flex align-items-center justify-content-center px-3"
+      style={{ minHeight: "100vh" }}>
+      <div
+        className="bg-white rounded-4 shadow-sm p-4 p-md-5 w-100"
+        style={{ maxWidth: "480px" }}>
+        <div className="d-flex flex-column align-items-center mb-4">
+          <div
+            className="bg-primary bg-opacity-10 rounded-circle p-3 mb-3"
+            style={{ width: "70px", height: "70px" }}>
+            <i className="bi bi-shield-lock-fill text-primary fs-1"></i>
+          </div>
+          <h4 className="mb-1 fw-bold">Create New Password</h4>
+          <p className="text-muted small mb-0 text-center">
+            Enter a strong password for your account
+          </p>
+        </div>
+
         {!successMessage ?
           <Form onKeyPress={handleKeyPress}>
             {/* New Password */}
@@ -163,32 +179,17 @@ const ResetPasswordModal = ({
                 </div>
               </div>
             )}
-          </Form>
-        : <AnimatedAlert type="success" message={successMessage} />}
 
-        {validationError && (
-          <AnimatedAlert type="error" message={validationError} />
-        )}
-        {error && <AnimatedAlert type="error" message={error} />}
-      </Modal.Body>
+            {validationError && (
+              <AnimatedAlert type="error" message={validationError} />
+            )}
+            {error && <AnimatedAlert type="error" message={error} />}
 
-      <Modal.Footer className="border-0 pt-0 px-4 pb-4">
-        <div className="w-100">
-          <div className="d-flex gap-2">
-            <Button
-              variant="outline-secondary"
-              onClick={onClose}
-              className="flex-fill py-2 fw-semibold"
-              disabled={loading}>
-              Cancel
-            </Button>
             <Button
               variant="primary"
               onClick={handleReset}
-              disabled={
-                loading || !password || !confirmPassword || !!successMessage
-              }
-              className="flex-fill py-2 fw-semibold">
+              disabled={loading || !password || !confirmPassword}
+              className="w-100 py-2 fw-semibold mt-2">
               {loading ?
                 <>
                   <span
@@ -203,10 +204,10 @@ const ResetPasswordModal = ({
                 </>
               }
             </Button>
-          </div>
-        </div>
-      </Modal.Footer>
-    </Modal>
+          </Form>
+        : <AnimatedAlert type="success" message={successMessage} />}
+      </div>
+    </div>
   );
 };
 

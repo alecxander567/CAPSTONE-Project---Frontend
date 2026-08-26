@@ -3,6 +3,7 @@ import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
 
 // Public pages
 import Landingpage from "./pages/Landingpage/Landingpage";
+import ResetPasswordModal from "./components/ResetPasswordModal/ResetPasswordModal";
 
 // Admin pages
 import Dashboard from "./pages/Dashboard/Dashboard";
@@ -28,6 +29,9 @@ function App() {
     <Routes>
       {/* Public Route */}
       <Route path="/" element={<Landingpage />} />
+
+      {/* Public — reached via the reset link sent to the user's email */}
+      <Route path="/reset-password" element={<ResetPasswordModal />} />
 
       {/* ── Admin Routes ── */}
       <Route

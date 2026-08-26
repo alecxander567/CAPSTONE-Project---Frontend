@@ -16,16 +16,31 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [localError, setLocalError] = useState("");
   const [showForgot, setShowForgot] = useState(false);
-  const [showRegister, setShowRegister] = useState(false); 
+  const [showRegister, setShowRegister] = useState(false);
 
   const { login, loading, error } = useLogin();
   const navigate = useNavigate();
 
   const handleLogin = async () => {
+    setLocalError("");
+
+    if (!studentId.trim()) {
+      return setLocalError("Student ID or Account ID is required");
+    }
+    if (!/^\d+$/.test(studentId.trim())) {
+      return setLocalError(
+        "Student ID or Account ID must contain numbers only",
+      );
+    }
+    if (!password) {
+      return setLocalError("Password is required");
+    }
+
     try {
       const data = await login({
-        student_id_no: studentId,
+        student_id_no: studentId.trim(),
         password: password,
       });
 
@@ -87,9 +102,10 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
             </Form.Label>
             <Form.Control
               type="text"
+              inputMode="numeric"
               placeholder="Enter your student ID number"
               value={studentId}
-              onChange={(e) => setStudentId(e.target.value)}
+              onChange={(e) => setStudentId(e.target.value.replace(/\D/g, ""))}
               className="py-2 border-2"
               style={{ fontSize: "0.95rem" }}
               autoFocus
@@ -138,6 +154,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
         {successMessage && (
           <AnimatedAlert type="success" message={successMessage} />
         )}
+        {localError && <AnimatedAlert type="error" message={localError} />}
         {error && <AnimatedAlert type="error" message={error} />}
       </Modal.Body>
 

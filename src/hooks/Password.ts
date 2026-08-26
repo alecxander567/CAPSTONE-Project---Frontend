@@ -5,26 +5,23 @@ export const usePassword = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const forgotPassword = async (mobilePhone: string) => {
+  const forgotPassword = async (email: string) => {
     setLoading(true);
     setError(null);
 
     try {
-      // Clean the phone number (remove spaces, dashes, etc.)
-      const cleanedPhone = mobilePhone
-        .trim()
-        .replace(/\s/g, "")
-        .replace(/-/g, "");
+      const cleanedEmail = email.trim().toLowerCase();
 
       const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/auth/forgot-password`,
-        { mobile_phone: cleanedPhone },
+        { email: cleanedEmail },
       );
 
-      // Return the full response which contains the token
-      return res.data; // { message: "...", token: "..." }
+      // Backend now emails the reset link directly and returns only a
+      // generic confirmation message — no token in the response anymore.
+      return res.data; // { message: "..." }
     } catch (err: unknown) {
-      let message = "Phone number not found";
+      let message = "Something went wrong. Please try again.";
 
       if (axios.isAxiosError(err)) {
         message = err.response?.data?.detail ?? message;
