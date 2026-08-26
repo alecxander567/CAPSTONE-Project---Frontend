@@ -20,7 +20,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
   const [lastName, setLastName] = useState("");
   const [programId, setProgramId] = useState<number | "">("");
   const [role, setRole] = useState<"ADMIN" | "STUDENT">("STUDENT");
-  const [mobilePhone, setMobilePhone] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
@@ -43,7 +43,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
     setLastName("");
     setProgramId("");
     setRole("STUDENT");
-    setMobilePhone("");
+    setEmail("");
     setPassword("");
     setShowPassword(false);
     setYearLevel("");
@@ -55,7 +55,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
 
     if (!firstName.trim()) return setLocalError("First name is required");
     if (!lastName.trim()) return setLocalError("Last name is required");
-    if (!mobilePhone.trim()) return setLocalError("Mobile phone is required");
+    if (!email.trim()) return setLocalError("Email is required");
     if (!password.trim()) return setLocalError("Password is required");
 
     if (role === "STUDENT") {
@@ -71,7 +71,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
       last_name: lastName.trim(),
       program_id: role === "STUDENT" ? (programId as number) : undefined,
       year_level: role === "STUDENT" ? yearLevel : undefined,
-      mobile_phone: mobilePhone.trim(),
+      email: email.trim(),
       password: password.trim(),
       role: role.toLowerCase() as "admin" | "student",
     };
@@ -357,18 +357,18 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
               </Row>
             )}
 
-            {/* Row 4: Mobile Phone + Password side by side */}
+            {/* Row 4: Email + Password side by side */}
             <Row className="g-2 mb-3">
               <Col md={6} xs={12}>
                 <Form.Group>
                   <Form.Label className="fw-semibold small text-secondary mb-1">
-                    <i className="bi bi-phone me-1"></i>Mobile Phone *
+                    <i className="bi bi-envelope me-1"></i>Email Address *
                   </Form.Label>
                   <Form.Control
-                    type="tel"
-                    placeholder="+63 912 345 6789"
-                    value={mobilePhone}
-                    onChange={(e) => setMobilePhone(e.target.value)}
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     className="border-2"
                     style={{ fontSize: "0.9rem" }}
                     required
@@ -376,7 +376,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
                   <Form.Text
                     className="text-muted"
                     style={{ fontSize: "0.78rem" }}>
-                    e.g., +63 912 345 6789
+                    e.g., name@example.com
                   </Form.Text>
                 </Form.Group>
               </Col>

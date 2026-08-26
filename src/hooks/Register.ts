@@ -8,7 +8,7 @@ export interface RegisterPayload {
   last_name: string;
   program_id?: number;
   year_level?: string;
-  mobile_phone: string;
+  email: string;
   password: string;
   role: "admin" | "student";
 }
