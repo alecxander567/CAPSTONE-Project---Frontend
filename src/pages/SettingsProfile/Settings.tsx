@@ -12,7 +12,7 @@ interface ProfileUpdatePayload {
   student_id_no: string;
   first_name: string;
   last_name: string;
-  mobile_phone: string;
+  email: string;
   middle_initial?: string;
   program?: string;
   year_level?: string;
@@ -64,7 +64,7 @@ function Settings() {
     first_name: profile?.first_name || "",
     last_name: profile?.last_name || "",
     middle_initial: profile?.middle_initial || "",
-    mobile_phone: profile?.mobile_phone || "",
+    email: profile?.email || "",
     // For admin, these will be undefined/empty
     program:
       isAdmin ? ""
@@ -90,7 +90,7 @@ function Settings() {
         first_name: profile.first_name || "",
         last_name: profile.last_name || "",
         middle_initial: profile.middle_initial || "",
-        mobile_phone: profile.mobile_phone || "",
+        email: profile.email || "",
         // For admin, these fields are intentionally empty
         program:
           isAdminUser ? ""
@@ -111,7 +111,7 @@ function Settings() {
         first_name: profile.first_name || "",
         last_name: profile.last_name || "",
         middle_initial: profile.middle_initial || "",
-        mobile_phone: profile.mobile_phone || "",
+        email: profile.email || "",
         program:
           isAdminUser ? ""
           : typeof profile.program === "object" ? profile.program?.code
@@ -140,7 +140,7 @@ function Settings() {
         student_id_no: formData.student_id_no,
         first_name: formData.first_name,
         last_name: formData.last_name,
-        mobile_phone: formData.mobile_phone,
+        email: formData.email,
       };
 
       // Only include middle_initial if it has value
@@ -735,27 +735,25 @@ function Settings() {
                     }
                   </div>
 
-                  {/* Mobile Phone - Always shown */}
+                  {/* Email - Always shown */}
                   <div className="settings-pg-profile-field">
-                    <label
-                      className="settings-pg-field-label"
-                      htmlFor="mobile_phone">
-                      Mobile Phone Number
+                    <label className="settings-pg-field-label" htmlFor="email">
+                      Email Address
                     </label>
                     {isEditing ?
                       <input
                         className="settings-pg-form-input"
-                        type="tel"
-                        id="mobile_phone"
-                        name="mobile_phone"
-                        value={formData.mobile_phone}
+                        type="email"
+                        id="email"
+                        name="email"
+                        value={formData.email}
                         onChange={handleInputChange}
                         required
-                        placeholder="e.g., 09123456789"
+                        placeholder="e.g., name@example.com"
                       />
                     : <div className="settings-pg-field-value">
-                        <i className="bi bi-phone settings-pg-field-icon"></i>
-                        {profile.mobile_phone}
+                        <i className="bi bi-envelope settings-pg-field-icon"></i>
+                        {profile.email}
                       </div>
                     }
                   </div>

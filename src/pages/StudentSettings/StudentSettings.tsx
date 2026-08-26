@@ -32,7 +32,7 @@ function StudentSettings() {
     first_name: profile?.first_name || "",
     last_name: profile?.last_name || "",
     middle_initial: profile?.middle_initial || "",
-    mobile_phone: profile?.mobile_phone || "",
+    email: profile?.email || "",
     program:
       typeof profile?.program === "object" ?
         profile?.program?.code
@@ -52,7 +52,7 @@ function StudentSettings() {
           first_name: profile.first_name || "",
           last_name: profile.last_name || "",
           middle_initial: profile.middle_initial || "",
-          mobile_phone: profile.mobile_phone || "",
+          email: profile.email || "",
           program:
             typeof profile.program === "object" ?
               (profile.program as any)?.code
@@ -70,7 +70,7 @@ function StudentSettings() {
         first_name: profile.first_name || "",
         last_name: profile.last_name || "",
         middle_initial: profile.middle_initial || "",
-        mobile_phone: profile.mobile_phone || "",
+        email: profile.email || "",
         program:
           typeof profile.program === "object" ?
             (profile.program as any)?.code
@@ -616,22 +616,23 @@ function StudentSettings() {
                   </div>
 
                   <div className="ss-profile-field">
-                    <label className="ss-field-label" htmlFor="mobile_phone">
-                      Mobile Phone
+                    <label className="ss-field-label" htmlFor="email">
+                      Email Address
                     </label>
                     {isEditing ?
                       <input
                         className="ss-form-input"
-                        type="tel"
-                        id="mobile_phone"
-                        name="mobile_phone"
-                        value={formData.mobile_phone}
+                        type="email"
+                        id="email"
+                        name="email"
+                        value={formData.email}
                         onChange={handleInputChange}
                         required
+                        placeholder="e.g., name@example.com"
                       />
                     : <div className="ss-field-value">
-                        <i className="bi bi-phone ss-field-icon"></i>
-                        {profile.mobile_phone}
+                        <i className="bi bi-envelope ss-field-icon"></i>
+                        {profile.email}
                       </div>
                     }
                   </div>

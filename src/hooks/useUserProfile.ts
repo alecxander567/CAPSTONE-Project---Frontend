@@ -10,7 +10,7 @@ interface UserProfile {
   program: string | { code: string; name: string; id: number };
   year_level?: string;
   role: string;
-  mobile_phone: string;
+  email: string;
   profile_image?: string;
   status: string;
   created_at: string;
@@ -21,7 +21,7 @@ interface ProfileUpdateData {
   first_name?: string;
   last_name?: string;
   middle_initial?: string;
-  mobile_phone?: string;
+  email?: string;
   program?: string;
   year_level?: number | string;
   profile_image?: string;
@@ -35,7 +35,6 @@ export const useUserProfile = () => {
   const [updateError, setUpdateError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
-  // Get the base URL safely
   const getApiUrl = () => {
     const url = import.meta.env.VITE_API_URL;
     if (!url) {
@@ -91,14 +90,11 @@ export const useUserProfile = () => {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No authentication token found");
 
-      // Clean the data - remove undefined, null, and empty strings
       const filteredPayload: Partial<ProfileUpdateData> = {};
       (
         Object.entries(profileData) as [keyof ProfileUpdateData, unknown][]
       ).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== "") {
-          // Cast is safe here: `key` is a keyof ProfileUpdateData and
-          // `value` came directly from that same field on profileData.
           (filteredPayload as Record<string, unknown>)[key] = value;
         }
       });
