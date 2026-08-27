@@ -25,7 +25,6 @@ type EnrollmentStepUI = {
 
 const TOTAL_TIMEOUT_SECONDS = 35;
 
-// Countdown ring geometry — radius chosen to keep the SVG viewBox tidy at 80x80.
 const RING_RADIUS = 34;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
@@ -38,8 +37,6 @@ const EnrollmentModal = ({
 }: EnrollmentModalProps) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [timeoutSeconds, setTimeoutSeconds] = useState(TOTAL_TIMEOUT_SECONDS);
-  // Replaces the old console.log calls — shown in the modal so you can see
-  // what's happening without opening devtools.
   const [statusMessage, setStatusMessage] = useState("");
 
   const pollRef = useRef<number | null>(null);
@@ -174,8 +171,6 @@ const EnrollmentModal = ({
   useEffect(() => {
     if (!isOpen) {
       clearTimers();
-      // Deferred so we're not calling setState synchronously in the
-      // effect body — runs on the next tick instead.
       resetRef.current = window.setTimeout(() => {
         setCurrentStep(0);
         setSteps((prev) =>
@@ -213,6 +208,7 @@ const EnrollmentModal = ({
       clearTimers();
     }, TOTAL_TIMEOUT_SECONDS * 1000);
 
+    // OPTIMIZED: Faster polling (300ms instead of 500ms)
     pollRef.current = window.setInterval(async () => {
       try {
         const response = await axios.get(
@@ -227,18 +223,18 @@ const EnrollmentModal = ({
           clearTimers();
           updateStatus(userId, "enrolled");
           setStatusMessage("Fingerprint enrolled successfully!");
-          setTimeout(() => onClose?.(), 800);
+          setTimeout(() => onClose?.(), 500); // Reduced from 800
         } else if (status === "failed") {
           clearTimers();
           updateStatus(userId, "failed");
           setStatusMessage("Enrollment failed. Please try again.");
-          setTimeout(() => onClose?.(), 800);
+          setTimeout(() => onClose?.(), 500); // Reduced from 800
         }
       } catch (err) {
         console.error("Enrollment polling error:", err);
         setStatusMessage("Connection error while checking status...");
       }
-    }, 500);
+    }, 300); // OPTIMIZED: 300ms instead of 500ms
 
     return () => {
       clearTimers();
@@ -257,7 +253,6 @@ const EnrollmentModal = ({
 
   const progress = ((currentStep + 1) / steps.length) * 100;
 
-  // Ring fill drains from full to empty as time runs out.
   const timeFraction = timeoutSeconds / TOTAL_TIMEOUT_SECONDS;
   const ringOffset = RING_CIRCUMFERENCE * (1 - timeFraction);
   const timerState =
