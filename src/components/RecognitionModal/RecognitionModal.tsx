@@ -4,7 +4,7 @@ import "../EnrollmentModal/EnrollmentModal.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 const DEFAULT_DEVICE_ID = "esp32-default";
-const RECOGNITION_TIMEOUT = 15000;
+const RECOGNITION_TIMEOUT = 30000; // CHANGED — was 15000
 const RECOGNITION_TIMEOUT_SECONDS = RECOGNITION_TIMEOUT / 1000;
 const POLL_INTERVAL = 500;
 
@@ -70,7 +70,7 @@ const RecognitionModal = ({
   const countdownRef = useRef<number | null>(null);
   const resetRef = useRef<number | null>(null);
   const hasCalledRef = useRef(false);
-  const isCompletedRef = useRef(false); 
+  const isCompletedRef = useRef(false);
 
   const clearTimers = () => {
     if (pollRef.current !== null) {
