@@ -382,3 +382,18 @@ textarea.form-control-enhanced {
     transition: none !important;
   }
 }
+
+/* ── Disabled state (submitting) ── */
+.btn-secondary-enhanced:disabled,
+.btn-primary-enhanced:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-secondary-enhanced:disabled:hover,
+.btn-primary-enhanced:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}

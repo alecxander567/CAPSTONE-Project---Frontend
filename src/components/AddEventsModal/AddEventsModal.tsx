@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import type { FormEvent } from "react";
 import axios from "axios";
 import "./AddEventsModal.css";
@@ -26,7 +26,7 @@ interface Program {
 interface AddEventModalProps {
   show: boolean;
   onClose: () => void;
-  onSave: (data: EventData) => void;
+  onSave: (data: EventData) => void | Promise<void>;
   initialData?: EventData | null;
 }
 
@@ -38,6 +38,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
 }) => {
   const [visible, setVisible] = useState(false);
   const [active, setActive] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   // These initializers only run once per mount. Because the parent now
   // passes a `key` tied to initialData (see usage note below), React
@@ -57,7 +58,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
   );
   const [programs, setPrograms] = useState<Program[]>([]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     axios
       .get<Program[]>(`${import.meta.env.VITE_API_URL}/programs/`)
       .then((res) => setPrograms(res.data))
@@ -68,7 +69,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
   // removed. That responsibility now lives in the `key` prop the parent
   // passes to this component (see usage note at the bottom of this file).
 
-  useEffect(() => {
+  React.useEffect(() => {
     let showTimeout: number;
     let activeTimeout: number;
     let deactivateTimeout: number;
@@ -90,23 +91,34 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
     };
   }, [show]);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    onSave({
-      title,
-      description: description || "",
-      event_date: eventDate || "",
-      start_time: startTime || "",
-      end_time: endTime || "",
-      location: location || "",
-      program_id: programId,
-    });
+    if (submitting) return; // guard against double submit / double click
+
+    setSubmitting(true);
+    try {
+      await onSave({
+        title,
+        description: description || "",
+        event_date: eventDate || "",
+        start_time: startTime || "",
+        end_time: endTime || "",
+        location: location || "",
+        program_id: programId,
+      });
+    } catch (err) {
+      console.error("Failed to save event:", err);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (!visible) return null;
 
   return (
-    <div className={`custom-modal ${active ? "active" : ""}`} onClick={onClose}>
+    <div
+      className={`custom-modal ${active ? "active" : ""}`}
+      onClick={submitting ? undefined : onClose}>
       <div
         className="modal-dialog modal-dialog-centered"
         onClick={(e) => e.stopPropagation()}>
@@ -134,6 +146,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
               type="button"
               className="btn-close btn-close-white"
               onClick={onClose}
+              disabled={submitting}
             />
           </div>
 
@@ -152,6 +165,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                     placeholder="Enter event title"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
+                    disabled={submitting}
                     required
                   />
                 </div>
@@ -164,6 +178,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                     className="form-control form-control-enhanced"
                     value={eventDate}
                     onChange={(e) => setEventDate(e.target.value)}
+                    disabled={submitting}
                     required
                   />
                 </div>
@@ -180,6 +195,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                     className="form-control form-control-enhanced"
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
+                    disabled={submitting}
                     required
                   />
                 </div>
@@ -192,6 +208,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                     className="form-control form-control-enhanced"
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
+                    disabled={submitting}
                     required
                   />
                 </div>
@@ -209,6 +226,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                     placeholder="Enter event location"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
+                    disabled={submitting}
                     required
                   />
                 </div>
@@ -223,7 +241,8 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                       setProgramId(
                         e.target.value === "" ? null : Number(e.target.value),
                       )
-                    }>
+                    }
+                    disabled={submitting}>
                     <option value="">All Programs</option>
                     {programs.map((prog) => (
                       <option key={prog.id} value={prog.id}>
@@ -245,6 +264,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                   rows={2}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
+                  disabled={submitting}
                   required
                 />
               </div>
@@ -255,17 +275,31 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
               <button
                 type="button"
                 className="btn btn-secondary btn-secondary-enhanced"
-                onClick={onClose}>
+                onClick={onClose}
+                disabled={submitting}>
                 <i className="bi bi-x-circle me-2" />
                 Cancel
               </button>
               <button
                 type="submit"
-                className="btn btn-primary btn-primary-enhanced">
-                <i
-                  className={`bi ${initialData ? "bi-save" : "bi-check-circle"} me-2`}
-                />
-                {initialData ? "Update Event" : "Save Event"}
+                className="btn btn-primary btn-primary-enhanced"
+                disabled={submitting}>
+                {submitting ?
+                  <>
+                    <span
+                      className="spinner-border spinner-border-sm me-2"
+                      role="status"
+                      aria-hidden="true"
+                    />
+                    {initialData ? "Updating..." : "Saving..."}
+                  </>
+                : <>
+                    <i
+                      className={`bi ${initialData ? "bi-save" : "bi-check-circle"} me-2`}
+                    />
+                    {initialData ? "Update Event" : "Save Event"}
+                  </>
+                }
               </button>
             </div>
           </form>
@@ -293,6 +327,15 @@ values — replacing the old effect-based reset:
     onSave={onSave}
     initialData={initialData}
   />
+
+ALSO REQUIRED: onSave must return a Promise that resolves once the
+save request actually completes, or the spinner won't know when to
+turn off:
+
+  const handleSaveEvent = async (data: EventData) => {
+    await axios.post(`${import.meta.env.VITE_API_URL}/events/`, data);
+    // refresh list, close modal, etc.
+  };
 
 Without this key, switching between editing different events (or from
 edit back to add) will keep showing stale field values, since there's no
