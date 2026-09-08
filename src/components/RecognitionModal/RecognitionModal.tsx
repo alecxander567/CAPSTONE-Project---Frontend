@@ -81,12 +81,7 @@ const RecognitionModal = ({
   const isCompleteRef = useRef(false);
   const pollAttemptsRef = useRef(0);
   const targetDeviceRef = useRef<string>("");
-  const clearAttemptedRef = useRef(false);
-  const pollingStartedRef = useRef(false);
-  const isFirstPollRef = useRef(true);
   const activeRecognitionLockRef = useRef<number | null>(null);
-  // NEW: Track if we should show the alert
-  const shouldShowAlertRef = useRef(false);
 
   const clearTimers = () => {
     if (pollRef.current !== null) {
@@ -106,32 +101,19 @@ const RecognitionModal = ({
       resetRef.current = null;
     }
     isPollingRef.current = false;
-    pollingStartedRef.current = false;
   };
 
-  // FIXED: Only call onRecognized when the modal is about to close
-  const handleRecognitionComplete = useCallback(
+  const safeOnRecognized = useCallback(
     (id: number, success: boolean) => {
       if (hasCalledRef.current || isCompletedRef.current) return;
       hasCalledRef.current = true;
       isCompletedRef.current = true;
-
-      // Release the lock
       if (activeRecognitionLockRef.current === id) {
         activeRecognitionLockRef.current = null;
       }
-
-      // Only call onRecognized when modal closes, not during the process
-      shouldShowAlertRef.current = true;
-
-      // Close the modal after a delay
-      setTimeout(() => {
-        // Now call onRecognized to show the alert
-        onRecognized(id, success);
-        onClose?.();
-      }, 2000);
+      onRecognized(id, success);
     },
-    [onRecognized, onClose],
+    [onRecognized],
   );
 
   const updateStepUI = useCallback((step: string) => {
@@ -181,20 +163,15 @@ const RecognitionModal = ({
     setPrevIsOpen(isOpen);
 
     if (!isOpen) {
-      // Modal closed — release the lock
       if (activeRecognitionLockRef.current === userId) {
         activeRecognitionLockRef.current = null;
       }
-      shouldShowAlertRef.current = false;
       setTargetDevice("");
       setTargetFingerId(null);
       setCurrentStep(0);
       isRecognitionStartedRef.current = false;
       isCompleteRef.current = false;
       pollAttemptsRef.current = 0;
-      clearAttemptedRef.current = false;
-      pollingStartedRef.current = false;
-      isFirstPollRef.current = true;
       setSteps((prev) => prev.map((s) => ({ ...s, status: "waiting" })));
       setTimeoutSeconds(RECOGNITION_TIMEOUT_SECONDS);
       hasCalledRef.current = false;
@@ -206,14 +183,10 @@ const RecognitionModal = ({
       isRecognitionStartedRef.current = false;
       isCompleteRef.current = false;
       pollAttemptsRef.current = 0;
-      clearAttemptedRef.current = false;
-      pollingStartedRef.current = false;
-      isFirstPollRef.current = true;
       hasCalledRef.current = false;
       isCompletedRef.current = false;
       isPollingRef.current = false;
       isResolvedRef.current = false;
-      shouldShowAlertRef.current = false;
       setCurrentStep(0);
       setSteps((prev) => prev.map((s) => ({ ...s, status: "waiting" })));
       setTimeoutSeconds(RECOGNITION_TIMEOUT_SECONDS);
@@ -260,8 +233,6 @@ const RecognitionModal = ({
     isRecognitionStartedRef.current = true;
     isResolvedRef.current = false;
     pollAttemptsRef.current = 0;
-    pollingStartedRef.current = false;
-    isFirstPollRef.current = true;
 
     setTimeoutSeconds(RECOGNITION_TIMEOUT_SECONDS);
 
@@ -271,6 +242,7 @@ const RecognitionModal = ({
 
     const startRecognition = async () => {
       try {
+        // Clear any existing recognition state
         console.log("[Recognition] Clearing any stale recognition state...");
         try {
           await axios.post(
@@ -278,12 +250,12 @@ const RecognitionModal = ({
             {},
             { timeout: 5000 },
           );
-          clearAttemptedRef.current = true;
           console.log("[Recognition] Cleared previous recognition state");
         } catch (clearErr) {
           console.log("[Recognition] Error clearing previous state:", clearErr);
         }
 
+        // Start new recognition
         console.log("[Recognition] Starting new recognition...");
         const res = await axios.post(
           `${API_BASE_URL}/fingerprints/start-recognition/${userId}`,
@@ -298,108 +270,129 @@ const RecognitionModal = ({
           `[Recognition] Started on device: ${targetDeviceRef.current}, finger_id: ${targetFingerIdLocal}`,
         );
 
+        // Update to "Place Finger" step
         setSteps((prev) =>
           prev.map((s, idx) =>
             idx === 0 ?
               {
                 ...s,
-                description: `Waiting for device ${targetDeviceRef.current} to be ready...`,
+                status: "completed" as StepStatus,
+                description: `Device ${targetDeviceRef.current} ready`,
+              }
+            : idx === 1 ?
+              {
+                ...s,
                 status: "active" as StepStatus,
+                description: "Please place your finger on the sensor...",
               }
             : s,
           ),
         );
-        setCurrentStep(0);
+        setCurrentStep(1);
+        updateStepUI("place_finger");
 
-        let readyCheckAttempts = 0;
-        const maxReadyChecks = 20;
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
 
-        const checkDeviceReady = async () => {
-          if (isResolvedRef.current) return;
-          if (readyCheckAttempts >= maxReadyChecks) {
-            console.log(
-              "[Recognition] Device ready check timeout, proceeding anyway",
-            );
+        timeoutRef.current = window.setTimeout(() => {
+          if (!isResolvedRef.current) {
+            isResolvedRef.current = true;
+            clearTimers();
+            updateStepUI("error");
             setSteps((prev) =>
               prev.map((s, idx) =>
-                idx === 0 ?
+                idx === 2 ?
                   {
                     ...s,
-                    status: "completed" as StepStatus,
-                    description: `Device ${targetDeviceRef.current} ready`,
-                  }
-                : idx === 1 ?
-                  {
-                    ...s,
-                    status: "active" as StepStatus,
-                    description: "Please place your finger on the sensor...",
+                    status: "failed" as StepStatus,
+                    description: "Recognition timed out. Please try again.",
                   }
                 : s,
               ),
             );
-            setCurrentStep(1);
-            updateStepUI("place_finger");
-            startResultPolling();
+            safeOnRecognized(userId, false);
+            isCompleteRef.current = true;
+            if (activeRecognitionLockRef.current === userId) {
+              activeRecognitionLockRef.current = null;
+            }
+            setTimeout(() => {
+              onClose?.();
+            }, 1500);
+          }
+        }, RECOGNITION_TIMEOUT);
+
+        if (pollRef.current) {
+          clearInterval(pollRef.current);
+        }
+
+        // Poll for result
+        pollRef.current = window.setInterval(async () => {
+          if (!targetFingerIdLocal) return;
+          if (isResolvedRef.current) {
+            if (pollRef.current) {
+              clearInterval(pollRef.current);
+              pollRef.current = null;
+            }
             return;
           }
-          readyCheckAttempts++;
+          if (isPollingRef.current) return;
+          isPollingRef.current = true;
+          pollAttemptsRef.current++;
 
           try {
             const deviceId = targetDeviceRef.current || DEFAULT_DEVICE_ID;
-            const statusUrl = `${API_BASE_URL}/fingerprints/device-mode?device_id=${deviceId}`;
-            const statusRes = await axios.get(statusUrl, { timeout: 3000 });
-            const mode = statusRes.data;
+            const url = `${API_BASE_URL}/fingerprints/get-recognition-result?finger_id=${targetFingerIdLocal}&device_id=${deviceId}`;
 
+            console.log(`[Poll ${pollAttemptsRef.current}] Checking: ${url}`);
+            const res = await axios.get(url, { timeout: 5000 });
+
+            const { status, matched } = res.data;
             console.log(
-              `[Recognition] Device mode check ${readyCheckAttempts}: ${mode}`,
+              `[Poll ${pollAttemptsRef.current}] Response: status=${status}, matched=${matched}`,
             );
 
-            if (mode === "recognize") {
-              console.log("[Recognition] Device is ready in recognize mode!");
-
+            if (status === "done" && !isResolvedRef.current) {
+              console.log(
+                `[Recognition] Result received: ${matched ? "MATCH" : "NO MATCH"}`,
+              );
+              isResolvedRef.current = true;
+              clearTimers();
+              updateStepUI(matched ? "success" : "error");
               setSteps((prev) =>
                 prev.map((s, idx) =>
-                  idx === 0 ?
+                  idx === 2 ?
                     {
                       ...s,
-                      status: "completed" as StepStatus,
-                      description: `Device ${targetDeviceRef.current} ready`,
-                    }
-                  : idx === 1 ?
-                    {
-                      ...s,
-                      status: "active" as StepStatus,
-                      description: "Please place your finger on the sensor...",
+                      status: matched ? "completed" : ("failed" as StepStatus),
+                      description:
+                        matched ?
+                          "Fingerprint matched successfully!"
+                        : "Fingerprint did not match.",
                     }
                   : s,
                 ),
               );
-              setCurrentStep(1);
-              updateStepUI("place_finger");
-              startResultPolling();
-            } else {
-              setTimeout(checkDeviceReady, 500);
-            }
-          } catch (err) {
-            console.log("[Recognition] Error checking device mode:", err);
-            setTimeout(checkDeviceReady, 500);
-          }
-        };
-
-        const startResultPolling = () => {
-          if (pollingStartedRef.current) return;
-          pollingStartedRef.current = true;
-
-          if (pollRef.current) {
-            clearInterval(pollRef.current);
-          }
-
-          if (timeoutRef.current) {
-            clearTimeout(timeoutRef.current);
-          }
-
-          timeoutRef.current = window.setTimeout(() => {
-            if (!isResolvedRef.current) {
+              safeOnRecognized(userId, matched);
+              isCompleteRef.current = true;
+              if (activeRecognitionLockRef.current === userId) {
+                activeRecognitionLockRef.current = null;
+              }
+              setTimeout(() => {
+                onClose?.();
+              }, 1500);
+            } else if (status === "pending") {
+              setSteps((prev) =>
+                prev.map((s, idx) =>
+                  idx === 1 ?
+                    {
+                      ...s,
+                      description: "Waiting for finger placement...",
+                    }
+                  : s,
+                ),
+              );
+            } else if (status === "timeout" && !isResolvedRef.current) {
               isResolvedRef.current = true;
               clearTimers();
               updateStepUI("error");
@@ -414,119 +407,32 @@ const RecognitionModal = ({
                   : s,
                 ),
               );
-              handleRecognitionComplete(userId, false);
+              safeOnRecognized(userId, false);
               isCompleteRef.current = true;
               if (activeRecognitionLockRef.current === userId) {
                 activeRecognitionLockRef.current = null;
               }
-            }
-          }, RECOGNITION_TIMEOUT);
-
-          pollRef.current = window.setInterval(async () => {
-            if (!targetFingerIdLocal) return;
-            if (isResolvedRef.current) {
-              if (pollRef.current) {
-                clearInterval(pollRef.current);
-                pollRef.current = null;
-              }
-              return;
-            }
-            if (isPollingRef.current) return;
-            isPollingRef.current = true;
-            pollAttemptsRef.current++;
-
-            try {
-              const deviceId = targetDeviceRef.current || DEFAULT_DEVICE_ID;
-              const url = `${API_BASE_URL}/fingerprints/get-recognition-result?finger_id=${targetFingerIdLocal}&device_id=${deviceId}`;
-
-              console.log(`[Poll ${pollAttemptsRef.current}] Checking: ${url}`);
-              const res = await axios.get(url, { timeout: 5000 });
-
-              const { status, matched } = res.data;
-              console.log(
-                `[Poll ${pollAttemptsRef.current}] Response: status=${status}, matched=${matched}`,
+              setTimeout(() => {
+                onClose?.();
+              }, 1500);
+            } else if (status === "not_in_recognition_mode") {
+              setSteps((prev) =>
+                prev.map((s, idx) =>
+                  idx === 0 ?
+                    {
+                      ...s,
+                      description: `Waiting for device to enter recognition mode...`,
+                    }
+                  : s,
+                ),
               );
-
-              if (status === "done" && !isResolvedRef.current) {
-                console.log(
-                  `[Recognition] Result received: ${matched ? "MATCH" : "NO MATCH"}`,
-                );
-                isResolvedRef.current = true;
-                clearTimers();
-                updateStepUI(matched ? "success" : "error");
-                setSteps((prev) =>
-                  prev.map((s, idx) =>
-                    idx === 2 ?
-                      {
-                        ...s,
-                        status:
-                          matched ? "completed" : ("failed" as StepStatus),
-                        description:
-                          matched ?
-                            "Fingerprint matched successfully!"
-                          : "Fingerprint did not match.",
-                      }
-                    : s,
-                  ),
-                );
-                // FIXED: Use handleRecognitionComplete instead of safeOnRecognized
-                handleRecognitionComplete(userId, matched);
-                isCompleteRef.current = true;
-                if (activeRecognitionLockRef.current === userId) {
-                  activeRecognitionLockRef.current = null;
-                }
-              } else if (status === "pending") {
-                setSteps((prev) =>
-                  prev.map((s, idx) =>
-                    idx === 1 ?
-                      {
-                        ...s,
-                        description: "Waiting for finger placement...",
-                      }
-                    : s,
-                  ),
-                );
-              } else if (status === "timeout" && !isResolvedRef.current) {
-                isResolvedRef.current = true;
-                clearTimers();
-                updateStepUI("error");
-                setSteps((prev) =>
-                  prev.map((s, idx) =>
-                    idx === 2 ?
-                      {
-                        ...s,
-                        status: "failed" as StepStatus,
-                        description: "Recognition timed out. Please try again.",
-                      }
-                    : s,
-                  ),
-                );
-                handleRecognitionComplete(userId, false);
-                isCompleteRef.current = true;
-                if (activeRecognitionLockRef.current === userId) {
-                  activeRecognitionLockRef.current = null;
-                }
-              } else if (status === "not_in_recognition_mode") {
-                setSteps((prev) =>
-                  prev.map((s, idx) =>
-                    idx === 0 ?
-                      {
-                        ...s,
-                        description: `Waiting for device ${deviceId} to enter recognition mode...`,
-                      }
-                    : s,
-                  ),
-                );
-              }
-            } catch (err) {
-              console.error("Polling error:", err);
-            } finally {
-              isPollingRef.current = false;
             }
-          }, POLL_INTERVAL);
-        };
-
-        setTimeout(checkDeviceReady, 1000);
+          } catch (err) {
+            console.error("Polling error:", err);
+          } finally {
+            isPollingRef.current = false;
+          }
+        }, POLL_INTERVAL);
       } catch (err) {
         if (!isResolvedRef.current) {
           isResolvedRef.current = true;
@@ -546,8 +452,11 @@ const RecognitionModal = ({
                 : s,
               ),
             );
-            handleRecognitionComplete(userId, false);
+            safeOnRecognized(userId, false);
             isCompleteRef.current = true;
+            setTimeout(() => {
+              onClose?.();
+            }, 1500);
           } else {
             console.error("Failed to start recognition:", err);
             updateStepUI("error");
@@ -563,8 +472,11 @@ const RecognitionModal = ({
                 : s,
               ),
             );
-            handleRecognitionComplete(userId, false);
+            safeOnRecognized(userId, false);
             isCompleteRef.current = true;
+            setTimeout(() => {
+              onClose?.();
+            }, 1500);
           }
         }
       }
@@ -578,7 +490,7 @@ const RecognitionModal = ({
       }
       clearTimers();
     };
-  }, [isOpen, userId, updateStepUI, handleRecognitionComplete]);
+  }, [isOpen, userId, updateStepUI, safeOnRecognized, onClose]);
 
   if (!isOpen) return null;
 
