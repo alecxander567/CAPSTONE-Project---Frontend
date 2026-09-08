@@ -86,11 +86,7 @@ const ProgramStudents = () => {
   );
   const [isClearingAll, setIsClearingAll] = useState(false);
 
-  const {
-    enrollFingerprint,
-    isLoading,
-    // Removed: onlineDevices, systemTargetDevice, clearTargetDevice
-  } = useEnrollFingerprint();
+  const { enrollFingerprint, isLoading } = useEnrollFingerprint();
 
   const isProcessingRecognitionRef = useRef(false);
   const isProcessingEnrollmentRef = useRef(false);
@@ -155,7 +151,7 @@ const ProgramStudents = () => {
     }
   };
 
-  // Normalize string for search (remove accents, trim, lowercase)
+  // Normalize string for search
   const normalizeString = (str: string) => {
     return str
       .toLowerCase()
@@ -441,7 +437,7 @@ const ProgramStudents = () => {
           }, 100);
         }}
         userId={currentStudent?.id || 0}
-        fingerId={currentStudent?.finger_id || 0}
+        fingerId={currentStudent?.finger_id || null}
         onRecognized={handleRecognitionResult}
       />
       <DeleteFingerprintModal
@@ -506,7 +502,6 @@ const ProgramStudents = () => {
                   <p>Total enrolled students in this program</p>
                 </div>
                 <div className="students-pg-controls-right">
-                  {/* Clear All Pending Button - FIRST */}
                   <button
                     className="students-pg-clear-all-btn"
                     onClick={handleClearAllPending}
@@ -516,7 +511,6 @@ const ProgramStudents = () => {
                       {isClearingAll ? "Clearing..." : "Clear All Pending"}
                     </span>
                   </button>
-                  {/* Search Bar - SECOND */}
                   <div className="students-pg-search-bar">
                     <i className="bi bi-search"></i>
                     <input

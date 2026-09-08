@@ -15,6 +15,7 @@ interface RecognitionModalProps {
   isOpen: boolean;
   onClose?: () => void;
   userId: number;
+  fingerId: number | null;
   onRecognized: (studentId: number, success: boolean) => void;
 }
 
@@ -32,6 +33,7 @@ const RecognitionModal = ({
   isOpen,
   onClose,
   userId,
+  fingerId,
   onRecognized,
 }: RecognitionModalProps) => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -210,6 +212,27 @@ const RecognitionModal = ({
       isRecognitionStartedRef.current ||
       isCompleteRef.current
     ) {
+      return;
+    }
+
+    // Check if student has fingerprint
+    if (fingerId === null || fingerId === undefined || fingerId === 0) {
+      setSteps((prev) =>
+        prev.map((s, idx) =>
+          idx === 0 ?
+            {
+              ...s,
+              status: "failed",
+              description: "Student has no fingerprint enrolled",
+            }
+          : s,
+        ),
+      );
+      setCurrentStep(0);
+      safeOnRecognized(userId, false);
+      setTimeout(() => {
+        onClose?.();
+      }, 2000);
       return;
     }
 
@@ -466,7 +489,7 @@ const RecognitionModal = ({
     return () => {
       clearTimers();
     };
-  }, [isOpen, userId, updateStepUI, safeOnRecognized, onClose]);
+  }, [isOpen, userId, fingerId, updateStepUI, safeOnRecognized, onClose]);
 
   if (!isOpen) return null;
 
