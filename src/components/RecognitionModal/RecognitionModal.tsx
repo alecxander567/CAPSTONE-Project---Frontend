@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import axios from "axios";
-// REMOVE THIS LINE: import "./RecognitionModal.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 const DEFAULT_DEVICE_ID = "esp32-default";
@@ -41,8 +40,6 @@ const RecognitionModal = ({
     RECOGNITION_TIMEOUT_SECONDS,
   );
   const [targetDevice, setTargetDevice] = useState<string>("");
-  const [isRecognitionStarted, setIsRecognitionStarted] = useState(false);
-  const [isComplete, setIsComplete] = useState(false);
   const [steps, setSteps] = useState<StepUI[]>([
     {
       id: 0,
@@ -79,6 +76,13 @@ const RecognitionModal = ({
   const isCompletedRef = useRef(false);
   const isPollingRef = useRef(false);
   const isResolvedRef = useRef(false);
+  // ✅ FIX: these were `useState` before. Being in the effect's dependency
+  // array meant flipping them re-ran the effect, whose cleanup
+  // (clearTimers) immediately wiped out the countdown/poll interval that
+  // had just been created — that's what made the steps "stick". Plain
+  // refs don't trigger re-renders or re-run the effect.
+  const recognitionStartedRef = useRef(false);
+  const isCompleteFlagRef = useRef(false);
 
   const clearTimers = () => {
     if (pollRef.current !== null) {
@@ -156,34 +160,18 @@ const RecognitionModal = ({
   if (isOpen !== prevIsOpen) {
     setPrevIsOpen(isOpen);
 
-    if (!isOpen) {
-      // Modal just closed — reset everything
-      setTargetDevice("");
-      setCurrentStep(0);
-      setIsRecognitionStarted(false);
-      setIsComplete(false);
-      setSteps((prev) => prev.map((s) => ({ ...s, status: "waiting" })));
-      setTimeoutSeconds(RECOGNITION_TIMEOUT_SECONDS);
-      // Reset refs
-      hasCalledRef.current = false;
-      isCompletedRef.current = false;
-      isPollingRef.current = false;
-      isResolvedRef.current = false;
-      clearTimers();
-    } else {
-      // Modal just opened - start fresh
-      setIsRecognitionStarted(false);
-      setIsComplete(false);
-      hasCalledRef.current = false;
-      isCompletedRef.current = false;
-      isPollingRef.current = false;
-      isResolvedRef.current = false;
-      setCurrentStep(0);
-      setSteps((prev) => prev.map((s) => ({ ...s, status: "waiting" })));
-      setTimeoutSeconds(RECOGNITION_TIMEOUT_SECONDS);
-      setTargetDevice("");
-      clearTimers();
-    }
+    setTargetDevice("");
+    setCurrentStep(0);
+    setSteps((prev) => prev.map((s) => ({ ...s, status: "waiting" })));
+    setTimeoutSeconds(RECOGNITION_TIMEOUT_SECONDS);
+
+    recognitionStartedRef.current = false;
+    isCompleteFlagRef.current = false;
+    hasCalledRef.current = false;
+    isCompletedRef.current = false;
+    isPollingRef.current = false;
+    isResolvedRef.current = false;
+    clearTimers();
   }
 
   useEffect(() => {
@@ -203,12 +191,14 @@ const RecognitionModal = ({
 
   // Starts recognition when the modal opens
   useEffect(() => {
-    if (!isOpen || !userId || isRecognitionStarted || isComplete) return;
+    if (!isOpen || !userId) return;
+    // ✅ Guard with a ref, not state — flipping a ref doesn't re-run this
+    // effect, so the timers set up below are never torn down mid-flight.
+    if (recognitionStartedRef.current || isCompleteFlagRef.current) return;
 
     let targetFingerId: number | null = null;
 
-    // Mark as started to prevent multiple starts
-    setIsRecognitionStarted(true);
+    recognitionStartedRef.current = true;
     isResolvedRef.current = false;
 
     // Reset the timer
@@ -283,7 +273,7 @@ const RecognitionModal = ({
               ),
             );
             safeOnRecognized(userId, false);
-            setIsComplete(true);
+            isCompleteFlagRef.current = true;
             setTimeout(() => {
               onClose?.();
             }, 1500);
@@ -338,7 +328,7 @@ const RecognitionModal = ({
                   ),
                 );
                 safeOnRecognized(userId, matched);
-                setIsComplete(true);
+                isCompleteFlagRef.current = true;
                 setTimeout(() => {
                   onClose?.();
                 }, 2000);
@@ -370,7 +360,7 @@ const RecognitionModal = ({
                   ),
                 );
                 safeOnRecognized(userId, false);
-                setIsComplete(true);
+                isCompleteFlagRef.current = true;
                 setTimeout(() => {
                   onClose?.();
                 }, 1500);
@@ -401,7 +391,7 @@ const RecognitionModal = ({
               ),
             );
             safeOnRecognized(userId, false);
-            setIsComplete(true);
+            isCompleteFlagRef.current = true;
             setTimeout(() => {
               onClose?.();
             }, 2000);
@@ -421,7 +411,7 @@ const RecognitionModal = ({
               ),
             );
             safeOnRecognized(userId, false);
-            setIsComplete(true);
+            isCompleteFlagRef.current = true;
             setTimeout(() => {
               onClose?.();
             }, 1500);
@@ -435,15 +425,8 @@ const RecognitionModal = ({
     return () => {
       clearTimers();
     };
-  }, [
-    isOpen,
-    userId,
-    updateStepUI,
-    safeOnRecognized,
-    onClose,
-    isRecognitionStarted,
-    isComplete,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, userId, updateStepUI, safeOnRecognized, onClose]);
 
   if (!isOpen) return null;
 
