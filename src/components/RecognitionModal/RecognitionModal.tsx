@@ -12,9 +12,6 @@ const RING_RADIUS = 34;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
 // ─── STRICT MODE LOCK ──────────────────────────────────────────────────────
-// React StrictMode double-mounts the effect in dev. This module-level lock
-// prevents the second mount from starting a duplicate recognition session
-// and invalidating the first one mid-flight.
 let activeRecognitionUserId: number | null = null;
 
 interface RecognitionModalProps {
@@ -89,9 +86,7 @@ const RecognitionModal = ({
   const targetDeviceRef = useRef<string>("");
   const clearAttemptedRef = useRef(false);
   const pollingStartedRef = useRef(false);
-  const isFirstPollRef = useRef(true);
 
-  // ─── RELEASE THE STRICT MODE LOCK ──────────────────────────────────────
   const releaseLock = useCallback(() => {
     if (activeRecognitionUserId === userId) {
       activeRecognitionUserId = null;
@@ -124,7 +119,6 @@ const RecognitionModal = ({
       if (hasCalledRef.current || isCompletedRef.current) return;
       hasCalledRef.current = true;
       isCompletedRef.current = true;
-      // Release the lock when recognition completes
       releaseLock();
       onRecognized(id, success);
     },
@@ -178,7 +172,6 @@ const RecognitionModal = ({
     setPrevIsOpen(isOpen);
 
     if (!isOpen) {
-      // Modal closed — release the lock and clean up
       releaseLock();
       setTargetDevice("");
       setTargetFingerId(null);
@@ -188,7 +181,6 @@ const RecognitionModal = ({
       pollAttemptsRef.current = 0;
       clearAttemptedRef.current = false;
       pollingStartedRef.current = false;
-      isFirstPollRef.current = true;
       setSteps((prev) => prev.map((s) => ({ ...s, status: "waiting" })));
       setTimeoutSeconds(RECOGNITION_TIMEOUT_SECONDS);
       hasCalledRef.current = false;
@@ -197,13 +189,11 @@ const RecognitionModal = ({
       isResolvedRef.current = false;
       clearTimers();
     } else {
-      // Modal opened - fresh start (lock is released by the close path above)
       isRecognitionStartedRef.current = false;
       isCompleteRef.current = false;
       pollAttemptsRef.current = 0;
       clearAttemptedRef.current = false;
       pollingStartedRef.current = false;
-      isFirstPollRef.current = true;
       hasCalledRef.current = false;
       isCompletedRef.current = false;
       isPollingRef.current = false;
@@ -234,23 +224,19 @@ const RecognitionModal = ({
 
   // Starts recognition when the modal opens
   useEffect(() => {
-    // ─── STRICT MODE GUARD ──────────────────────────────────────────────
-    // If we already have an active session for this user, block the second mount
     if (
       !isOpen ||
       !userId ||
       isRecognitionStartedRef.current ||
       isCompleteRef.current ||
-      activeRecognitionUserId === userId // <-- StrictMode lock check
+      activeRecognitionUserId === userId
     ) {
-      // If we're blocked by the lock, make sure we clean up any partial state
       if (activeRecognitionUserId === userId && !isOpen) {
         activeRecognitionUserId = null;
       }
       return;
     }
 
-    // ─── CLAIM THE LOCK ─────────────────────────────────────────────────
     activeRecognitionUserId = userId;
 
     let targetFingerIdLocal: number | null = null;
@@ -259,7 +245,6 @@ const RecognitionModal = ({
     isResolvedRef.current = false;
     pollAttemptsRef.current = 0;
     pollingStartedRef.current = false;
-    isFirstPollRef.current = true;
 
     setTimeoutSeconds(RECOGNITION_TIMEOUT_SECONDS);
 
@@ -582,7 +567,6 @@ const RecognitionModal = ({
     startRecognition();
 
     return () => {
-      // Cleanup: release the lock if the component unmounts
       releaseLock();
       clearTimers();
     };
