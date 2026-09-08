@@ -82,6 +82,7 @@ const RecognitionModal = ({
   const isCompleteRef = useRef(false);
   const pollAttemptsRef = useRef(0);
   const targetDeviceRef = useRef<string>("");
+  const clearAttemptedRef = useRef(false);
 
   const clearTimers = () => {
     if (pollRef.current !== null) {
@@ -167,6 +168,7 @@ const RecognitionModal = ({
       isRecognitionStartedRef.current = false;
       isCompleteRef.current = false;
       pollAttemptsRef.current = 0;
+      clearAttemptedRef.current = false;
       setSteps((prev) => prev.map((s) => ({ ...s, status: "waiting" })));
       setTimeoutSeconds(RECOGNITION_TIMEOUT_SECONDS);
       // Reset refs
@@ -180,6 +182,7 @@ const RecognitionModal = ({
       isRecognitionStartedRef.current = false;
       isCompleteRef.current = false;
       pollAttemptsRef.current = 0;
+      clearAttemptedRef.current = false;
       hasCalledRef.current = false;
       isCompletedRef.current = false;
       isPollingRef.current = false;
@@ -236,17 +239,24 @@ const RecognitionModal = ({
 
     const startRecognition = async () => {
       try {
-        // Clear any existing recognition state first
+        // FIX: Clear any existing recognition state first - ALWAYS do this
+        // This prevents stale results from showing up immediately
         try {
+          console.log("[Recognition] Clearing any stale recognition state...");
           await axios.post(
             `${API_BASE_URL}/fingerprints/cancel-recognition/${userId}`,
             {},
             { timeout: 5000 },
           );
-          console.log("Cleared previous recognition state");
+          clearAttemptedRef.current = true;
+          console.log("[Recognition] Cleared previous recognition state");
         } catch (clearErr) {
-          console.log("Error clearing previous state:", clearErr);
+          console.log("[Recognition] Error clearing previous state:", clearErr);
+          // Continue even if clear fails - the device might not have state
         }
+
+        // Wait a moment for the clear to propagate
+        await new Promise((resolve) => setTimeout(resolve, 500));
 
         // Now start new recognition
         const res = await axios.post(
@@ -408,6 +418,17 @@ const RecognitionModal = ({
                 }, 1500);
               } else if (status === "not_in_recognition_mode") {
                 console.log("Device not in recognition mode, waiting...");
+                // Update the step description
+                setSteps((prev) =>
+                  prev.map((s, idx) =>
+                    idx === 1 ?
+                      {
+                        ...s,
+                        description: "Waiting for device to be ready...",
+                      }
+                    : s,
+                  ),
+                );
               }
             } catch (err) {
               console.error("Polling error:", err);
@@ -416,7 +437,7 @@ const RecognitionModal = ({
               isPollingRef.current = false;
             }
           }, POLL_INTERVAL);
-        }, 1000);
+        }, 1500);
       } catch (err) {
         if (!isResolvedRef.current) {
           isResolvedRef.current = true;
