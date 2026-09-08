@@ -214,8 +214,10 @@ const ProgramStudents = () => {
     }
   };
 
-  // Handle recognize click - updated to show device info
+  // Handle recognize click - FIXED: No premature alert
   const handleRecognizeClick = async (student: Student) => {
+    if (recognitionModalOpen) return;
+
     // Check if student has a fingerprint
     if (!student.finger_id) {
       showAlert("Student has no fingerprint enrolled", false);
@@ -233,10 +235,10 @@ const ProgramStudents = () => {
       );
 
       if (response.data.target_device) {
-        showAlert(
+        console.log(
           `Recognition started on device: ${response.data.target_device}`,
-          true,
         );
+        // FIXED: Don't show success alert here - just open the modal
         setRecognitionModalOpen(true);
       } else {
         showAlert("Failed to start recognition. No device available.", false);
