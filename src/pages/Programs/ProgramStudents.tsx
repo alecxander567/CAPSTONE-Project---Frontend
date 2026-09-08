@@ -92,7 +92,7 @@ const ProgramStudents = () => {
   const isProcessingEnrollmentRef = useRef(false);
   const alertTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // NEW: Refresh students function
+  // Refresh students function
   const refreshStudents = useCallback(async () => {
     if (!programCode) return;
     try {
@@ -162,7 +162,6 @@ const ProgramStudents = () => {
         true,
       );
 
-      // Refresh students after clearing
       await refreshStudents();
     } catch (err) {
       const message =
@@ -284,7 +283,6 @@ const ProgramStudents = () => {
         true,
       );
 
-      // Refresh students after clearing
       await refreshStudents();
     } catch (err) {
       const message =
@@ -363,7 +361,6 @@ const ProgramStudents = () => {
       );
       showAlert("Fingerprint unenrolled successfully!", true);
 
-      // Refresh students after unenroll
       await refreshStudents();
     } catch (err) {
       let errorMessage = "Failed to unenroll fingerprint";
@@ -396,7 +393,6 @@ const ProgramStudents = () => {
     );
   }, [fetchedStudents]);
 
-  // NEW: Update student status and refresh if enrolled
   const updateStudentStatus = (
     studentId: number,
     status: FingerprintStatus,
@@ -406,7 +402,6 @@ const ProgramStudents = () => {
       refreshStudents();
     }
 
-    // Still update the UI optimistically
     setStudents((prev) =>
       prev.map((s) =>
         s.id === studentId ? { ...s, fingerprint_status: status } : s,
@@ -462,13 +457,13 @@ const ProgramStudents = () => {
         isOpen={showEnrollmentModal}
         onClose={() => {
           setShowEnrollmentModal(false);
-          // Refresh students when modal closes (enrollment completed)
           refreshStudents();
         }}
         userId={selectedStudentId || 0}
         fingerId={selectedFingerId || 0}
         updateStatus={updateStudentStatus}
       />
+
       <RecognitionModal
         isOpen={recognitionModalOpen}
         onClose={() => {
@@ -479,9 +474,10 @@ const ProgramStudents = () => {
           }, 100);
         }}
         userId={currentStudent?.id || 0}
-        fingerId={currentStudent?.finger_id || null}
+        fingerId={currentStudent?.finger_id || 0}
         onRecognized={handleRecognitionResult}
       />
+
       <DeleteFingerprintModal
         show={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
