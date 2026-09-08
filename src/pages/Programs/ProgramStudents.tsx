@@ -7,7 +7,7 @@ import DeleteFingerprintModal from "../../components/DeleteFingerprintModal/Dele
 import RecognitionModal from "../../components/RecognitionModal/RecognitionModal";
 import SuccessAlert from "../../components/SuccessAlert/SuccessAlert";
 import ErrorAlert from "../../components/SuccessAlert/ErrorAlert";
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import axios from "axios";
 import "./Students.css";
 
@@ -92,6 +92,27 @@ const ProgramStudents = () => {
   const isProcessingEnrollmentRef = useRef(false);
   const alertTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // NEW: Refresh students function
+  const refreshStudents = useCallback(async () => {
+    if (!programCode) return;
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/programs/${programCode}/students`,
+      );
+      if (response.data) {
+        setStudents(
+          response.data.map((s: any) => ({
+            ...s,
+            year_level: s.year_level ?? null,
+            finger_id: s.finger_id ?? null,
+          })),
+        );
+      }
+    } catch (err) {
+      console.error("Failed to refresh students:", err);
+    }
+  }, [programCode]);
+
   const showAlert = (message: string, isSuccess: boolean) => {
     if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
     setAlertMessage(message);
@@ -140,6 +161,9 @@ const ProgramStudents = () => {
         response.data.message || "Cleared all pending enrollments!",
         true,
       );
+
+      // Refresh students after clearing
+      await refreshStudents();
     } catch (err) {
       const message =
         axios.isAxiosError(err) ?
@@ -259,6 +283,9 @@ const ProgramStudents = () => {
         `Cleared stuck enrollment for ${student.first_name} ${student.last_name}.`,
         true,
       );
+
+      // Refresh students after clearing
+      await refreshStudents();
     } catch (err) {
       const message =
         axios.isAxiosError(err) ?
@@ -335,6 +362,9 @@ const ProgramStudents = () => {
         ),
       );
       showAlert("Fingerprint unenrolled successfully!", true);
+
+      // Refresh students after unenroll
+      await refreshStudents();
     } catch (err) {
       let errorMessage = "Failed to unenroll fingerprint";
       if (axios.isAxiosError(err)) {
@@ -366,15 +396,23 @@ const ProgramStudents = () => {
     );
   }, [fetchedStudents]);
 
+  // NEW: Update student status and refresh if enrolled
   const updateStudentStatus = (
     studentId: number,
     status: FingerprintStatus,
   ) => {
+    // If enrolled, refresh the entire list to get the updated finger_id
+    if (status === "enrolled") {
+      refreshStudents();
+    }
+
+    // Still update the UI optimistically
     setStudents((prev) =>
       prev.map((s) =>
         s.id === studentId ? { ...s, fingerprint_status: status } : s,
       ),
     );
+
     if (isProcessingEnrollmentRef.current) return;
     if (status === "enrolled" || status === "failed") {
       isProcessingEnrollmentRef.current = true;
@@ -422,7 +460,11 @@ const ProgramStudents = () => {
 
       <EnrollmentModal
         isOpen={showEnrollmentModal}
-        onClose={() => setShowEnrollmentModal(false)}
+        onClose={() => {
+          setShowEnrollmentModal(false);
+          // Refresh students when modal closes (enrollment completed)
+          refreshStudents();
+        }}
         userId={selectedStudentId || 0}
         fingerId={selectedFingerId || 0}
         updateStatus={updateStudentStatus}
