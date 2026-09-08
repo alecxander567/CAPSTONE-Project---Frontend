@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import axios from "axios";
-import "../EnrollmentModal/EnrollmentModal.css";
+import "./RecognitionModal.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 const DEFAULT_DEVICE_ID = "esp32-default";
@@ -221,7 +221,7 @@ const RecognitionModal = ({
 
     const startRecognition = async () => {
       try {
-        // CRITICAL: Clear any existing recognition state first
+        // Clear any existing recognition state first
         try {
           await axios.post(
             `${API_BASE_URL}/fingerprints/cancel-recognition/${userId}`,
@@ -375,18 +375,15 @@ const RecognitionModal = ({
                   onClose?.();
                 }, 1500);
               } else if (status === "not_in_recognition_mode") {
-                // Device is not in recognition mode - this shouldn't happen
-                // but if it does, we should wait a bit longer
                 console.log("Device not in recognition mode, waiting...");
               }
             } catch (err) {
               console.error("Polling error:", err);
-              // Don't immediately fail on network errors - keep polling
             } finally {
               isPollingRef.current = false;
             }
           }, POLL_INTERVAL);
-        }, 1500); // Increased delay to ensure device is ready
+        }, 1500);
       } catch (err) {
         if (!isResolvedRef.current) {
           isResolvedRef.current = true;
