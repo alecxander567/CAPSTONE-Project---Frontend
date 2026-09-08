@@ -42,6 +42,7 @@ const RecognitionModal = ({
   );
   const [targetDevice, setTargetDevice] = useState<string>("");
   const [isRecognitionStarted, setIsRecognitionStarted] = useState(false);
+  const [isComplete, setIsComplete] = useState(false);
   const [steps, setSteps] = useState<StepUI[]>([
     {
       id: 0,
@@ -77,6 +78,7 @@ const RecognitionModal = ({
   const hasCalledRef = useRef(false);
   const isCompletedRef = useRef(false);
   const isPollingRef = useRef(false);
+  const isResolvedRef = useRef(false);
 
   const clearTimers = () => {
     if (pollRef.current !== null) {
@@ -159,19 +161,23 @@ const RecognitionModal = ({
       setTargetDevice("");
       setCurrentStep(0);
       setIsRecognitionStarted(false);
+      setIsComplete(false);
       setSteps((prev) => prev.map((s) => ({ ...s, status: "waiting" })));
       setTimeoutSeconds(RECOGNITION_TIMEOUT_SECONDS);
       // Reset refs
       hasCalledRef.current = false;
       isCompletedRef.current = false;
       isPollingRef.current = false;
+      isResolvedRef.current = false;
       clearTimers();
     } else {
       // Modal just opened - start fresh
       setIsRecognitionStarted(false);
+      setIsComplete(false);
       hasCalledRef.current = false;
       isCompletedRef.current = false;
       isPollingRef.current = false;
+      isResolvedRef.current = false;
       setCurrentStep(0);
       setSteps((prev) => prev.map((s) => ({ ...s, status: "waiting" })));
       setTimeoutSeconds(RECOGNITION_TIMEOUT_SECONDS);
@@ -197,13 +203,13 @@ const RecognitionModal = ({
 
   // Starts recognition when the modal opens
   useEffect(() => {
-    if (!isOpen || !userId || isRecognitionStarted) return;
+    if (!isOpen || !userId || isRecognitionStarted || isComplete) return;
 
     let targetFingerId: number | null = null;
-    let isResolved = false;
 
     // Mark as started to prevent multiple starts
     setIsRecognitionStarted(true);
+    isResolvedRef.current = false;
 
     // Reset the timer
     setTimeoutSeconds(RECOGNITION_TIMEOUT_SECONDS);
@@ -215,16 +221,16 @@ const RecognitionModal = ({
 
     const startRecognition = async () => {
       try {
-        // First, clear any existing recognition state on the device
-        // This ensures we start fresh
+        // CRITICAL: Clear any existing recognition state first
         try {
           await axios.post(
             `${API_BASE_URL}/fingerprints/cancel-recognition/${userId}`,
             {},
             { timeout: 5000 },
           );
-        } catch {
-          // Ignore errors - the endpoint might not exist or already cleared
+          console.log("Cleared previous recognition state");
+        } catch (clearErr) {
+          console.log("Error clearing previous state:", clearErr);
         }
 
         // Now start new recognition
@@ -261,8 +267,8 @@ const RecognitionModal = ({
         }
 
         timeoutRef.current = window.setTimeout(() => {
-          if (!isResolved) {
-            isResolved = true;
+          if (!isResolvedRef.current) {
+            isResolvedRef.current = true;
             clearTimers();
             updateStepUI("error");
             setSteps((prev) =>
@@ -277,6 +283,7 @@ const RecognitionModal = ({
               ),
             );
             safeOnRecognized(userId, false);
+            setIsComplete(true);
             setTimeout(() => {
               onClose?.();
             }, 1500);
@@ -287,13 +294,13 @@ const RecognitionModal = ({
           clearInterval(pollRef.current);
         }
 
-        // Start polling - but only after a small delay to ensure device is ready
+        // Start polling after a delay
         setTimeout(() => {
-          if (isResolved) return;
+          if (isResolvedRef.current) return;
 
           pollRef.current = window.setInterval(async () => {
             if (!targetFingerId) return;
-            if (isResolved) {
+            if (isResolvedRef.current) {
               if (pollRef.current) {
                 clearInterval(pollRef.current);
                 pollRef.current = null;
@@ -311,8 +318,8 @@ const RecognitionModal = ({
               const { status, matched } = res.data;
 
               // Only process if we get a definitive result
-              if (status === "done" && !isResolved) {
-                isResolved = true;
+              if (status === "done" && !isResolvedRef.current) {
+                isResolvedRef.current = true;
                 clearTimers();
                 updateStepUI(matched ? "success" : "error");
                 setSteps((prev) =>
@@ -331,6 +338,7 @@ const RecognitionModal = ({
                   ),
                 );
                 safeOnRecognized(userId, matched);
+                setIsComplete(true);
                 setTimeout(() => {
                   onClose?.();
                 }, 2000);
@@ -346,8 +354,8 @@ const RecognitionModal = ({
                     : s,
                   ),
                 );
-              } else if (status === "timeout" && !isResolved) {
-                isResolved = true;
+              } else if (status === "timeout" && !isResolvedRef.current) {
+                isResolvedRef.current = true;
                 clearTimers();
                 updateStepUI("error");
                 setSteps((prev) =>
@@ -362,47 +370,26 @@ const RecognitionModal = ({
                   ),
                 );
                 safeOnRecognized(userId, false);
+                setIsComplete(true);
                 setTimeout(() => {
                   onClose?.();
                 }, 1500);
+              } else if (status === "not_in_recognition_mode") {
+                // Device is not in recognition mode - this shouldn't happen
+                // but if it does, we should wait a bit longer
+                console.log("Device not in recognition mode, waiting...");
               }
             } catch (err) {
               console.error("Polling error:", err);
-              if (!isResolved) {
-                // Don't immediately fail on network errors - keep polling
-                // Only fail if we get a 404 or 400
-                if (
-                  axios.isAxiosError(err) &&
-                  (err.response?.status === 404 || err.response?.status === 400)
-                ) {
-                  isResolved = true;
-                  clearTimers();
-                  updateStepUI("error");
-                  setSteps((prev) =>
-                    prev.map((s, idx) =>
-                      idx === 2 ?
-                        {
-                          ...s,
-                          status: "failed" as StepStatus,
-                          description: "Recognition failed. Please try again.",
-                        }
-                      : s,
-                    ),
-                  );
-                  safeOnRecognized(userId, false);
-                  setTimeout(() => {
-                    onClose?.();
-                  }, 1500);
-                }
-              }
+              // Don't immediately fail on network errors - keep polling
             } finally {
               isPollingRef.current = false;
             }
           }, POLL_INTERVAL);
-        }, 1000); // Delay polling to ensure device is ready
+        }, 1500); // Increased delay to ensure device is ready
       } catch (err) {
-        if (!isResolved) {
-          isResolved = true;
+        if (!isResolvedRef.current) {
+          isResolvedRef.current = true;
           if (axios.isAxiosError(err) && err.response?.status === 503) {
             setCurrentStep(0);
             setSteps((prev) =>
@@ -417,6 +404,7 @@ const RecognitionModal = ({
               ),
             );
             safeOnRecognized(userId, false);
+            setIsComplete(true);
             setTimeout(() => {
               onClose?.();
             }, 2000);
@@ -436,6 +424,7 @@ const RecognitionModal = ({
               ),
             );
             safeOnRecognized(userId, false);
+            setIsComplete(true);
             setTimeout(() => {
               onClose?.();
             }, 1500);
@@ -456,6 +445,7 @@ const RecognitionModal = ({
     safeOnRecognized,
     onClose,
     isRecognitionStarted,
+    isComplete,
   ]);
 
   if (!isOpen) return null;
