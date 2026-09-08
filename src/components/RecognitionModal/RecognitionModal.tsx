@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import axios from "axios";
-import "./RecognitionModal.css";
+// REMOVE THIS LINE: import "./RecognitionModal.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 const DEFAULT_DEVICE_ID = "esp32-default";
@@ -466,10 +466,26 @@ const RecognitionModal = ({
               <h2>Fingerprint Recognition</h2>
               <p>Please place your finger on the sensor</p>
               {targetDevice && (
-                <div className="recognition-device-info">
-                  <i className="bi bi-cpu"></i>
+                <div
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    marginTop: "8px",
+                    padding: "6px 14px",
+                    background: "rgba(15, 82, 186, 0.08)",
+                    borderRadius: "20px",
+                    fontSize: "0.85rem",
+                    color: "#1a202c",
+                  }}>
+                  <i
+                    className="bi bi-cpu"
+                    style={{ color: "#0f52ba", fontSize: "1rem" }}></i>
                   <span>
-                    Device: <strong>{targetDevice}</strong>
+                    Device:{" "}
+                    <strong style={{ color: "#0f52ba", fontWeight: 600 }}>
+                      {targetDevice}
+                    </strong>
                   </span>
                 </div>
               )}
