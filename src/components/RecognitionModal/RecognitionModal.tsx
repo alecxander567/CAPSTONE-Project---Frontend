@@ -33,6 +33,7 @@ const RecognitionModal = ({
   isOpen,
   onClose,
   userId,
+  fingerId,
   onRecognized,
 }: RecognitionModalProps) => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -76,10 +77,9 @@ const RecognitionModal = ({
   const isCompletedRef = useRef(false);
   const isPollingRef = useRef(false);
   const isResolvedRef = useRef(false);
-
-  // FIXED: Use refs instead of state to prevent effect re-triggering
   const isRecognitionStartedRef = useRef(false);
   const isCompleteRef = useRef(false);
+  const pollAttemptsRef = useRef(0);
 
   const clearTimers = () => {
     if (pollRef.current !== null) {
@@ -163,6 +163,7 @@ const RecognitionModal = ({
       setCurrentStep(0);
       isRecognitionStartedRef.current = false;
       isCompleteRef.current = false;
+      pollAttemptsRef.current = 0;
       setSteps((prev) => prev.map((s) => ({ ...s, status: "waiting" })));
       setTimeoutSeconds(RECOGNITION_TIMEOUT_SECONDS);
       // Reset refs
@@ -175,6 +176,7 @@ const RecognitionModal = ({
       // Modal just opened - start fresh
       isRecognitionStartedRef.current = false;
       isCompleteRef.current = false;
+      pollAttemptsRef.current = 0;
       hasCalledRef.current = false;
       isCompletedRef.current = false;
       isPollingRef.current = false;
@@ -203,7 +205,6 @@ const RecognitionModal = ({
   }, [isOpen]);
 
   // Starts recognition when the modal opens
-  // FIXED: Removed isRecognitionStarted and isComplete from deps
   useEffect(() => {
     if (
       !isOpen ||
@@ -218,6 +219,7 @@ const RecognitionModal = ({
     // Mark as started to prevent multiple starts
     isRecognitionStartedRef.current = true;
     isResolvedRef.current = false;
+    pollAttemptsRef.current = 0;
 
     // Reset the timer
     setTimeoutSeconds(RECOGNITION_TIMEOUT_SECONDS);
@@ -262,6 +264,7 @@ const RecognitionModal = ({
               {
                 ...s,
                 status: "active" as StepStatus,
+                description: "Please place your finger on the sensor...",
               }
             : s,
           ),
@@ -302,7 +305,7 @@ const RecognitionModal = ({
           clearInterval(pollRef.current);
         }
 
-        // Start polling after a delay
+        // Start polling immediately but with a small delay to ensure device is ready
         setTimeout(() => {
           if (isResolvedRef.current) return;
 
@@ -317,13 +320,19 @@ const RecognitionModal = ({
             }
             if (isPollingRef.current) return;
             isPollingRef.current = true;
+            pollAttemptsRef.current++;
 
             try {
+              // Use the finger_id from the target (the enrolled fingerprint)
               const res = await axios.get(
                 `${API_BASE_URL}/fingerprints/get-recognition-result?finger_id=${targetFingerId}&device_id=${DEFAULT_DEVICE_ID}`,
+                { timeout: 5000 },
               );
 
               const { status, matched } = res.data;
+              console.log(
+                `[Poll attempt ${pollAttemptsRef.current}] Status: ${status}, Matched: ${matched}`,
+              );
 
               // Only process if we get a definitive result
               if (status === "done" && !isResolvedRef.current) {
@@ -384,14 +393,27 @@ const RecognitionModal = ({
                 }, 1500);
               } else if (status === "not_in_recognition_mode") {
                 console.log("Device not in recognition mode, waiting...");
+                // Update the step description to show we're waiting
+                setSteps((prev) =>
+                  prev.map((s, idx) =>
+                    idx === 0 ?
+                      {
+                        ...s,
+                        description:
+                          "Waiting for device to enter recognition mode...",
+                      }
+                    : s,
+                  ),
+                );
               }
             } catch (err) {
               console.error("Polling error:", err);
+              // Don't immediately fail on network errors - keep polling
             } finally {
               isPollingRef.current = false;
             }
           }, POLL_INTERVAL);
-        }, 1500);
+        }, 1000); // Small delay to ensure device is ready
       } catch (err) {
         if (!isResolvedRef.current) {
           isResolvedRef.current = true;
@@ -443,7 +465,6 @@ const RecognitionModal = ({
     return () => {
       clearTimers();
     };
-    // FIXED: Removed isRecognitionStarted and isComplete from deps
   }, [isOpen, userId, updateStepUI, safeOnRecognized, onClose]);
 
   if (!isOpen) return null;
