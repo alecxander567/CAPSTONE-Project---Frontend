@@ -214,8 +214,16 @@ const ProgramStudents = () => {
     }
   };
 
-  // Handle recognize click - FIXED: No premature alert
-  const handleRecognizeClick = async (student: Student) => {
+  // Handle recognize click.
+  // FIX: This used to also POST /start-recognition here, and then
+  // RecognitionModal's own effect would ALSO call cancel-recognition +
+  // start-recognition when it opened. That double-start caused the
+  // backend's recognition_target_id / recognition_matched state to get
+  // reassigned mid-flight, so a stale/mismatched result could come back
+  // and the modal would show a result before the finger was ever scanned.
+  // Now we only open the modal - RecognitionModal owns starting recognition,
+  // exactly once.
+  const handleRecognizeClick = (student: Student) => {
     if (recognitionModalOpen) return;
 
     // Check if student has a fingerprint
@@ -225,31 +233,7 @@ const ProgramStudents = () => {
     }
 
     setCurrentStudent(student);
-
-    try {
-      // Start recognition - backend will determine which device to use
-      const response = await axios.post(
-        `${API_BASE_URL}/fingerprints/start-recognition/${student.id}`,
-        {},
-        { timeout: 10000 },
-      );
-
-      if (response.data.target_device) {
-        console.log(
-          `Recognition started on device: ${response.data.target_device}`,
-        );
-        // FIXED: Don't show success alert here - just open the modal
-        setRecognitionModalOpen(true);
-      } else {
-        showAlert("Failed to start recognition. No device available.", false);
-      }
-    } catch (err) {
-      const message =
-        axios.isAxiosError(err) ?
-          err.response?.data?.detail || err.message
-        : "Failed to start recognition";
-      showAlert(message, false);
-    }
+    setRecognitionModalOpen(true);
   };
 
   const handleRecognitionResult = (studentId: number, success: boolean) => {
