@@ -11,6 +11,12 @@ const POLL_INTERVAL = 500;
 const RING_RADIUS = 34;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
+// ─── STRICT MODE LOCK ──────────────────────────────────────────────────────
+// React StrictMode double-mounts the effect in dev. This module-level lock
+// prevents the second mount from starting a duplicate recognition session
+// and invalidating the first one mid-flight.
+let activeRecognitionUserId: number | null = null;
+
 interface RecognitionModalProps {
   isOpen: boolean;
   onClose?: () => void;
@@ -85,6 +91,13 @@ const RecognitionModal = ({
   const pollingStartedRef = useRef(false);
   const isFirstPollRef = useRef(true);
 
+  // ─── RELEASE THE STRICT MODE LOCK ──────────────────────────────────────
+  const releaseLock = useCallback(() => {
+    if (activeRecognitionUserId === userId) {
+      activeRecognitionUserId = null;
+    }
+  }, [userId]);
+
   const clearTimers = () => {
     if (pollRef.current !== null) {
       clearInterval(pollRef.current);
@@ -111,9 +124,11 @@ const RecognitionModal = ({
       if (hasCalledRef.current || isCompletedRef.current) return;
       hasCalledRef.current = true;
       isCompletedRef.current = true;
+      // Release the lock when recognition completes
+      releaseLock();
       onRecognized(id, success);
     },
-    [onRecognized],
+    [onRecognized, releaseLock],
   );
 
   const updateStepUI = useCallback((step: string) => {
@@ -163,6 +178,8 @@ const RecognitionModal = ({
     setPrevIsOpen(isOpen);
 
     if (!isOpen) {
+      // Modal closed — release the lock and clean up
+      releaseLock();
       setTargetDevice("");
       setTargetFingerId(null);
       setCurrentStep(0);
@@ -180,6 +197,7 @@ const RecognitionModal = ({
       isResolvedRef.current = false;
       clearTimers();
     } else {
+      // Modal opened - fresh start (lock is released by the close path above)
       isRecognitionStartedRef.current = false;
       isCompleteRef.current = false;
       pollAttemptsRef.current = 0;
@@ -216,13 +234,24 @@ const RecognitionModal = ({
 
   // Starts recognition when the modal opens
   useEffect(() => {
+    // ─── STRICT MODE GUARD ──────────────────────────────────────────────
+    // If we already have an active session for this user, block the second mount
     if (
       !isOpen ||
       !userId ||
       isRecognitionStartedRef.current ||
-      isCompleteRef.current
-    )
+      isCompleteRef.current ||
+      activeRecognitionUserId === userId // <-- StrictMode lock check
+    ) {
+      // If we're blocked by the lock, make sure we clean up any partial state
+      if (activeRecognitionUserId === userId && !isOpen) {
+        activeRecognitionUserId = null;
+      }
       return;
+    }
+
+    // ─── CLAIM THE LOCK ─────────────────────────────────────────────────
+    activeRecognitionUserId = userId;
 
     let targetFingerIdLocal: number | null = null;
 
@@ -293,7 +322,6 @@ const RecognitionModal = ({
             console.log(
               "[Recognition] Device ready check timeout, proceeding anyway",
             );
-            // Force proceed to place finger
             setSteps((prev) =>
               prev.map((s, idx) =>
                 idx === 0 ?
@@ -331,7 +359,6 @@ const RecognitionModal = ({
             if (mode === "recognize") {
               console.log("[Recognition] Device is ready in recognize mode!");
 
-              // Update to "Place Finger" step
               setSteps((prev) =>
                 prev.map((s, idx) =>
                   idx === 0 ?
@@ -351,11 +378,8 @@ const RecognitionModal = ({
               );
               setCurrentStep(1);
               updateStepUI("place_finger");
-
-              // Start polling for result
               startResultPolling();
             } else {
-              // Device not ready yet, check again
               setTimeout(checkDeviceReady, 500);
             }
           } catch (err) {
@@ -377,7 +401,6 @@ const RecognitionModal = ({
             clearTimeout(timeoutRef.current);
           }
 
-          // Overall timeout
           timeoutRef.current = window.setTimeout(() => {
             if (!isResolvedRef.current) {
               isResolvedRef.current = true;
@@ -396,13 +419,13 @@ const RecognitionModal = ({
               );
               safeOnRecognized(userId, false);
               isCompleteRef.current = true;
+              releaseLock();
               setTimeout(() => {
                 onClose?.();
               }, 1500);
             }
           }, RECOGNITION_TIMEOUT);
 
-          // Poll for result
           pollRef.current = window.setInterval(async () => {
             if (!targetFingerIdLocal) return;
             if (isResolvedRef.current) {
@@ -452,11 +475,11 @@ const RecognitionModal = ({
                 );
                 safeOnRecognized(userId, matched);
                 isCompleteRef.current = true;
+                releaseLock();
                 setTimeout(() => {
                   onClose?.();
                 }, 2000);
               } else if (status === "pending") {
-                // Still waiting
                 setSteps((prev) =>
                   prev.map((s, idx) =>
                     idx === 1 ?
@@ -484,11 +507,11 @@ const RecognitionModal = ({
                 );
                 safeOnRecognized(userId, false);
                 isCompleteRef.current = true;
+                releaseLock();
                 setTimeout(() => {
                   onClose?.();
                 }, 1500);
               } else if (status === "not_in_recognition_mode") {
-                // Device not in recognition mode yet
                 setSteps((prev) =>
                   prev.map((s, idx) =>
                     idx === 0 ?
@@ -508,11 +531,11 @@ const RecognitionModal = ({
           }, POLL_INTERVAL);
         };
 
-        // Start device ready check after a short delay
         setTimeout(checkDeviceReady, 1000);
       } catch (err) {
         if (!isResolvedRef.current) {
           isResolvedRef.current = true;
+          releaseLock();
           if (axios.isAxiosError(err) && err.response?.status === 503) {
             setCurrentStep(0);
             setSteps((prev) =>
@@ -559,9 +582,11 @@ const RecognitionModal = ({
     startRecognition();
 
     return () => {
+      // Cleanup: release the lock if the component unmounts
+      releaseLock();
       clearTimers();
     };
-  }, [isOpen, userId, updateStepUI, safeOnRecognized, onClose]);
+  }, [isOpen, userId, updateStepUI, safeOnRecognized, onClose, releaseLock]);
 
   if (!isOpen) return null;
 
