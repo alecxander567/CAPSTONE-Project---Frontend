@@ -1,779 +1,563 @@
-import { useParams, useNavigate } from "react-router-dom";
-import Sidebar from "../../components/Sidebar/Sidebar";
-import { useProgramStudents } from "../../hooks/useProgramStudents";
-import { useEnrollFingerprint } from "../../hooks/useEnrollFingerprint";
-import EnrollmentModal from "../../components/EnrollmentModal/EnrollmentModal";
-import DeleteFingerprintModal from "../../components/DeleteFingerprintModal/DeleteFingerprintModal";
-import RecognitionModal from "../../components/RecognitionModal/RecognitionModal";
-import SuccessAlert from "../../components/SuccessAlert/SuccessAlert";
-import ErrorAlert from "../../components/SuccessAlert/ErrorAlert";
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import axios from "axios";
-import "./Students.css";
+import "../EnrollmentModal/EnrollmentModal.css";
 
-interface Student {
-  id: number;
-  student_id_no: string;
-  first_name: string;
-  last_name: string;
-  program: string;
-  year_level: string | null;
-  fingerprint_status: "not_enrolled" | "pending" | "enrolled" | "failed";
-  finger_id: number | null;
-  profile_image?: string | null;
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+const DEFAULT_DEVICE_ID = "esp32-default";
+const RECOGNITION_TIMEOUT = 30000;
+const RECOGNITION_TIMEOUT_SECONDS = RECOGNITION_TIMEOUT / 1000;
+const POLL_INTERVAL = 500;
+
+// Same ring geometry as EnrollmentModal
+const RING_RADIUS = 34;
+const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
+
+interface RecognitionModalProps {
+  isOpen: boolean;
+  onClose?: () => void;
+  userId: number;
+  fingerId: number;
+  onRecognized: (studentId: number, success: boolean) => void;
 }
 
-type FingerprintStatus = "not_enrolled" | "pending" | "enrolled" | "failed";
+type StepStatus = "waiting" | "active" | "completed" | "failed";
 
-const API_BASE_URL = `${import.meta.env.VITE_API_URL}`;
-const DEFAULT_DEVICE_ID = "esp32-default";
-
-const FingerprintStatusBadge = ({ status }: { status: FingerprintStatus }) => {
-  const statusMap: Record<
-    FingerprintStatus,
-    { label: string; className: string }
-  > = {
-    not_enrolled: {
-      label: "Not Enrolled",
-      className: "students-pg-status-not",
-    },
-    pending: { label: "Pending", className: "students-pg-status-pending" },
-    enrolled: { label: "Enrolled", className: "students-pg-status-enrolled" },
-    failed: { label: "Failed", className: "students-pg-status-failed" },
-  };
-  const safeStatus = status || "not_enrolled";
-  const { label, className } =
-    statusMap[safeStatus as FingerprintStatus] || statusMap.not_enrolled;
-
-  return (
-    <span className={`students-pg-fingerprint-status ${className}`}>
-      <i className="bi bi-fingerprint"></i>
-      {label}
-    </span>
-  );
+type StepUI = {
+  id: number;
+  title: string;
+  description: string;
+  icon: string;
+  status: StepStatus;
 };
 
-const getInitials = (firstName: string, lastName: string) =>
-  `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase();
-
-const ProgramStudents = () => {
-  const { programCode } = useParams();
-  const navigate = useNavigate();
-  const {
-    students: fetchedStudents,
-    loading,
-    error,
-  } = useProgramStudents(programCode || "");
-  const [students, setStudents] = useState<Student[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showEnrollmentModal, setShowEnrollmentModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedStudentId, setSelectedStudentId] = useState<number | null>(
-    null,
+const RecognitionModal = ({
+  isOpen,
+  onClose,
+  userId,
+  onRecognized,
+}: RecognitionModalProps) => {
+  const [currentStep, setCurrentStep] = useState(0);
+  const [timeoutSeconds, setTimeoutSeconds] = useState(
+    RECOGNITION_TIMEOUT_SECONDS,
   );
-  const [selectedStudentName, setSelectedStudentName] = useState<string>("");
-  const [selectedFingerId, setSelectedFingerId] = useState<number | null>(null);
-  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
-  const [showErrorAlert, setShowErrorAlert] = useState(false);
-  const [alertMessage, setAlertMessage] = useState("");
-  const [recognitionModalOpen, setRecognitionModalOpen] = useState(false);
-  const [currentStudent, setCurrentStudent] = useState<Student | null>(null);
-  const [unenrollingStudentId, setUnenrollingStudentId] = useState<
-    number | null
-  >(null);
-  const [clearingPendingId, setClearingPendingId] = useState<number | null>(
-    null,
+  const [targetDevice, setTargetDevice] = useState<string>("");
+  const [isRecognitionStarted, setIsRecognitionStarted] = useState(false);
+  const [isComplete, setIsComplete] = useState(false);
+  const [steps, setSteps] = useState<StepUI[]>([
+    {
+      id: 0,
+      title: "Waiting for ESP32",
+      description: "Connecting to fingerprint sensor...",
+      icon: "bi-hourglass-split",
+      status: "waiting",
+    },
+    {
+      id: 1,
+      title: "Place Finger",
+      description: "Place your finger on the sensor",
+      icon: "bi-hand-index-thumb",
+      status: "waiting",
+    },
+    {
+      id: 2,
+      title: "Recognition Complete",
+      description: "Processing fingerprint...",
+      icon: "bi-check-circle",
+      status: "waiting",
+    },
+  ]);
+
+  // Mirrors `isOpen` so we can detect open/close transitions during render
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+
+  const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const pollRef = useRef<number | null>(null);
+  const timeoutRef = useRef<number | null>(null);
+  const countdownRef = useRef<number | null>(null);
+  const resetRef = useRef<number | null>(null);
+  const hasCalledRef = useRef(false);
+  const isCompletedRef = useRef(false);
+  const isPollingRef = useRef(false);
+  const isResolvedRef = useRef(false);
+
+  const clearTimers = () => {
+    if (pollRef.current !== null) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+    if (timeoutRef.current !== null) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    if (countdownRef.current !== null) {
+      clearInterval(countdownRef.current);
+      countdownRef.current = null;
+    }
+    if (resetRef.current !== null) {
+      clearTimeout(resetRef.current);
+      resetRef.current = null;
+    }
+    isPollingRef.current = false;
+  };
+
+  const safeOnRecognized = useCallback(
+    (id: number, success: boolean) => {
+      if (hasCalledRef.current || isCompletedRef.current) return;
+      hasCalledRef.current = true;
+      isCompletedRef.current = true;
+      onRecognized(id, success);
+    },
+    [onRecognized],
   );
-  // Device selection state
-  const [showDeviceSelector, setShowDeviceSelector] = useState(false);
-  const [pendingEnrollStudentId, setPendingEnrollStudentId] = useState<
-    number | null
-  >(null);
-  const [isStartingEnrollment, setIsStartingEnrollment] = useState(false);
 
-  const {
-    enrollFingerprint,
-    isLoading,
-    onlineDevices,
-    systemTargetDevice,
-    fetchOnlineDevices,
-    fetchSystemTargetDevice,
-    clearTargetDevice,
-  } = useEnrollFingerprint();
+  const updateStepUI = useCallback((step: string) => {
+    let stepIndex = 0;
+    let failed = false;
 
-  const isProcessingRecognitionRef = useRef(false);
-  const isProcessingEnrollmentRef = useRef(false);
-  const alertTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    switch (step) {
+      case "pending":
+        stepIndex = 0;
+        break;
+      case "place_finger":
+        stepIndex = 1;
+        break;
+      case "success":
+        stepIndex = 2;
+        break;
+      case "error":
+        stepIndex = 2;
+        failed = true;
+        break;
+      default:
+        stepIndex = 0;
+    }
 
-  // Fetch devices on mount
-  useEffect(() => {
-    fetchOnlineDevices();
-    fetchSystemTargetDevice();
+    setCurrentStep(stepIndex);
+
+    setSteps((prev) =>
+      prev.map((s, idx) => {
+        let status: StepStatus;
+
+        if (failed && idx === stepIndex) status = "failed";
+        else if (idx < stepIndex) status = "completed";
+        else if (idx === stepIndex)
+          status =
+            failed ? "failed"
+            : step === "success" ? "completed"
+            : "active";
+        else status = "waiting";
+
+        return { ...s, status };
+      }),
+    );
   }, []);
 
-  const showAlert = (message: string, isSuccess: boolean) => {
-    if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
-    setAlertMessage(message);
-    if (isSuccess) {
-      setShowSuccessAlert(true);
-      alertTimeoutRef.current = setTimeout(
-        () => setShowSuccessAlert(false),
-        3000,
-      );
+  // Reset state when modal opens/closes
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen);
+
+    if (!isOpen) {
+      // Modal just closed — reset everything
+      setTargetDevice("");
+      setCurrentStep(0);
+      setIsRecognitionStarted(false);
+      setIsComplete(false);
+      setSteps((prev) => prev.map((s) => ({ ...s, status: "waiting" })));
+      setTimeoutSeconds(RECOGNITION_TIMEOUT_SECONDS);
+      // Reset refs
+      hasCalledRef.current = false;
+      isCompletedRef.current = false;
+      isPollingRef.current = false;
+      isResolvedRef.current = false;
+      clearTimers();
     } else {
-      setShowErrorAlert(true);
-      alertTimeoutRef.current = setTimeout(
-        () => setShowErrorAlert(false),
-        4000,
-      );
+      // Modal just opened - start fresh
+      setIsRecognitionStarted(false);
+      setIsComplete(false);
+      hasCalledRef.current = false;
+      isCompletedRef.current = false;
+      isPollingRef.current = false;
+      isResolvedRef.current = false;
+      setCurrentStep(0);
+      setSteps((prev) => prev.map((s) => ({ ...s, status: "waiting" })));
+      setTimeoutSeconds(RECOGNITION_TIMEOUT_SECONDS);
+      setTargetDevice("");
+      clearTimers();
     }
-  };
+  }
 
-  // Normalize string for search (remove accents, trim, lowercase)
-  const normalizeString = (str: string) => {
-    return str
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .trim();
-  };
-
-  // Memoized filtered students with improved search logic
-  const filteredStudents = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!query) return students;
-
-    const normalizedQuery = normalizeString(query);
-
-    return students.filter((student: Student) => {
-      const firstName = normalizeString(student.first_name || "");
-      const lastName = normalizeString(student.last_name || "");
-      const fullName = normalizeString(
-        `${student.first_name} ${student.last_name}`,
-      );
-      const idNo = normalizeString(student.student_id_no || "");
-
-      return (
-        firstName.includes(normalizedQuery) ||
-        lastName.includes(normalizedQuery) ||
-        fullName.includes(normalizedQuery) ||
-        idNo.includes(normalizedQuery)
-      );
+  useEffect(() => {
+    stepRefs.current[currentStep]?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
     });
-  }, [students, searchQuery]);
+  }, [currentStep]);
 
-  // Handle enroll button click - ALWAYS show device selector
-  const handleEnrollClick = (studentId: number) => {
-    setPendingEnrollStudentId(studentId);
-
-    // Check if there are online devices
-    if (onlineDevices.length === 0) {
-      showAlert(
-        "No online devices available. Please ensure ESP32 is connected.",
-        false,
-      );
-      return;
+  // Effect only handles clearing timers when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      clearTimers();
     }
+    return () => clearTimers();
+  }, [isOpen]);
 
-    // ALWAYS show the device selector, even if system target is set
-    setShowDeviceSelector(true);
-  };
+  // Starts recognition when the modal opens
+  useEffect(() => {
+    if (!isOpen || !userId || isRecognitionStarted || isComplete) return;
 
-  // Start enrollment with selected device
-  const startEnrollmentWithDevice = async (
-    studentId: number,
-    deviceId: string | null,
-  ) => {
-    if (isStartingEnrollment) return;
-    setIsStartingEnrollment(true);
+    let targetFingerId: number | null = null;
 
-    try {
-      const data = await enrollFingerprint(studentId, deviceId);
-      if (!data) {
-        showAlert("Failed to start enrollment. Please try again.", false);
-        return;
-      }
-      if (!data.finger_id) {
-        showAlert("Invalid enrollment response. Please try again.", false);
-        return;
-      }
-      setSelectedStudentId(studentId);
-      setSelectedFingerId(data.finger_id);
-      setShowEnrollmentModal(true);
-      setShowDeviceSelector(false);
-      setPendingEnrollStudentId(null);
-    } catch (err) {
-      const message =
-        axios.isAxiosError(err) ?
-          err.response?.data?.detail || err.message || "Unknown error"
-        : "Unknown error";
-      showAlert(`Failed to start enrollment: ${message}`, false);
-      // Don't close the device selector on error so user can try again
-    } finally {
-      setIsStartingEnrollment(false);
-    }
-  };
+    // Mark as started to prevent multiple starts
+    setIsRecognitionStarted(true);
+    isResolvedRef.current = false;
 
-  // Handle recognize click - updated to show device info
-  const handleRecognizeClick = async (student: Student) => {
-    if (recognitionModalOpen) return;
+    // Reset the timer
+    setTimeoutSeconds(RECOGNITION_TIMEOUT_SECONDS);
 
-    // Check if student has a fingerprint
-    if (!student.finger_id) {
-      showAlert("Student has no fingerprint enrolled", false);
-      return;
-    }
-
-    setCurrentStudent(student);
-
-    try {
-      // Start recognition - backend will determine which device to use
-      const response = await axios.post(
-        `${API_BASE_URL}/fingerprints/start-recognition/${student.id}`,
-        {},
-        { timeout: 10000 },
-      );
-
-      if (response.data.target_device) {
-        console.log(
-          `Recognition started on device: ${response.data.target_device}`,
-        );
-        showAlert(
-          `🔍 Recognition started on device: ${response.data.target_device}`,
-          true,
-        );
-        setRecognitionModalOpen(true);
-      } else {
-        showAlert("Failed to start recognition. No device available.", false);
-      }
-    } catch (err) {
-      const message =
-        axios.isAxiosError(err) ?
-          err.response?.data?.detail || err.message
-        : "Failed to start recognition";
-      showAlert(message, false);
-    }
-  };
-
-  const handleRecognitionResult = (studentId: number, success: boolean) => {
-    if (isProcessingRecognitionRef.current) return;
-    isProcessingRecognitionRef.current = true;
-    showAlert(
-      success ? "Fingerprint recognized!" : "Recognition failed.",
-      success,
-    );
-    setTimeout(() => {
-      isProcessingRecognitionRef.current = false;
+    // Start countdown
+    countdownRef.current = window.setInterval(() => {
+      setTimeoutSeconds((prev) => (prev <= 1 ? 0 : prev - 1));
     }, 1000);
-  };
 
-  const handleUnenrollClick = (student: Student) => {
-    setSelectedStudentId(student.id);
-    setSelectedStudentName(`${student.first_name} ${student.last_name}`);
-    setShowDeleteModal(true);
-  };
+    const startRecognition = async () => {
+      try {
+        // CRITICAL: First, clear any existing recognition state from the device
+        // This uses the cancel-recognition endpoint to reset the device state
+        try {
+          // First, tell the backend to clear any stale recognition state
+          await axios.post(
+            `${API_BASE_URL}/fingerprints/cancel-recognition/${userId}`,
+            {},
+            { timeout: 5000 },
+          );
+          console.log("Cleared previous recognition state from device");
+        } catch (clearErr) {
+          console.log(
+            "Error clearing previous state (may not exist):",
+            clearErr,
+          );
+        }
 
-  const handleClearPending = async (student: Student) => {
-    setClearingPendingId(student.id);
-    try {
-      await axios.post(
-        `${API_BASE_URL}/fingerprints/reset-enrollment/${student.id}`,
-        {},
-        { headers: { "Content-Type": "application/json" }, timeout: 10000 },
-      );
+        // Wait a moment for the device to reset
+        await new Promise((resolve) => setTimeout(resolve, 500));
 
-      setStudents((prev) =>
-        prev.map((s) =>
-          s.id === student.id ?
-            { ...s, fingerprint_status: "not_enrolled", finger_id: null }
-          : s,
-        ),
-      );
-      showAlert(
-        `Cleared stuck enrollment for ${student.first_name} ${student.last_name}.`,
-        true,
-      );
-    } catch (err) {
-      const message =
-        axios.isAxiosError(err) ?
-          err.response?.data?.detail || err.message || "Unknown error"
-        : "Unknown error";
-      showAlert(`Failed to clear pending enrollment: ${message}`, false);
-    } finally {
-      setClearingPendingId(null);
-    }
-  };
+        // Now start new recognition
+        const res = await axios.post(
+          `${API_BASE_URL}/fingerprints/start-recognition/${userId}`,
+        );
 
-  const confirmUnenroll = async () => {
-    if (!selectedStudentId) return;
-    const studentId = selectedStudentId;
-    setUnenrollingStudentId(studentId);
+        targetFingerId = res.data.target_finger_id;
+        setTargetDevice(res.data.target_device || "Unknown");
 
-    const student = students.find((s) => s.id === studentId);
-    const fingerId = student?.finger_id;
-
-    try {
-      await axios.post(
-        `${API_BASE_URL}/fingerprints/unenroll-fingerprint/${studentId}`,
-        {},
-        { headers: { "Content-Type": "application/json" }, timeout: 10000 },
-      );
-
-      if (!fingerId) {
-        setStudents((prev) =>
-          prev.map((s) =>
-            s.id === studentId ?
-              { ...s, fingerprint_status: "not_enrolled" }
+        // Update step to show device info
+        setSteps((prev) =>
+          prev.map((s, idx) =>
+            idx === 0 ?
+              {
+                ...s,
+                description: `Using device: ${res.data.target_device || "Unknown"}`,
+                status: "completed" as StepStatus,
+              }
+            : idx === 1 ?
+              {
+                ...s,
+                status: "active" as StepStatus,
+              }
             : s,
           ),
         );
-        showAlert("Fingerprint unenrolled successfully!", true);
-        return;
-      }
 
-      const POLL_INTERVAL = 500;
-      const TIMEOUT = 10000;
-      const startTime = Date.now();
+        setCurrentStep(1);
+        updateStepUI("place_finger");
 
-      await new Promise<void>((resolve, reject) => {
-        const poll = setInterval(async () => {
-          if (Date.now() - startTime > TIMEOUT) {
-            clearInterval(poll);
-            reject(new Error("Delete timed out. Check device connection."));
-            return;
-          }
-          try {
-            const res = await axios.get(
-              `${API_BASE_URL}/fingerprints/get-status?finger_id=${fingerId}&device_id=${DEFAULT_DEVICE_ID}`,
-            );
-            const { status, step, message } = res.data;
-
-            const deletedAlready =
-              status === "failed" &&
-              step === "error" &&
-              message === "User not found";
-
-            if (status === "not_enrolled" || deletedAlready) {
-              clearInterval(poll);
-              resolve();
-            }
-          } catch {
-            // ignore transient network errors, keep polling until timeout
-          }
-        }, POLL_INTERVAL);
-      });
-
-      setStudents((prev) =>
-        prev.map((s) =>
-          s.id === studentId ? { ...s, fingerprint_status: "not_enrolled" } : s,
-        ),
-      );
-      showAlert("Fingerprint unenrolled successfully!", true);
-    } catch (err) {
-      let errorMessage = "Failed to unenroll fingerprint";
-      if (axios.isAxiosError(err)) {
-        if (err.response)
-          errorMessage =
-            err.response.data?.detail || `Server error: ${err.response.status}`;
-        else if (err.request)
-          errorMessage =
-            "No response from server. Check if backend is running.";
-        else errorMessage = err.message;
-      } else if (err instanceof Error) {
-        errorMessage = err.message;
-      }
-      showAlert(errorMessage, false);
-    } finally {
-      setUnenrollingStudentId(null);
-      setSelectedStudentId(null);
-      setSelectedStudentName("");
-    }
-  };
-
-  useEffect(() => {
-    setStudents(
-      fetchedStudents.map((s) => ({
-        ...s,
-        year_level: s.year_level ?? null,
-        finger_id: s.finger_id ?? null,
-      })),
-    );
-  }, [fetchedStudents]);
-
-  const updateStudentStatus = (
-    studentId: number,
-    status: FingerprintStatus,
-  ) => {
-    setStudents((prev) =>
-      prev.map((s) =>
-        s.id === studentId ? { ...s, fingerprint_status: status } : s,
-      ),
-    );
-    if (isProcessingEnrollmentRef.current) return;
-    if (status === "enrolled" || status === "failed") {
-      isProcessingEnrollmentRef.current = true;
-      showAlert(
-        status === "enrolled" ?
-          "Fingerprint enrolled successfully!"
-        : "Fingerprint enrollment failed. Please try again.",
-        status === "enrolled",
-      );
-      setTimeout(() => {
-        isProcessingEnrollmentRef.current = false;
-      }, 1000);
-    }
-  };
-
-  useEffect(() => {
-    const observerOptions = { threshold: 0.1, rootMargin: "0px 0px -50px 0px" };
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("show");
-          observer.unobserve(entry.target);
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
         }
-      });
-    }, observerOptions);
 
-    setTimeout(() => {
-      document
-        .querySelectorAll(".students-pg-fade-up:not(.show)")
-        .forEach((el) => observer.observe(el));
-    }, 100);
+        timeoutRef.current = window.setTimeout(() => {
+          if (!isResolvedRef.current) {
+            isResolvedRef.current = true;
+            clearTimers();
+            updateStepUI("error");
+            setSteps((prev) =>
+              prev.map((s, idx) =>
+                idx === 2 ?
+                  {
+                    ...s,
+                    status: "failed" as StepStatus,
+                    description: "Recognition timed out. Please try again.",
+                  }
+                : s,
+              ),
+            );
+            safeOnRecognized(userId, false);
+            setIsComplete(true);
+            setTimeout(() => {
+              onClose?.();
+            }, 1500);
+          }
+        }, RECOGNITION_TIMEOUT);
 
-    return () => observer.disconnect();
-  }, [filteredStudents, loading]);
+        if (pollRef.current) {
+          clearInterval(pollRef.current);
+        }
 
-  useEffect(() => {
-    return () => {
-      if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
+        // Start polling after a delay
+        setTimeout(() => {
+          if (isResolvedRef.current) return;
+
+          pollRef.current = window.setInterval(async () => {
+            if (!targetFingerId) return;
+            if (isResolvedRef.current) {
+              if (pollRef.current) {
+                clearInterval(pollRef.current);
+                pollRef.current = null;
+              }
+              return;
+            }
+            if (isPollingRef.current) return;
+            isPollingRef.current = true;
+
+            try {
+              const res = await axios.get(
+                `${API_BASE_URL}/fingerprints/get-recognition-result?finger_id=${targetFingerId}&device_id=${DEFAULT_DEVICE_ID}`,
+              );
+
+              const { status, matched } = res.data;
+
+              // Only process if we get a definitive result
+              if (status === "done" && !isResolvedRef.current) {
+                isResolvedRef.current = true;
+                clearTimers();
+                updateStepUI(matched ? "success" : "error");
+                setSteps((prev) =>
+                  prev.map((s, idx) =>
+                    idx === 2 ?
+                      {
+                        ...s,
+                        status:
+                          matched ? "completed" : ("failed" as StepStatus),
+                        description:
+                          matched ?
+                            "Fingerprint matched successfully!"
+                          : "Fingerprint did not match.",
+                      }
+                    : s,
+                  ),
+                );
+                safeOnRecognized(userId, matched);
+                setIsComplete(true);
+                setTimeout(() => {
+                  onClose?.();
+                }, 2000);
+              } else if (status === "pending") {
+                // Still waiting - update status message occasionally
+                setSteps((prev) =>
+                  prev.map((s, idx) =>
+                    idx === 1 ?
+                      {
+                        ...s,
+                        description: "Waiting for finger placement...",
+                      }
+                    : s,
+                  ),
+                );
+              } else if (status === "timeout" && !isResolvedRef.current) {
+                isResolvedRef.current = true;
+                clearTimers();
+                updateStepUI("error");
+                setSteps((prev) =>
+                  prev.map((s, idx) =>
+                    idx === 2 ?
+                      {
+                        ...s,
+                        status: "failed" as StepStatus,
+                        description: "Recognition timed out. Please try again.",
+                      }
+                    : s,
+                  ),
+                );
+                safeOnRecognized(userId, false);
+                setIsComplete(true);
+                setTimeout(() => {
+                  onClose?.();
+                }, 1500);
+              } else if (status === "not_in_recognition_mode") {
+                // Device is not in recognition mode - this shouldn't happen
+                // but if it does, we should wait a bit longer
+                console.log("Device not in recognition mode, waiting...");
+              }
+            } catch (err) {
+              console.error("Polling error:", err);
+              // Don't immediately fail on network errors - keep polling
+            } finally {
+              isPollingRef.current = false;
+            }
+          }, POLL_INTERVAL);
+        }, 1500); // Increased delay to ensure device is ready
+      } catch (err) {
+        if (!isResolvedRef.current) {
+          isResolvedRef.current = true;
+          if (axios.isAxiosError(err) && err.response?.status === 503) {
+            setCurrentStep(0);
+            setSteps((prev) =>
+              prev.map((s, idx) =>
+                idx === 0 ?
+                  {
+                    ...s,
+                    status: "failed",
+                    description: "Device is offline. Please try again.",
+                  }
+                : s,
+              ),
+            );
+            safeOnRecognized(userId, false);
+            setIsComplete(true);
+            setTimeout(() => {
+              onClose?.();
+            }, 2000);
+          } else {
+            console.error("Failed to start recognition:", err);
+            updateStepUI("error");
+            setSteps((prev) =>
+              prev.map((s, idx) =>
+                idx === 2 ?
+                  {
+                    ...s,
+                    status: "failed" as StepStatus,
+                    description:
+                      "Failed to start recognition. Please try again.",
+                  }
+                : s,
+              ),
+            );
+            safeOnRecognized(userId, false);
+            setIsComplete(true);
+            setTimeout(() => {
+              onClose?.();
+            }, 1500);
+          }
+        }
+      }
     };
-  }, []);
+
+    startRecognition();
+
+    return () => {
+      clearTimers();
+    };
+  }, [
+    isOpen,
+    userId,
+    updateStepUI,
+    safeOnRecognized,
+    onClose,
+    isRecognitionStarted,
+    isComplete,
+  ]);
+
+  if (!isOpen) return null;
+
+  const progress = ((currentStep + 1) / steps.length) * 100;
+
+  const timeFraction = timeoutSeconds / RECOGNITION_TIMEOUT_SECONDS;
+  const ringOffset = RING_CIRCUMFERENCE * (1 - timeFraction);
+  const timerState =
+    timeoutSeconds <= 3 ? "critical"
+    : timeoutSeconds <= 5 ? "warning"
+    : "normal";
 
   return (
-    <div className="students-pg-layout">
-      <Sidebar />
-
-      <EnrollmentModal
-        isOpen={showEnrollmentModal}
-        onClose={() => setShowEnrollmentModal(false)}
-        userId={selectedStudentId || 0}
-        fingerId={selectedFingerId || 0}
-        updateStatus={updateStudentStatus}
-      />
-      <RecognitionModal
-        isOpen={recognitionModalOpen}
-        onClose={() => {
-          setRecognitionModalOpen(false);
-          setCurrentStudent(null);
-          setTimeout(() => {
-            isProcessingRecognitionRef.current = false;
-          }, 100);
-        }}
-        userId={currentStudent?.id || 0}
-        fingerId={currentStudent?.finger_id || 0}
-        onRecognized={handleRecognitionResult}
-      />
-      <DeleteFingerprintModal
-        show={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        onConfirm={confirmUnenroll}
-        studentName={selectedStudentName}
-      />
-      <SuccessAlert
-        show={showSuccessAlert}
-        message={alertMessage}
-        onClose={() => setShowSuccessAlert(false)}
-      />
-      <ErrorAlert
-        show={showErrorAlert}
-        message={alertMessage}
-        onClose={() => setShowErrorAlert(false)}
-      />
-
-      {/* Device Selector Modal - ALWAYS shown when enroll is clicked */}
-      {showDeviceSelector && (
-        <div className="device-selector-overlay">
-          <div className="device-selector-modal">
-            <div className="device-selector-header">
-              <i className="bi bi-hdd-network"></i>
-              <h3>Select Device for Enrollment</h3>
-              <p>Choose which ESP32 device should enroll this fingerprint</p>
-              {systemTargetDevice && (
-                <div className="device-selector-system-default-hint">
-                  <i className="bi bi-info-circle"></i>
+    <div className="enrollment-modal-overlay">
+      <div className="enrollment-modal-content">
+        <div className="enrollment-header">
+          <div className="enrollment-header-top">
+            <div className="enrollment-header-titles">
+              <i className="bi bi-fingerprint enrollment-icon"></i>
+              <h2>Fingerprint Recognition</h2>
+              <p>Please place your finger on the sensor</p>
+              {targetDevice && (
+                <div className="recognition-device-info">
+                  <i className="bi bi-cpu"></i>
                   <span>
-                    System default: <strong>{systemTargetDevice}</strong>
+                    Device: <strong>{targetDevice}</strong>
                   </span>
-                  <button
-                    className="device-selector-clear-target-small"
-                    onClick={async () => {
-                      await clearTargetDevice();
-                      fetchSystemTargetDevice();
-                      showAlert("System target device cleared", true);
-                    }}>
-                    Clear Default
-                  </button>
                 </div>
               )}
             </div>
 
-            <div className="device-selector-body">
-              {onlineDevices.length === 0 ?
-                <div className="device-selector-empty">
-                  <i className="bi bi-wifi-off"></i>
-                  <p>No online devices available</p>
-                  <button
-                    className="device-selector-refresh"
-                    onClick={() => fetchOnlineDevices()}>
-                    <i className="bi bi-arrow-clockwise"></i> Refresh
-                  </button>
-                </div>
-              : <>
-                  <div className="device-selector-list">
-                    {onlineDevices.map((device) => (
-                      <button
-                        key={device.device_id}
-                        className={`device-selector-item ${
-                          systemTargetDevice === device.device_id ?
-                            "device-selector-item-default"
-                          : ""
-                        }`}
-                        onClick={() => {
-                          if (pendingEnrollStudentId) {
-                            startEnrollmentWithDevice(
-                              pendingEnrollStudentId,
-                              device.device_id,
-                            );
-                          }
-                        }}
-                        disabled={isStartingEnrollment || isLoading}>
-                        <div className="device-selector-item-icon">
-                          <i className="bi bi-cpu"></i>
-                        </div>
-                        <div className="device-selector-item-info">
-                          <span className="device-name">
-                            {device.device_id}
-                            {systemTargetDevice === device.device_id && (
-                              <span className="device-default-badge">
-                                Default
-                              </span>
-                            )}
-                          </span>
-                          <span className="device-mode">
-                            Mode: {device.mode}
-                          </span>
-                        </div>
-                        <div className="device-selector-item-status">
-                          <span className="device-online-badge">
-                            <i className="bi bi-circle-fill"></i> Online
-                          </span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="device-selector-actions">
-                    <button
-                      className="device-selector-btn device-selector-btn-any"
-                      onClick={() => {
-                        if (pendingEnrollStudentId) {
-                          startEnrollmentWithDevice(
-                            pendingEnrollStudentId,
-                            null,
-                          );
-                        }
-                      }}
-                      disabled={isStartingEnrollment || isLoading}>
-                      <i className="bi bi-radioactive"></i>
-                      Any Available Device
-                    </button>
-                    <button
-                      className="device-selector-btn device-selector-btn-cancel"
-                      onClick={() => {
-                        setShowDeviceSelector(false);
-                        setPendingEnrollStudentId(null);
-                      }}
-                      disabled={isStartingEnrollment}>
-                      Cancel
-                    </button>
-                  </div>
-                </>
-              }
-            </div>
-          </div>
-        </div>
-      )}
-
-      <main className="students-pg-content">
-        <header className="students-pg-header students-pg-fade-up">
-          <div className="students-pg-wave"></div>
-
-          <button
-            className="students-pg-btn-back"
-            onClick={() => navigate("/programs")}>
-            <i className="bi bi-arrow-left"></i>
-            <span className="btn-back-label">Back to Programs</span>
-          </button>
-
-          <div className="students-pg-header-content">
-            <div className="d-flex flex-column align-items-center justify-content-center gap-2">
-              <i className="bi bi-people fs-2"></i>
-              <div>
-                <h1>{programCode} Students</h1>
-                <p>List of enrolled students in {programCode} program</p>
+            <div
+              className="enrollment-timer-ring"
+              data-state={timerState}
+              role="timer"
+              aria-live="polite"
+              aria-label={`${timeoutSeconds} seconds remaining`}>
+              <svg viewBox="0 0 80 80" className="timer-ring-svg">
+                <circle
+                  className="timer-ring-track"
+                  cx="40"
+                  cy="40"
+                  r={RING_RADIUS}
+                />
+                <circle
+                  className="timer-ring-progress"
+                  cx="40"
+                  cy="40"
+                  r={RING_RADIUS}
+                  style={{
+                    strokeDasharray: RING_CIRCUMFERENCE,
+                    strokeDashoffset: ringOffset,
+                  }}
+                />
+              </svg>
+              <div className="timer-ring-label">
+                <span className="timer-ring-seconds">{timeoutSeconds}</span>
+                <span className="timer-ring-unit">sec</span>
               </div>
             </div>
           </div>
-        </header>
+        </div>
 
-        <div className="students-pg-list">
-          {loading ?
-            <div className="students-pg-loading-state students-pg-fade-up">
-              <div className="students-pg-spinner"></div>
-              <p>Loading students...</p>
-            </div>
-          : error ?
-            <div className="students-pg-error-state students-pg-fade-up">
-              <i className="bi bi-exclamation-triangle-fill"></i>
-              <p>{error}</p>
-            </div>
-          : students.length === 0 ?
-            <div className="students-pg-empty-state">
-              <i className="bi bi-inbox"></i>
-              <p>No students enrolled yet</p>
-            </div>
-          : <>
-              <div className="students-pg-controls students-pg-fade-up">
-                <div className="students-pg-header-info">
-                  <h2>All Students ({filteredStudents.length})</h2>
-                  <p>Total enrolled students in this program</p>
-                </div>
-                <div className="students-pg-search-bar">
-                  <i className="bi bi-search"></i>
-                  <input
-                    type="text"
-                    placeholder="Search by name or ID..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    aria-label="Search students"
-                  />
-                  {searchQuery && (
-                    <button
-                      className="students-pg-clear-search"
-                      onClick={() => setSearchQuery("")}
-                      aria-label="Clear search">
-                      <i className="bi bi-x-lg"></i>
-                    </button>
-                  )}
-                </div>
+        <div className="progress-bar-container">
+          <div
+            className="progress-bar-fill"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+
+        <div className="enrollment-steps">
+          {steps.map((step, index) => (
+            <div
+              key={step.id}
+              ref={(el) => {
+                stepRefs.current[index] = el;
+              }}
+              className={`enrollment-step ${step.status}`}>
+              <div className="step-indicator">
+                {step.status === "completed" ?
+                  <i className="bi bi-check-circle-fill" />
+                : step.status === "failed" ?
+                  <i className="bi bi-x-circle-fill" />
+                : step.status === "active" ?
+                  <div className="step-spinner" />
+                : <div className="step-number">{step.id + 1}</div>}
               </div>
 
-              {filteredStudents.length === 0 ?
-                <div className="students-pg-empty-state students-pg-fade-up">
-                  <i className="bi bi-search"></i>
-                  <p>No students found matching "{searchQuery}"</p>
+              <div className="step-content">
+                <div className="step-icon">
+                  <i className={`bi ${step.icon}`} />
                 </div>
-              : <div className="students-pg-grid">
-                  {filteredStudents.map((student: Student, index: number) => (
-                    <div
-                      key={student.id}
-                      className={`students-pg-card students-pg-fade-up students-pg-fade-delay-${Math.min((index % 4) + 1, 4)}`}>
-                      <div className="students-pg-avatar-wrapper">
-                        {student.profile_image ?
-                          <img
-                            src={
-                              student.profile_image.startsWith("http") ?
-                                student.profile_image
-                              : `${import.meta.env.VITE_API_URL}/${student.profile_image.replace(/^\//, "")}`
-                            }
-                            alt={`${student.first_name} ${student.last_name}`}
-                            className="students-pg-avatar-image"
-                          />
-                        : <div className="students-pg-avatar-initials">
-                            {getInitials(student.first_name, student.last_name)}
-                          </div>
-                        }
-                      </div>
-
-                      <div className="students-pg-info">
-                        <h3 className="students-pg-student-name">
-                          {student.first_name} {student.last_name}
-                        </h3>
-                        <FingerprintStatusBadge
-                          status={student.fingerprint_status}
-                        />
-                        <div className="students-pg-details">
-                          <span className="students-pg-detail-item">
-                            <i className="bi bi-hash"></i>
-                            <span className="students-pg-detail-text">
-                              {student.student_id_no}
-                            </span>
-                          </span>
-                          <span className="students-pg-detail-item">
-                            <i className="bi bi-calendar3"></i>
-                            <span className="students-pg-detail-text">
-                              {student.year_level ?? "No year level"}
-                            </span>
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="students-pg-actions">
-                        {student.fingerprint_status === "enrolled" ?
-                          <>
-                            <button
-                              className="students-pg-action-btn students-pg-btn-recognize"
-                              onClick={() => handleRecognizeClick(student)}
-                              title="Test Fingerprint Recognition">
-                              <i className="bi bi-search"></i>
-                              Recognize
-                            </button>
-                            <button
-                              className="students-pg-action-btn students-pg-delete-btn"
-                              onClick={() => handleUnenrollClick(student)}
-                              disabled={unenrollingStudentId === student.id}
-                              title="Unenroll Fingerprint">
-                              <i className="bi bi-fingerprint"></i>
-                              <span>
-                                {unenrollingStudentId === student.id ?
-                                  "Unenrolling..."
-                                : "Unenroll"}
-                              </span>
-                            </button>
-                          </>
-                        : student.fingerprint_status === "pending" ?
-                          <button
-                            className="students-pg-action-btn students-pg-delete-btn"
-                            onClick={() => handleClearPending(student)}
-                            disabled={clearingPendingId === student.id}
-                            title="Clear stuck pending enrollment (e.g. after a dropped connection)">
-                            <i className="bi bi-x-circle"></i>
-                            <span>
-                              {clearingPendingId === student.id ?
-                                "Clearing..."
-                              : "Clear Pending"}
-                            </span>
-                          </button>
-                        : <button
-                            className="students-pg-action-btn students-pg-btn-primary"
-                            onClick={() => handleEnrollClick(student.id)}
-                            disabled={isLoading}>
-                            <i className="bi bi-fingerprint"></i>
-                            Enroll
-                          </button>
-                        }
-                      </div>
-                    </div>
-                  ))}
+                <div className="step-text">
+                  <h4>{step.title}</h4>
+                  <p>{step.description}</p>
                 </div>
-              }
-            </>
-          }
+              </div>
+            </div>
+          ))}
         </div>
-      </main>
+      </div>
     </div>
   );
 };
 
-export default ProgramStudents;
+export default RecognitionModal;
