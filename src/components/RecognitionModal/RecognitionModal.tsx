@@ -230,7 +230,7 @@ const RecognitionModal = ({
 
     const startRecognition = async () => {
       try {
-        // First, clear any existing recognition state
+        // Clear any existing recognition state
         try {
           await axios.post(
             `${API_BASE_URL}/fingerprints/cancel-recognition/${userId}`,
@@ -242,7 +242,7 @@ const RecognitionModal = ({
           console.log("[Recognition] Error clearing state:", clearErr);
         }
 
-        // Start new recognition - this just tells the device to start
+        // Start new recognition
         const res = await axios.post(
           `${API_BASE_URL}/fingerprints/start-recognition/${userId}`,
         );
@@ -277,7 +277,6 @@ const RecognitionModal = ({
         setCurrentStep(1);
         updateStepUI("place_finger");
 
-        // Start polling for the ACTUAL result
         if (timeoutRef.current) {
           clearTimeout(timeoutRef.current);
         }
@@ -311,7 +310,7 @@ const RecognitionModal = ({
           clearInterval(pollRef.current);
         }
 
-        // Poll for the result - this waits for the device to actually scan
+        // Poll for the result
         pollRef.current = window.setInterval(async () => {
           if (!targetFingerId) return;
           if (isResolvedRef.current || resultSentRef.current) {
@@ -339,7 +338,6 @@ const RecognitionModal = ({
               `[Poll ${pollAttemptsRef.current}] Status: ${status}, Matched: ${matched}`,
             );
 
-            // Only process when we get a definitive result
             if (
               status === "done" &&
               !isResolvedRef.current &&
@@ -372,7 +370,6 @@ const RecognitionModal = ({
                 onClose?.();
               }, 1500);
             } else if (status === "pending") {
-              // Device is still waiting for finger - keep showing "Place Finger"
               setSteps((prev) =>
                 prev.map((s, idx) =>
                   idx === 1 ?
