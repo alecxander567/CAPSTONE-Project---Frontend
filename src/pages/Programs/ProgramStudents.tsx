@@ -84,11 +84,12 @@ const ProgramStudents = () => {
   const [clearingPendingId, setClearingPendingId] = useState<number | null>(
     null,
   );
-  // NEW: Device selection state
+  // Device selection state
   const [showDeviceSelector, setShowDeviceSelector] = useState(false);
   const [pendingEnrollStudentId, setPendingEnrollStudentId] = useState<
     number | null
   >(null);
+  const [isStartingEnrollment, setIsStartingEnrollment] = useState(false);
 
   const {
     enrollFingerprint,
@@ -161,32 +162,31 @@ const ProgramStudents = () => {
     });
   }, [students, searchQuery]);
 
-  // NEW: Handle enroll button click - show device selector
+  // Handle enroll button click - ALWAYS show device selector
   const handleEnrollClick = (studentId: number) => {
     setPendingEnrollStudentId(studentId);
 
-    // If there are online devices, show selector
-    if (onlineDevices.length > 0) {
-      // If system target is set, use it directly
-      if (systemTargetDevice) {
-        startEnrollmentWithDevice(studentId, systemTargetDevice);
-      } else {
-        setShowDeviceSelector(true);
-      }
-    } else {
-      // No online devices, show error
+    // Check if there are online devices
+    if (onlineDevices.length === 0) {
       showAlert(
         "No online devices available. Please ensure ESP32 is connected.",
         false,
       );
+      return;
     }
+
+    // ALWAYS show the device selector, even if system target is set
+    setShowDeviceSelector(true);
   };
 
-  // NEW: Start enrollment with selected device
+  // Start enrollment with selected device
   const startEnrollmentWithDevice = async (
     studentId: number,
     deviceId: string | null,
   ) => {
+    if (isStartingEnrollment) return;
+    setIsStartingEnrollment(true);
+
     try {
       const data = await enrollFingerprint(studentId, deviceId);
       if (!data) {
@@ -208,7 +208,9 @@ const ProgramStudents = () => {
           err.response?.data?.detail || err.message || "Unknown error"
         : "Unknown error";
       showAlert(`Failed to start enrollment: ${message}`, false);
-      setShowDeviceSelector(false);
+      // Don't close the device selector on error so user can try again
+    } finally {
+      setIsStartingEnrollment(false);
     }
   };
 
@@ -454,7 +456,7 @@ const ProgramStudents = () => {
         onClose={() => setShowErrorAlert(false)}
       />
 
-      {/* NEW: Device Selector Modal */}
+      {/* Device Selector Modal - ALWAYS shown when enroll is clicked */}
       {showDeviceSelector && (
         <div className="device-selector-overlay">
           <div className="device-selector-modal">
@@ -462,6 +464,23 @@ const ProgramStudents = () => {
               <i className="bi bi-hdd-network"></i>
               <h3>Select Device for Enrollment</h3>
               <p>Choose which ESP32 device should enroll this fingerprint</p>
+              {systemTargetDevice && (
+                <div className="device-selector-system-default-hint">
+                  <i className="bi bi-info-circle"></i>
+                  <span>
+                    System default: <strong>{systemTargetDevice}</strong>
+                  </span>
+                  <button
+                    className="device-selector-clear-target-small"
+                    onClick={async () => {
+                      await clearTargetDevice();
+                      fetchSystemTargetDevice();
+                      showAlert("System target device cleared", true);
+                    }}>
+                    Clear Default
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="device-selector-body">
@@ -480,7 +499,11 @@ const ProgramStudents = () => {
                     {onlineDevices.map((device) => (
                       <button
                         key={device.device_id}
-                        className="device-selector-item"
+                        className={`device-selector-item ${
+                          systemTargetDevice === device.device_id ?
+                            "device-selector-item-default"
+                          : ""
+                        }`}
                         onClick={() => {
                           if (pendingEnrollStudentId) {
                             startEnrollmentWithDevice(
@@ -489,13 +512,18 @@ const ProgramStudents = () => {
                             );
                           }
                         }}
-                        disabled={isLoading}>
+                        disabled={isStartingEnrollment || isLoading}>
                         <div className="device-selector-item-icon">
                           <i className="bi bi-cpu"></i>
                         </div>
                         <div className="device-selector-item-info">
                           <span className="device-name">
                             {device.device_id}
+                            {systemTargetDevice === device.device_id && (
+                              <span className="device-default-badge">
+                                Default
+                              </span>
+                            )}
                           </span>
                           <span className="device-mode">
                             Mode: {device.mode}
@@ -521,7 +549,7 @@ const ProgramStudents = () => {
                           );
                         }
                       }}
-                      disabled={isLoading}>
+                      disabled={isStartingEnrollment || isLoading}>
                       <i className="bi bi-radioactive"></i>
                       Any Available Device
                     </button>
@@ -530,28 +558,11 @@ const ProgramStudents = () => {
                       onClick={() => {
                         setShowDeviceSelector(false);
                         setPendingEnrollStudentId(null);
-                      }}>
+                      }}
+                      disabled={isStartingEnrollment}>
                       Cancel
                     </button>
                   </div>
-
-                  {systemTargetDevice && (
-                    <div className="device-selector-system-target">
-                      <i className="bi bi-info-circle"></i>
-                      <span>
-                        System default: <strong>{systemTargetDevice}</strong>
-                      </span>
-                      <button
-                        className="device-selector-clear-target"
-                        onClick={async () => {
-                          await clearTargetDevice();
-                          fetchSystemTargetDevice();
-                          showAlert("System target device cleared", true);
-                        }}>
-                        Clear Default
-                      </button>
-                    </div>
-                  )}
                 </>
               }
             </div>
