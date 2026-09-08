@@ -41,6 +41,7 @@ const RecognitionModal = ({
     RECOGNITION_TIMEOUT_SECONDS,
   );
   const [targetDevice, setTargetDevice] = useState<string>("");
+  const [targetFingerId, setTargetFingerId] = useState<number | null>(null);
   const [steps, setSteps] = useState<StepUI[]>([
     {
       id: 0,
@@ -80,6 +81,7 @@ const RecognitionModal = ({
   const isRecognitionStartedRef = useRef(false);
   const isCompleteRef = useRef(false);
   const pollAttemptsRef = useRef(0);
+  const targetDeviceRef = useRef<string>("");
 
   const clearTimers = () => {
     if (pollRef.current !== null) {
@@ -160,6 +162,7 @@ const RecognitionModal = ({
     if (!isOpen) {
       // Modal just closed — reset everything
       setTargetDevice("");
+      setTargetFingerId(null);
       setCurrentStep(0);
       isRecognitionStartedRef.current = false;
       isCompleteRef.current = false;
@@ -185,6 +188,8 @@ const RecognitionModal = ({
       setSteps((prev) => prev.map((s) => ({ ...s, status: "waiting" })));
       setTimeoutSeconds(RECOGNITION_TIMEOUT_SECONDS);
       setTargetDevice("");
+      setTargetFingerId(null);
+      targetDeviceRef.current = "";
       clearTimers();
     }
   }
@@ -214,7 +219,7 @@ const RecognitionModal = ({
     )
       return;
 
-    let targetFingerId: number | null = null;
+    let targetFingerIdLocal: number | null = null;
 
     // Mark as started to prevent multiple starts
     isRecognitionStartedRef.current = true;
@@ -248,8 +253,14 @@ const RecognitionModal = ({
           `${API_BASE_URL}/fingerprints/start-recognition/${userId}`,
         );
 
-        targetFingerId = res.data.target_finger_id;
-        setTargetDevice(res.data.target_device || "Unknown");
+        targetFingerIdLocal = res.data.target_finger_id;
+        targetFingerId = targetFingerIdLocal;
+        targetDeviceRef.current = res.data.target_device || "Unknown";
+        setTargetDevice(targetDeviceRef.current);
+
+        console.log(
+          `[Recognition] Started on device: ${targetDeviceRef.current}, finger_id: ${targetFingerIdLocal}`,
+        );
 
         // Update step to show device info
         setSteps((prev) =>
@@ -257,7 +268,7 @@ const RecognitionModal = ({
             idx === 0 ?
               {
                 ...s,
-                description: `Using device: ${res.data.target_device || "Unknown"}`,
+                description: `Using device: ${targetDeviceRef.current}`,
                 status: "completed" as StepStatus,
               }
             : idx === 1 ?
@@ -305,12 +316,12 @@ const RecognitionModal = ({
           clearInterval(pollRef.current);
         }
 
-        // Start polling immediately but with a small delay to ensure device is ready
+        // Start polling immediately with a small delay
         setTimeout(() => {
           if (isResolvedRef.current) return;
 
           pollRef.current = window.setInterval(async () => {
-            if (!targetFingerId) return;
+            if (!targetFingerIdLocal) return;
             if (isResolvedRef.current) {
               if (pollRef.current) {
                 clearInterval(pollRef.current);
@@ -323,19 +334,23 @@ const RecognitionModal = ({
             pollAttemptsRef.current++;
 
             try {
-              // Use the finger_id from the target (the enrolled fingerprint)
-              const res = await axios.get(
-                `${API_BASE_URL}/fingerprints/get-recognition-result?finger_id=${targetFingerId}&device_id=${DEFAULT_DEVICE_ID}`,
-                { timeout: 5000 },
-              );
+              // Use the device_id that was returned from start-recognition
+              const deviceId = targetDeviceRef.current || DEFAULT_DEVICE_ID;
+              const url = `${API_BASE_URL}/fingerprints/get-recognition-result?finger_id=${targetFingerIdLocal}&device_id=${deviceId}`;
+
+              console.log(`[Poll ${pollAttemptsRef.current}] Checking: ${url}`);
+              const res = await axios.get(url, { timeout: 5000 });
 
               const { status, matched } = res.data;
               console.log(
-                `[Poll attempt ${pollAttemptsRef.current}] Status: ${status}, Matched: ${matched}`,
+                `[Poll ${pollAttemptsRef.current}] Response: status=${status}, matched=${matched}`,
               );
 
               // Only process if we get a definitive result
               if (status === "done" && !isResolvedRef.current) {
+                console.log(
+                  `[Recognition] Result received: ${matched ? "MATCH" : "NO MATCH"}`,
+                );
                 isResolvedRef.current = true;
                 clearTimers();
                 updateStepUI(matched ? "success" : "error");
@@ -360,7 +375,7 @@ const RecognitionModal = ({
                   onClose?.();
                 }, 2000);
               } else if (status === "pending") {
-                // Still waiting - update status message occasionally
+                // Still waiting
                 setSteps((prev) =>
                   prev.map((s, idx) =>
                     idx === 1 ?
@@ -393,18 +408,6 @@ const RecognitionModal = ({
                 }, 1500);
               } else if (status === "not_in_recognition_mode") {
                 console.log("Device not in recognition mode, waiting...");
-                // Update the step description to show we're waiting
-                setSteps((prev) =>
-                  prev.map((s, idx) =>
-                    idx === 0 ?
-                      {
-                        ...s,
-                        description:
-                          "Waiting for device to enter recognition mode...",
-                      }
-                    : s,
-                  ),
-                );
               }
             } catch (err) {
               console.error("Polling error:", err);
@@ -413,7 +416,7 @@ const RecognitionModal = ({
               isPollingRef.current = false;
             }
           }, POLL_INTERVAL);
-        }, 1000); // Small delay to ensure device is ready
+        }, 1000);
       } catch (err) {
         if (!isResolvedRef.current) {
           isResolvedRef.current = true;
