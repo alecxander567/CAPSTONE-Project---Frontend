@@ -214,10 +214,45 @@ const ProgramStudents = () => {
     }
   };
 
-  const handleRecognizeClick = (student: Student) => {
+  // Handle recognize click - updated to show device info
+  const handleRecognizeClick = async (student: Student) => {
     if (recognitionModalOpen) return;
+
+    // Check if student has a fingerprint
+    if (!student.finger_id) {
+      showAlert("Student has no fingerprint enrolled", false);
+      return;
+    }
+
     setCurrentStudent(student);
-    setRecognitionModalOpen(true);
+
+    try {
+      // Start recognition - backend will determine which device to use
+      const response = await axios.post(
+        `${API_BASE_URL}/fingerprints/start-recognition/${student.id}`,
+        {},
+        { timeout: 10000 },
+      );
+
+      if (response.data.target_device) {
+        console.log(
+          `Recognition started on device: ${response.data.target_device}`,
+        );
+        showAlert(
+          `🔍 Recognition started on device: ${response.data.target_device}`,
+          true,
+        );
+        setRecognitionModalOpen(true);
+      } else {
+        showAlert("Failed to start recognition. No device available.", false);
+      }
+    } catch (err) {
+      const message =
+        axios.isAxiosError(err) ?
+          err.response?.data?.detail || err.message
+        : "Failed to start recognition";
+      showAlert(message, false);
+    }
   };
 
   const handleRecognitionResult = (studentId: number, success: boolean) => {
@@ -435,8 +470,8 @@ const ProgramStudents = () => {
             isProcessingRecognitionRef.current = false;
           }, 100);
         }}
-        userId={currentStudent?.id}
-        fingerId={currentStudent?.finger_id}
+        userId={currentStudent?.id || 0}
+        fingerId={currentStudent?.finger_id || 0}
         onRecognized={handleRecognitionResult}
       />
       <DeleteFingerprintModal

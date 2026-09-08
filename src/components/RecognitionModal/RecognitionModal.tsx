@@ -4,11 +4,11 @@ import "../EnrollmentModal/EnrollmentModal.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 const DEFAULT_DEVICE_ID = "esp32-default";
-const RECOGNITION_TIMEOUT = 30000; // CHANGED — was 15000
+const RECOGNITION_TIMEOUT = 30000;
 const RECOGNITION_TIMEOUT_SECONDS = RECOGNITION_TIMEOUT / 1000;
 const POLL_INTERVAL = 500;
 
-// Same ring geometry as EnrollmentModal so both modals' timers look identical.
+// Same ring geometry as EnrollmentModal
 const RING_RADIUS = 34;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
@@ -40,6 +40,7 @@ const RecognitionModal = ({
   const [timeoutSeconds, setTimeoutSeconds] = useState(
     RECOGNITION_TIMEOUT_SECONDS,
   );
+  const [targetDevice, setTargetDevice] = useState<string>("");
   const [steps, setSteps] = useState<StepUI[]>([
     {
       id: 0,
@@ -63,6 +64,12 @@ const RecognitionModal = ({
       status: "waiting",
     },
   ]);
+
+  // Mirrors `isOpen` so we can detect open/close transitions during render
+  // and adjust state right away, instead of doing it as a side effect.
+  // This is the React-recommended pattern for "resetting state when a prop
+  // changes" (see https://react.dev/learn/you-might-not-need-an-effect).
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
 
   const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
   const pollRef = useRef<number | null>(null);
@@ -91,7 +98,6 @@ const RecognitionModal = ({
     }
   };
 
-  // ✅ Safe wrapper — only calls onRecognized once per modal open
   const safeOnRecognized = useCallback(
     (id: number, success: boolean) => {
       if (hasCalledRef.current || isCompletedRef.current) return;
@@ -144,6 +150,26 @@ const RecognitionModal = ({
     );
   }, []);
 
+  // ✅ FIX: Adjust state during render instead of calling setState
+  // synchronously inside an effect. When `isOpen` flips, we update the
+  // mirrored `prevIsOpen` state and the dependent UI state in the same
+  // render pass. React re-renders immediately with the new values before
+  // the browser paints, so there's no flash of stale UI, and no cascading
+  // effect-triggered render.
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen);
+
+    if (!isOpen) {
+      // Modal just closed — reset everything back to its initial shape.
+      setTargetDevice("");
+      setCurrentStep(0);
+      setSteps((prev) => prev.map((s) => ({ ...s, status: "waiting" })));
+    }
+
+    // Whether opening or closing, the countdown always restarts fresh.
+    setTimeoutSeconds(RECOGNITION_TIMEOUT_SECONDS);
+  }
+
   useEffect(() => {
     stepRefs.current[currentStep]?.scrollIntoView({
       behavior: "smooth",
@@ -151,39 +177,25 @@ const RecognitionModal = ({
     });
   }, [currentStep]);
 
+  // ✅ Effect only handles the real side effects tied to closing
+  // (clearing timers/intervals and mutable refs) — no setState here.
   useEffect(() => {
     if (!isOpen) {
       clearTimers();
-      // Reset guards when modal closes
       hasCalledRef.current = false;
       isCompletedRef.current = false;
-
-      // Deferred so we're not calling setState synchronously in the
-      // effect body — runs on the next tick instead.
-      resetRef.current = window.setTimeout(() => {
-        setCurrentStep(0);
-        setSteps((prev) => prev.map((s) => ({ ...s, status: "waiting" })));
-        setTimeoutSeconds(RECOGNITION_TIMEOUT_SECONDS);
-      }, 0);
-
-      return () => {
-        if (resetRef.current !== null) {
-          clearTimeout(resetRef.current);
-          resetRef.current = null;
-        }
-      };
     }
+  }, [isOpen]);
 
-    if (!userId) return;
+  // Starts recognition when the modal opens. The countdown timer itself
+  // (setTimeoutSeconds inside the interval callback) still runs here since
+  // it's a subscription to an external clock, which is exactly what
+  // effects are for — only the *initial* reset was moved out above.
+  useEffect(() => {
+    if (!isOpen || !userId) return;
 
     let targetFingerId: number | null = null;
-    let isResolved = false; // ✅ Local flag to prevent multiple resolutions
-
-    // Deferred so we're not calling setState synchronously in the effect
-    // body — runs on the next tick instead, same pattern used on close.
-    window.setTimeout(() => {
-      setTimeoutSeconds(RECOGNITION_TIMEOUT_SECONDS);
-    }, 0);
+    let isResolved = false;
 
     countdownRef.current = window.setInterval(() => {
       setTimeoutSeconds((prev) => (prev <= 1 ? 0 : prev - 1));
@@ -196,10 +208,22 @@ const RecognitionModal = ({
         );
 
         targetFingerId = res.data.target_finger_id;
+        setTargetDevice(res.data.target_device || "Unknown");
+
+        // Update step to show device info
+        setSteps((prev) =>
+          prev.map((s, idx) =>
+            idx === 0 ?
+              {
+                ...s,
+                description: `Using device: ${res.data.target_device || "Unknown"}`,
+              }
+            : s,
+          ),
+        );
 
         updateStepUI("place_finger");
 
-        // ✅ Clear any existing timeout first
         if (timeoutRef.current) {
           clearTimeout(timeoutRef.current);
         }
@@ -216,14 +240,13 @@ const RecognitionModal = ({
           }
         }, RECOGNITION_TIMEOUT);
 
-        // ✅ Clear any existing poll interval
         if (pollRef.current) {
           clearInterval(pollRef.current);
         }
 
         pollRef.current = window.setInterval(async () => {
           if (!targetFingerId) return;
-          if (isResolved) return; // ✅ Don't poll if already resolved
+          if (isResolved) return;
 
           try {
             const res = await axios.get(
@@ -237,7 +260,9 @@ const RecognitionModal = ({
               clearTimers();
               updateStepUI(matched ? "success" : "error");
               safeOnRecognized(userId, matched);
-              onClose?.();
+              setTimeout(() => {
+                onClose?.();
+              }, 1500);
             }
           } catch (err) {
             console.error("Polling error:", err);
@@ -266,7 +291,9 @@ const RecognitionModal = ({
               ),
             );
             safeOnRecognized(userId, false);
-            onClose?.();
+            setTimeout(() => {
+              onClose?.();
+            }, 2000);
           } else {
             console.error("Failed to start recognition:", err);
             updateStepUI("error");
@@ -287,7 +314,6 @@ const RecognitionModal = ({
 
   const progress = ((currentStep + 1) / steps.length) * 100;
 
-  // Ring fill drains from full to empty as time runs out.
   const timeFraction = timeoutSeconds / RECOGNITION_TIMEOUT_SECONDS;
   const ringOffset = RING_CIRCUMFERENCE * (1 - timeFraction);
   const timerState =
@@ -304,6 +330,14 @@ const RecognitionModal = ({
               <i className="bi bi-fingerprint enrollment-icon"></i>
               <h2>Fingerprint Recognition</h2>
               <p>Please place your finger on the sensor</p>
+              {targetDevice && (
+                <div className="recognition-device-info">
+                  <i className="bi bi-cpu"></i>
+                  <span>
+                    Device: <strong>{targetDevice}</strong>
+                  </span>
+                </div>
+              )}
             </div>
 
             <div
