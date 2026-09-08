@@ -263,41 +263,26 @@ const ProgramStudents = () => {
     }
   };
 
-  // Handle recognize click - updated to show device info
-  const handleRecognizeClick = async (student: Student) => {
+  // Handle recognize click.
+  // IMPORTANT: Do NOT call /start-recognition here. RecognitionModal is the
+  // single owner of the start-recognition lifecycle (it calls
+  // cancel-recognition then start-recognition itself when it opens). Calling
+  // start-recognition twice for one click sends two "mode:recognize:<id>"
+  // WebSocket commands to the ESP32 in quick succession. Each one bumps the
+  // device's commandEpoch, so the first recognition attempt gets silently
+  // aborted as "superseded" while the second one keeps running in the
+  // background — which is what caused the error alert to fire and the modal
+  // to close *before* the device actually finished waiting for a finger.
+  const handleRecognizeClick = (student: Student) => {
     if (recognitionModalOpen) return;
 
-    // Check if student has a fingerprint
     if (!student.finger_id) {
       showAlert("Student has no fingerprint enrolled", false);
       return;
     }
 
     setCurrentStudent(student);
-
-    try {
-      // Start recognition - backend will determine which device to use
-      const response = await axios.post(
-        `${API_BASE_URL}/fingerprints/start-recognition/${student.id}`,
-        {},
-        { timeout: 10000 },
-      );
-
-      if (response.data.target_device) {
-        console.log(
-          `Recognition started on device: ${response.data.target_device}`,
-        );
-        setRecognitionModalOpen(true);
-      } else {
-        showAlert("Failed to start recognition. No device available.", false);
-      }
-    } catch (err) {
-      const message =
-        axios.isAxiosError(err) ?
-          err.response?.data?.detail || err.message
-        : "Failed to start recognition";
-      showAlert(message, false);
-    }
+    setRecognitionModalOpen(true);
   };
 
   const handleRecognitionResult = (studentId: number, success: boolean) => {
