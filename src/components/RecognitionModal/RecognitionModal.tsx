@@ -15,7 +15,6 @@ interface RecognitionModalProps {
   isOpen: boolean;
   onClose?: () => void;
   userId: number;
-  fingerId: number;
   onRecognized: (studentId: number, success: boolean) => void;
 }
 
@@ -33,7 +32,6 @@ const RecognitionModal = ({
   isOpen,
   onClose,
   userId,
-  fingerId,
   onRecognized,
 }: RecognitionModalProps) => {
   const [currentStep, setCurrentStep] = useState(0);

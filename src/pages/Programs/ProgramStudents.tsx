@@ -84,34 +84,17 @@ const ProgramStudents = () => {
   const [clearingPendingId, setClearingPendingId] = useState<number | null>(
     null,
   );
-  // Device selection state
-  const [showDeviceSelector, setShowDeviceSelector] = useState(false);
-  const [pendingEnrollStudentId, setPendingEnrollStudentId] = useState<
-    number | null
-  >(null);
-  const [isStartingEnrollment, setIsStartingEnrollment] = useState(false);
-  // NEW: Clear all pending state
   const [isClearingAll, setIsClearingAll] = useState(false);
 
   const {
     enrollFingerprint,
     isLoading,
-    onlineDevices,
-    systemTargetDevice,
-    fetchOnlineDevices,
-    fetchSystemTargetDevice,
-    clearTargetDevice,
+    // Removed: onlineDevices, systemTargetDevice, clearTargetDevice
   } = useEnrollFingerprint();
 
   const isProcessingRecognitionRef = useRef(false);
   const isProcessingEnrollmentRef = useRef(false);
   const alertTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Fetch devices on mount
-  useEffect(() => {
-    fetchOnlineDevices();
-    fetchSystemTargetDevice();
-  }, []);
 
   const showAlert = (message: string, isSuccess: boolean) => {
     if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
@@ -131,7 +114,6 @@ const ProgramStudents = () => {
     }
   };
 
-  // NEW: Clear all pending enrollments and recognition state
   const handleClearAllPending = async () => {
     if (isClearingAll) return;
 
@@ -150,7 +132,6 @@ const ProgramStudents = () => {
         { timeout: 10000 },
       );
 
-      // Refresh students list
       setStudents((prev) =>
         prev.map((s) =>
           s.fingerprint_status === "pending" ?
@@ -163,10 +144,6 @@ const ProgramStudents = () => {
         response.data.message || "Cleared all pending enrollments!",
         true,
       );
-
-      // Refresh device list
-      fetchOnlineDevices();
-      fetchSystemTargetDevice();
     } catch (err) {
       const message =
         axios.isAxiosError(err) ?
@@ -211,33 +188,10 @@ const ProgramStudents = () => {
     });
   }, [students, searchQuery]);
 
-  // Handle enroll button click - ALWAYS show device selector
-  const handleEnrollClick = (studentId: number) => {
-    setPendingEnrollStudentId(studentId);
-
-    // Check if there are online devices
-    if (onlineDevices.length === 0) {
-      showAlert(
-        "No online devices available. Please ensure ESP32 is connected.",
-        false,
-      );
-      return;
-    }
-
-    // ALWAYS show the device selector, even if system target is set
-    setShowDeviceSelector(true);
-  };
-
-  // Start enrollment with selected device
-  const startEnrollmentWithDevice = async (
-    studentId: number,
-    deviceId: string | null,
-  ) => {
-    if (isStartingEnrollment) return;
-    setIsStartingEnrollment(true);
-
+  // Handle enroll button click - starts enrollment directly
+  const handleEnrollClick = async (studentId: number) => {
     try {
-      const data = await enrollFingerprint(studentId, deviceId);
+      const data = await enrollFingerprint(studentId);
       if (!data) {
         showAlert("Failed to start enrollment. Please try again.", false);
         return;
@@ -249,30 +203,16 @@ const ProgramStudents = () => {
       setSelectedStudentId(studentId);
       setSelectedFingerId(data.finger_id);
       setShowEnrollmentModal(true);
-      setShowDeviceSelector(false);
-      setPendingEnrollStudentId(null);
     } catch (err) {
       const message =
         axios.isAxiosError(err) ?
           err.response?.data?.detail || err.message || "Unknown error"
         : "Unknown error";
       showAlert(`Failed to start enrollment: ${message}`, false);
-      // Don't close the device selector on error so user can try again
-    } finally {
-      setIsStartingEnrollment(false);
     }
   };
 
   // Handle recognize click.
-  // IMPORTANT: Do NOT call /start-recognition here. RecognitionModal is the
-  // single owner of the start-recognition lifecycle (it calls
-  // cancel-recognition then start-recognition itself when it opens). Calling
-  // start-recognition twice for one click sends two "mode:recognize:<id>"
-  // WebSocket commands to the ESP32 in quick succession. Each one bumps the
-  // device's commandEpoch, so the first recognition attempt gets silently
-  // aborted as "superseded" while the second one keeps running in the
-  // background — which is what caused the error alert to fire and the modal
-  // to close *before* the device actually finished waiting for a finger.
   const handleRecognizeClick = (student: Student) => {
     if (recognitionModalOpen) return;
 
@@ -521,120 +461,6 @@ const ProgramStudents = () => {
         onClose={() => setShowErrorAlert(false)}
       />
 
-      {/* Device Selector Modal - ALWAYS shown when enroll is clicked */}
-      {showDeviceSelector && (
-        <div className="device-selector-overlay">
-          <div className="device-selector-modal">
-            <div className="device-selector-header">
-              <i className="bi bi-hdd-network"></i>
-              <h3>Select Device for Enrollment</h3>
-              <p>Choose which ESP32 device should enroll this fingerprint</p>
-              {systemTargetDevice && (
-                <div className="device-selector-system-default-hint">
-                  <i className="bi bi-info-circle"></i>
-                  <span>
-                    System default: <strong>{systemTargetDevice}</strong>
-                  </span>
-                  <button
-                    className="device-selector-clear-target-small"
-                    onClick={async () => {
-                      await clearTargetDevice();
-                      fetchSystemTargetDevice();
-                      showAlert("System target device cleared", true);
-                    }}>
-                    Clear Default
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <div className="device-selector-body">
-              {onlineDevices.length === 0 ?
-                <div className="device-selector-empty">
-                  <i className="bi bi-wifi-off"></i>
-                  <p>No online devices available</p>
-                  <button
-                    className="device-selector-refresh"
-                    onClick={() => fetchOnlineDevices()}>
-                    <i className="bi bi-arrow-clockwise"></i> Refresh
-                  </button>
-                </div>
-              : <>
-                  <div className="device-selector-list">
-                    {onlineDevices.map((device) => (
-                      <button
-                        key={device.device_id}
-                        className={`device-selector-item ${
-                          systemTargetDevice === device.device_id ?
-                            "device-selector-item-default"
-                          : ""
-                        }`}
-                        onClick={() => {
-                          if (pendingEnrollStudentId) {
-                            startEnrollmentWithDevice(
-                              pendingEnrollStudentId,
-                              device.device_id,
-                            );
-                          }
-                        }}
-                        disabled={isStartingEnrollment || isLoading}>
-                        <div className="device-selector-item-icon">
-                          <i className="bi bi-cpu"></i>
-                        </div>
-                        <div className="device-selector-item-info">
-                          <span className="device-name">
-                            {device.device_id}
-                            {systemTargetDevice === device.device_id && (
-                              <span className="device-default-badge">
-                                Default
-                              </span>
-                            )}
-                          </span>
-                          <span className="device-mode">
-                            Mode: {device.mode}
-                          </span>
-                        </div>
-                        <div className="device-selector-item-status">
-                          <span className="device-online-badge">
-                            <i className="bi bi-circle-fill"></i> Online
-                          </span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="device-selector-actions">
-                    <button
-                      className="device-selector-btn device-selector-btn-any"
-                      onClick={() => {
-                        if (pendingEnrollStudentId) {
-                          startEnrollmentWithDevice(
-                            pendingEnrollStudentId,
-                            null,
-                          );
-                        }
-                      }}
-                      disabled={isStartingEnrollment || isLoading}>
-                      <i className="bi bi-radioactive"></i>
-                      Any Available Device
-                    </button>
-                    <button
-                      className="device-selector-btn device-selector-btn-cancel"
-                      onClick={() => {
-                        setShowDeviceSelector(false);
-                        setPendingEnrollStudentId(null);
-                      }}
-                      disabled={isStartingEnrollment}>
-                      Cancel
-                    </button>
-                  </div>
-                </>
-              }
-            </div>
-          </div>
-        </div>
-      )}
-
       <main className="students-pg-content">
         <header className="students-pg-header students-pg-fade-up">
           <div className="students-pg-wave"></div>
@@ -679,34 +505,37 @@ const ProgramStudents = () => {
                   <h2>All Students ({filteredStudents.length})</h2>
                   <p>Total enrolled students in this program</p>
                 </div>
-                <div className="students-pg-search-bar">
-                  <i className="bi bi-search"></i>
-                  <input
-                    type="text"
-                    placeholder="Search by name or ID..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    aria-label="Search students"
-                  />
-                  {searchQuery && (
-                    <button
-                      className="students-pg-clear-search"
-                      onClick={() => setSearchQuery("")}
-                      aria-label="Clear search">
-                      <i className="bi bi-x-lg"></i>
-                    </button>
-                  )}
+                <div className="students-pg-controls-right">
+                  {/* Clear All Pending Button - FIRST */}
+                  <button
+                    className="students-pg-clear-all-btn"
+                    onClick={handleClearAllPending}
+                    disabled={isClearingAll}>
+                    <i className="bi bi-eraser"></i>
+                    <span>
+                      {isClearingAll ? "Clearing..." : "Clear All Pending"}
+                    </span>
+                  </button>
+                  {/* Search Bar - SECOND */}
+                  <div className="students-pg-search-bar">
+                    <i className="bi bi-search"></i>
+                    <input
+                      type="text"
+                      placeholder="Search by name or ID..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      aria-label="Search students"
+                    />
+                    {searchQuery && (
+                      <button
+                        className="students-pg-clear-search"
+                        onClick={() => setSearchQuery("")}
+                        aria-label="Clear search">
+                        <i className="bi bi-x-lg"></i>
+                      </button>
+                    )}
+                  </div>
                 </div>
-                {/* NEW: Clear All Pending Button */}
-                <button
-                  className="students-pg-clear-all-btn"
-                  onClick={handleClearAllPending}
-                  disabled={isClearingAll}>
-                  <i className="bi bi-eraser"></i>
-                  <span>
-                    {isClearingAll ? "Clearing..." : "Clear All Pending"}
-                  </span>
-                </button>
               </div>
 
               {filteredStudents.length === 0 ?
