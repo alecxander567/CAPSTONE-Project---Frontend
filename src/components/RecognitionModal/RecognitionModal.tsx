@@ -11,13 +11,6 @@ const POLL_INTERVAL = 500;
 const RING_RADIUS = 34;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
-// ─── STRICT MODE LOCK ──────────────────────────────────────────────────────
-// React StrictMode double-mounts the effect in dev. This module-level lock
-// prevents the second mount from starting a duplicate recognition session
-// and invalidating the first one mid-flight.
-// IMPORTANT: MUST be declared with `let`, NOT `const`
-let activeRecognitionUserId: number | null = null;
-
 interface RecognitionModalProps {
   isOpen: boolean;
   onClose?: () => void;
@@ -91,13 +84,8 @@ const RecognitionModal = ({
   const clearAttemptedRef = useRef(false);
   const pollingStartedRef = useRef(false);
   const isFirstPollRef = useRef(true);
-
-  // ─── RELEASE THE STRICT MODE LOCK ──────────────────────────────────────
-  const releaseLock = useCallback(() => {
-    if (activeRecognitionUserId === userId) {
-      activeRecognitionUserId = null;
-    }
-  }, [userId]);
+  // ─── USE A REF INSTEAD OF MODULE VARIABLE ──────────────────────────────
+  const activeRecognitionLockRef = useRef<number | null>(null);
 
   const clearTimers = () => {
     if (pollRef.current !== null) {
@@ -125,11 +113,13 @@ const RecognitionModal = ({
       if (hasCalledRef.current || isCompletedRef.current) return;
       hasCalledRef.current = true;
       isCompletedRef.current = true;
-      // Release the lock when recognition completes
-      releaseLock();
+      // Release the lock
+      if (activeRecognitionLockRef.current === userId) {
+        activeRecognitionLockRef.current = null;
+      }
       onRecognized(id, success);
     },
-    [onRecognized, releaseLock],
+    [onRecognized, userId],
   );
 
   const updateStepUI = useCallback((step: string) => {
@@ -179,8 +169,10 @@ const RecognitionModal = ({
     setPrevIsOpen(isOpen);
 
     if (!isOpen) {
-      // Modal closed — release the lock and clean up
-      releaseLock();
+      // Modal closed — release the lock
+      if (activeRecognitionLockRef.current === userId) {
+        activeRecognitionLockRef.current = null;
+      }
       setTargetDevice("");
       setTargetFingerId(null);
       setCurrentStep(0);
@@ -198,7 +190,6 @@ const RecognitionModal = ({
       isResolvedRef.current = false;
       clearTimers();
     } else {
-      // Modal opened - fresh start (lock is released by the close path above)
       isRecognitionStartedRef.current = false;
       isCompleteRef.current = false;
       pollAttemptsRef.current = 0;
@@ -235,24 +226,22 @@ const RecognitionModal = ({
 
   // Starts recognition when the modal opens
   useEffect(() => {
-    // ─── STRICT MODE GUARD ──────────────────────────────────────────────
-    // If we already have an active session for this user, block the second mount
+    // ─── STRICT MODE GUARD USING REF ────────────────────────────────────
     if (
       !isOpen ||
       !userId ||
       isRecognitionStartedRef.current ||
       isCompleteRef.current ||
-      activeRecognitionUserId === userId // <-- StrictMode lock check
+      activeRecognitionLockRef.current === userId // Check the ref
     ) {
-      // If we're blocked by the lock, make sure we clean up any partial state
-      if (activeRecognitionUserId === userId && !isOpen) {
-        activeRecognitionUserId = null;
+      if (activeRecognitionLockRef.current === userId && !isOpen) {
+        activeRecognitionLockRef.current = null;
       }
       return;
     }
 
     // ─── CLAIM THE LOCK ─────────────────────────────────────────────────
-    activeRecognitionUserId = userId;
+    activeRecognitionLockRef.current = userId;
 
     let targetFingerIdLocal: number | null = null;
 
@@ -420,7 +409,9 @@ const RecognitionModal = ({
               );
               safeOnRecognized(userId, false);
               isCompleteRef.current = true;
-              releaseLock();
+              if (activeRecognitionLockRef.current === userId) {
+                activeRecognitionLockRef.current = null;
+              }
               setTimeout(() => {
                 onClose?.();
               }, 1500);
@@ -476,7 +467,9 @@ const RecognitionModal = ({
                 );
                 safeOnRecognized(userId, matched);
                 isCompleteRef.current = true;
-                releaseLock();
+                if (activeRecognitionLockRef.current === userId) {
+                  activeRecognitionLockRef.current = null;
+                }
                 setTimeout(() => {
                   onClose?.();
                 }, 2000);
@@ -508,7 +501,9 @@ const RecognitionModal = ({
                 );
                 safeOnRecognized(userId, false);
                 isCompleteRef.current = true;
-                releaseLock();
+                if (activeRecognitionLockRef.current === userId) {
+                  activeRecognitionLockRef.current = null;
+                }
                 setTimeout(() => {
                   onClose?.();
                 }, 1500);
@@ -536,7 +531,9 @@ const RecognitionModal = ({
       } catch (err) {
         if (!isResolvedRef.current) {
           isResolvedRef.current = true;
-          releaseLock();
+          if (activeRecognitionLockRef.current === userId) {
+            activeRecognitionLockRef.current = null;
+          }
           if (axios.isAxiosError(err) && err.response?.status === 503) {
             setCurrentStep(0);
             setSteps((prev) =>
@@ -584,10 +581,12 @@ const RecognitionModal = ({
 
     return () => {
       // Cleanup: release the lock if the component unmounts
-      releaseLock();
+      if (activeRecognitionLockRef.current === userId) {
+        activeRecognitionLockRef.current = null;
+      }
       clearTimers();
     };
-  }, [isOpen, userId, updateStepUI, safeOnRecognized, onClose, releaseLock]);
+  }, [isOpen, userId, updateStepUI, safeOnRecognized, onClose]);
 
   if (!isOpen) return null;
 
