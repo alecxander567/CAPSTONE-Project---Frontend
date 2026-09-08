@@ -42,7 +42,6 @@ const RecognitionModal = ({
   );
   const [targetDevice, setTargetDevice] = useState<string>("");
   const [targetFingerId, setTargetFingerId] = useState<number | null>(null);
-  const [isDeviceReady, setIsDeviceReady] = useState(false);
   const [steps, setSteps] = useState<StepUI[]>([
     {
       id: 0,
@@ -83,8 +82,8 @@ const RecognitionModal = ({
   const pollAttemptsRef = useRef(0);
   const targetDeviceRef = useRef<string>("");
   const clearAttemptedRef = useRef(false);
-  const deviceReadyCheckedRef = useRef(false);
   const pollingStartedRef = useRef(false);
+  const isFirstPollRef = useRef(true);
 
   const clearTimers = () => {
     if (pollRef.current !== null) {
@@ -167,13 +166,12 @@ const RecognitionModal = ({
       setTargetDevice("");
       setTargetFingerId(null);
       setCurrentStep(0);
-      setIsDeviceReady(false);
       isRecognitionStartedRef.current = false;
       isCompleteRef.current = false;
       pollAttemptsRef.current = 0;
       clearAttemptedRef.current = false;
-      deviceReadyCheckedRef.current = false;
       pollingStartedRef.current = false;
+      isFirstPollRef.current = true;
       setSteps((prev) => prev.map((s) => ({ ...s, status: "waiting" })));
       setTimeoutSeconds(RECOGNITION_TIMEOUT_SECONDS);
       hasCalledRef.current = false;
@@ -186,13 +184,12 @@ const RecognitionModal = ({
       isCompleteRef.current = false;
       pollAttemptsRef.current = 0;
       clearAttemptedRef.current = false;
-      deviceReadyCheckedRef.current = false;
       pollingStartedRef.current = false;
+      isFirstPollRef.current = true;
       hasCalledRef.current = false;
       isCompletedRef.current = false;
       isPollingRef.current = false;
       isResolvedRef.current = false;
-      setIsDeviceReady(false);
       setCurrentStep(0);
       setSteps((prev) => prev.map((s) => ({ ...s, status: "waiting" })));
       setTimeoutSeconds(RECOGNITION_TIMEOUT_SECONDS);
@@ -232,8 +229,8 @@ const RecognitionModal = ({
     isRecognitionStartedRef.current = true;
     isResolvedRef.current = false;
     pollAttemptsRef.current = 0;
-    deviceReadyCheckedRef.current = false;
     pollingStartedRef.current = false;
+    isFirstPollRef.current = true;
 
     setTimeoutSeconds(RECOGNITION_TIMEOUT_SECONDS);
 
@@ -286,9 +283,9 @@ const RecognitionModal = ({
         );
         setCurrentStep(0);
 
-        // Step 4: Wait for device to be ready
+        // Step 4: Wait for device to be ready by checking mode
         let readyCheckAttempts = 0;
-        const maxReadyChecks = 30;
+        const maxReadyChecks = 20;
 
         const checkDeviceReady = async () => {
           if (isResolvedRef.current) return;
@@ -296,7 +293,27 @@ const RecognitionModal = ({
             console.log(
               "[Recognition] Device ready check timeout, proceeding anyway",
             );
-            setIsDeviceReady(true);
+            // Force proceed to place finger
+            setSteps((prev) =>
+              prev.map((s, idx) =>
+                idx === 0 ?
+                  {
+                    ...s,
+                    status: "completed" as StepStatus,
+                    description: `Device ${targetDeviceRef.current} ready`,
+                  }
+                : idx === 1 ?
+                  {
+                    ...s,
+                    status: "active" as StepStatus,
+                    description: "Please place your finger on the sensor...",
+                  }
+                : s,
+              ),
+            );
+            setCurrentStep(1);
+            updateStepUI("place_finger");
+            startResultPolling();
             return;
           }
           readyCheckAttempts++;
@@ -313,8 +330,6 @@ const RecognitionModal = ({
 
             if (mode === "recognize") {
               console.log("[Recognition] Device is ready in recognize mode!");
-              setIsDeviceReady(true);
-              deviceReadyCheckedRef.current = true;
 
               // Update to "Place Finger" step
               setSteps((prev) =>
@@ -472,6 +487,18 @@ const RecognitionModal = ({
                 setTimeout(() => {
                   onClose?.();
                 }, 1500);
+              } else if (status === "not_in_recognition_mode") {
+                // Device not in recognition mode yet
+                setSteps((prev) =>
+                  prev.map((s, idx) =>
+                    idx === 0 ?
+                      {
+                        ...s,
+                        description: `Waiting for device ${deviceId} to enter recognition mode...`,
+                      }
+                    : s,
+                  ),
+                );
               }
             } catch (err) {
               console.error("Polling error:", err);
@@ -481,8 +508,8 @@ const RecognitionModal = ({
           }, POLL_INTERVAL);
         };
 
-        // Start device ready check
-        setTimeout(checkDeviceReady, 500);
+        // Start device ready check after a short delay
+        setTimeout(checkDeviceReady, 1000);
       } catch (err) {
         if (!isResolvedRef.current) {
           isResolvedRef.current = true;
