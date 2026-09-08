@@ -90,6 +90,8 @@ const ProgramStudents = () => {
     number | null
   >(null);
   const [isStartingEnrollment, setIsStartingEnrollment] = useState(false);
+  // NEW: Clear all pending state
+  const [isClearingAll, setIsClearingAll] = useState(false);
 
   const {
     enrollFingerprint,
@@ -126,6 +128,53 @@ const ProgramStudents = () => {
         () => setShowErrorAlert(false),
         4000,
       );
+    }
+  };
+
+  // NEW: Clear all pending enrollments and recognition state
+  const handleClearAllPending = async () => {
+    if (isClearingAll) return;
+
+    if (
+      !window.confirm(
+        "This will clear ALL pending enrollments and any stuck recognition state. Are you sure?",
+      )
+    )
+      return;
+
+    setIsClearingAll(true);
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/fingerprints/clear-all-pending`,
+        {},
+        { timeout: 10000 },
+      );
+
+      // Refresh students list
+      setStudents((prev) =>
+        prev.map((s) =>
+          s.fingerprint_status === "pending" ?
+            { ...s, fingerprint_status: "not_enrolled", finger_id: null }
+          : s,
+        ),
+      );
+
+      showAlert(
+        response.data.message || "Cleared all pending enrollments!",
+        true,
+      );
+
+      // Refresh device list
+      fetchOnlineDevices();
+      fetchSystemTargetDevice();
+    } catch (err) {
+      const message =
+        axios.isAxiosError(err) ?
+          err.response?.data?.detail || err.message || "Unknown error"
+        : "Unknown error";
+      showAlert(`Failed to clear pending enrollments: ${message}`, false);
+    } finally {
+      setIsClearingAll(false);
     }
   };
 
@@ -214,16 +263,8 @@ const ProgramStudents = () => {
     }
   };
 
-  // Handle recognize click.
-  // FIX: This used to also POST /start-recognition here, and then
-  // RecognitionModal's own effect would ALSO call cancel-recognition +
-  // start-recognition when it opened. That double-start caused the
-  // backend's recognition_target_id / recognition_matched state to get
-  // reassigned mid-flight, so a stale/mismatched result could come back
-  // and the modal would show a result before the finger was ever scanned.
-  // Now we only open the modal - RecognitionModal owns starting recognition,
-  // exactly once.
-  const handleRecognizeClick = (student: Student) => {
+  // Handle recognize click - updated to show device info
+  const handleRecognizeClick = async (student: Student) => {
     if (recognitionModalOpen) return;
 
     // Check if student has a fingerprint
@@ -233,7 +274,30 @@ const ProgramStudents = () => {
     }
 
     setCurrentStudent(student);
-    setRecognitionModalOpen(true);
+
+    try {
+      // Start recognition - backend will determine which device to use
+      const response = await axios.post(
+        `${API_BASE_URL}/fingerprints/start-recognition/${student.id}`,
+        {},
+        { timeout: 10000 },
+      );
+
+      if (response.data.target_device) {
+        console.log(
+          `Recognition started on device: ${response.data.target_device}`,
+        );
+        setRecognitionModalOpen(true);
+      } else {
+        showAlert("Failed to start recognition. No device available.", false);
+      }
+    } catch (err) {
+      const message =
+        axios.isAxiosError(err) ?
+          err.response?.data?.detail || err.message
+        : "Failed to start recognition";
+      showAlert(message, false);
+    }
   };
 
   const handleRecognitionResult = (studentId: number, success: boolean) => {
@@ -648,6 +712,16 @@ const ProgramStudents = () => {
                     </button>
                   )}
                 </div>
+                {/* NEW: Clear All Pending Button */}
+                <button
+                  className="students-pg-clear-all-btn"
+                  onClick={handleClearAllPending}
+                  disabled={isClearingAll}>
+                  <i className="bi bi-eraser"></i>
+                  <span>
+                    {isClearingAll ? "Clearing..." : "Clear All Pending"}
+                  </span>
+                </button>
               </div>
 
               {filteredStudents.length === 0 ?
