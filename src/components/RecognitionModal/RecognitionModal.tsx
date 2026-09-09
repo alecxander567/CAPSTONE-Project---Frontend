@@ -102,6 +102,18 @@ const RecognitionModal = ({
     isPollingRef.current = false;
   };
 
+  // Tell the backend to drop any in-flight recognition state for this
+  // user/device. Fire-and-forget: if this fails, the backend's own
+  // recognize-mode staleness healing (~45s) will still clean it up.
+  const cancelOnServer = useCallback((id: number) => {
+    if (!id) return;
+    axios
+      .post(`${API_BASE_URL}/fingerprints/cancel-recognition/${id}`)
+      .catch((err) => {
+        console.warn("Failed to cancel recognition on server:", err);
+      });
+  }, []);
+
   const safeOnRecognized = useCallback(
     (id: number, success: boolean) => {
       if (hasCalledRef.current || isCompletedRef.current) return;
@@ -264,6 +276,11 @@ const RecognitionModal = ({
           if (!isResolvedRef.current) {
             isResolvedRef.current = true;
             clearTimers();
+            // Don't leave the backend holding a dangling recognition
+            // session just because the client gave up waiting — tell it
+            // to drop the state immediately instead of relying solely on
+            // the watchdog's staleness healing.
+            cancelOnServer(userId);
             updateStepUI("error");
             setSteps((prev) =>
               prev.map((s, idx) =>
@@ -429,8 +446,15 @@ const RecognitionModal = ({
 
     return () => {
       clearTimers();
+      // If the modal is unmounting/effect is re-running while a
+      // recognition is still in flight (e.g. the user navigated away or
+      // closed the modal early), notify the backend so it doesn't sit in
+      // "recognize" mode waiting for a poll that will never come again.
+      if (isRecognitionStartedRef.current && !isCompleteRef.current) {
+        cancelOnServer(userId);
+      }
     };
-  }, [isOpen, userId, updateStepUI, safeOnRecognized, onClose]);
+  }, [isOpen, userId, updateStepUI, safeOnRecognized, onClose, cancelOnServer]);
 
   if (!isOpen) return null;
 
