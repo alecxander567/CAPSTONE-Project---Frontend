@@ -63,6 +63,7 @@ const ProgramStudents = () => {
     students: fetchedStudents,
     loading,
     error,
+    refreshStudents,
   } = useProgramStudents(programCode || "");
   const [students, setStudents] = useState<Student[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -91,27 +92,6 @@ const ProgramStudents = () => {
   const isProcessingRecognitionRef = useRef(false);
   const isProcessingEnrollmentRef = useRef(false);
   const alertTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Refresh students function
-  const refreshStudents = useCallback(async () => {
-    if (!programCode) return;
-    try {
-      const response = await axios.get(
-        `${API_BASE_URL}/programs/${programCode}/students`,
-      );
-      if (response.data) {
-        setStudents(
-          response.data.map((s: any) => ({
-            ...s,
-            year_level: s.year_level ?? null,
-            finger_id: s.finger_id ?? null,
-          })),
-        );
-      }
-    } catch (err) {
-      console.error("Failed to refresh students:", err);
-    }
-  }, [programCode]);
 
   const showAlert = (message: string, isSuccess: boolean) => {
     if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);

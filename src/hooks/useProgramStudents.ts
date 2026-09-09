@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 
 export interface Student {
@@ -18,25 +18,27 @@ export const useProgramStudents = (programCode: string) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const fetchStudents = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const res = await axios.get<Student[]>(
-          `${import.meta.env.VITE_API_URL}/programs/${programCode}/students`,
-        );
-        setStudents(res.data);
-      } catch (err: unknown) {
-        console.error(err);
-        setError("Failed to fetch students");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (programCode) fetchStudents();
+  const fetchStudents = useCallback(async () => {
+    if (!programCode) return;
+    setLoading(true);
+    setError("");
+    try {
+      const res = await axios.get<Student[]>(
+        `${import.meta.env.VITE_API_URL}/programs/${programCode}/students`,
+        { timeout: 10000 },
+      );
+      setStudents(res.data);
+    } catch (err: unknown) {
+      console.error("Failed to fetch students:", err);
+      setError("Failed to fetch students");
+    } finally {
+      setLoading(false);
+    }
   }, [programCode]);
 
-  return { students, loading, error };
+  useEffect(() => {
+    if (programCode) fetchStudents();
+  }, [programCode, fetchStudents]);
+
+  return { students, loading, error, refreshStudents: fetchStudents };
 };
