@@ -103,8 +103,7 @@ const RecognitionModal = ({
   };
 
   // Tell the backend to drop any in-flight recognition state for this
-  // user/device. Fire-and-forget: if this fails, the backend's own
-  // recognize-mode staleness healing (~45s) will still clean it up.
+  // user/device. Fire-and-forget.
   const cancelOnServer = useCallback((id: number) => {
     if (!id) return;
     axios
@@ -225,8 +224,6 @@ const RecognitionModal = ({
       return;
     }
 
-    let targetFingerId: number | null = null;
-
     isRecognitionStartedRef.current = true;
     isResolvedRef.current = false;
     pollAttemptsRef.current = 0;
@@ -243,7 +240,7 @@ const RecognitionModal = ({
           `${API_BASE_URL}/fingerprints/start-recognition/${userId}`,
         );
 
-        targetFingerId = res.data.target_finger_id;
+        const targetFingerId = res.data.target_finger_id;
         targetDeviceRef.current = res.data.target_device || "Unknown";
         setTargetDevice(targetDeviceRef.current);
 
@@ -276,10 +273,6 @@ const RecognitionModal = ({
           if (!isResolvedRef.current) {
             isResolvedRef.current = true;
             clearTimers();
-            // Don't leave the backend holding a dangling recognition
-            // session just because the client gave up waiting — tell it
-            // to drop the state immediately instead of relying solely on
-            // the watchdog's staleness healing.
             cancelOnServer(userId);
             updateStepUI("error");
             setSteps((prev) =>
@@ -305,8 +298,10 @@ const RecognitionModal = ({
           clearInterval(pollRef.current);
         }
 
+        // Use the target device from the response
+        const deviceId = targetDeviceRef.current || DEFAULT_DEVICE_ID;
+
         pollRef.current = window.setInterval(async () => {
-          if (!targetFingerId) return;
           if (isResolvedRef.current) {
             if (pollRef.current) {
               clearInterval(pollRef.current);
@@ -319,7 +314,6 @@ const RecognitionModal = ({
           pollAttemptsRef.current++;
 
           try {
-            const deviceId = targetDeviceRef.current || DEFAULT_DEVICE_ID;
             const url = `${API_BASE_URL}/fingerprints/get-recognition-result?finger_id=${targetFingerId}&device_id=${deviceId}`;
 
             console.log(`[Poll ${pollAttemptsRef.current}] Checking: ${url}`);
@@ -417,6 +411,27 @@ const RecognitionModal = ({
             setTimeout(() => {
               onClose?.();
             }, 2000);
+          } else if (axios.isAxiosError(err) && err.response?.status === 400) {
+            // No target device saved for this user
+            setCurrentStep(0);
+            setSteps((prev) =>
+              prev.map((s, idx) =>
+                idx === 0 ?
+                  {
+                    ...s,
+                    status: "failed",
+                    description:
+                      err.response?.data?.detail ||
+                      "No device found for this user. Please re-enroll.",
+                  }
+                : s,
+              ),
+            );
+            safeOnRecognized(userId, false);
+            isCompleteRef.current = true;
+            setTimeout(() => {
+              onClose?.();
+            }, 2000);
           } else {
             console.error("Failed to start recognition:", err);
             updateStepUI("error");
@@ -446,10 +461,6 @@ const RecognitionModal = ({
 
     return () => {
       clearTimers();
-      // If the modal is unmounting/effect is re-running while a
-      // recognition is still in flight (e.g. the user navigated away or
-      // closed the modal early), notify the backend so it doesn't sit in
-      // "recognize" mode waiting for a poll that will never come again.
       if (isRecognitionStartedRef.current && !isCompleteRef.current) {
         cancelOnServer(userId);
       }
