@@ -142,6 +142,7 @@
 /* Controls Right - Clear All Pending FIRST, Search SECOND */
 .students-pg-controls-right {
   display: flex;
+  flex-direction: row;
   gap: 1rem;
   align-items: center;
   flex-wrap: wrap;
@@ -724,6 +725,7 @@
 
 .students-pg-controls-right {
   display: flex;
+  flex-direction: row;
   gap: 1rem;
   align-items: center;
   flex-wrap: wrap;
