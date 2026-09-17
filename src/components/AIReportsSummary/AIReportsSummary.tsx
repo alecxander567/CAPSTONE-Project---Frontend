@@ -16,11 +16,16 @@ interface AIReportsSummaryProps {
   programAttendanceData: ProgramAttendance[];
 }
 
-interface AIInsight {
-  type: "success" | "warning" | "danger" | "info";
-  title: string;
-  description: string;
-  suggestion?: string;
+type Severity = "good" | "warning" | "critical" | "neutral";
+
+interface SummaryItem {
+  id: string;
+  label: string;
+  value: string;
+  detail: string;
+  severity: Severity;
+  icon: string;
+  compact?: boolean;
 }
 
 export default function AIReportsSummary({
@@ -29,308 +34,159 @@ export default function AIReportsSummary({
   eventAttendanceData,
   programAttendanceData,
 }: AIReportsSummaryProps) {
-  const [insights, setInsights] = useState<AIInsight[]>([]);
+  const [items, setItems] = useState<SummaryItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const generateInsights = async () => {
-      if (
-        !allStudents.length ||
-        !events.length ||
-        !programAttendanceData.length
-      ) {
-        setLoading(false);
-        return;
+    // Recompute whenever any input changes
+    const totalPresent = allStudents.reduce((s, x) => s + (x.present || 0), 0);
+    const totalPossible = allStudents.reduce(
+      (s, x) => s + (x.total_events || 0),
+      0,
+    );
+    const overallRate =
+      totalPossible > 0 ? Math.round((totalPresent / totalPossible) * 100) : 0;
+
+    const atRisk = allStudents.filter((s) => (s.absences || 0) >= 3);
+    const perfect = allStudents.filter(
+      (s) => (s.absences || 0) === 0 && (s.total_events || 0) > 0,
+    );
+
+    const totalEvents = events.length;
+    const avgPerEvent =
+      totalEvents > 0 ?
+        Math.round(
+          eventAttendanceData.reduce((s, e) => s + (e.students || 0), 0) /
+            totalEvents,
+        )
+      : 0;
+
+    const list: SummaryItem[] = [
+      {
+        id: "overall",
+        label: "Overall Attendance Rate",
+        value: `${overallRate}%`,
+        detail: `${totalPresent.toLocaleString()} of ${totalPossible.toLocaleString()} possible check-ins`,
+        severity:
+          overallRate >= 85 ? "good"
+          : overallRate >= 70 ? "warning"
+          : "critical",
+        icon: "bi-bar-chart-line",
+      },
+      {
+        id: "atrisk",
+        label: "Students At Risk",
+        value: atRisk.length.toLocaleString(),
+        detail:
+          atRisk.length === 0 ?
+            "No students have reached the absence threshold"
+          : `${atRisk.length} student${atRisk.length === 1 ? "" : "s"} with 3 or more absences`,
+        severity:
+          atRisk.length === 0 ? "good"
+          : atRisk.length <= 5 ? "warning"
+          : "critical",
+        icon: "bi-exclamation-triangle",
+      },
+      {
+        id: "perfect",
+        label: "Perfect Attendance",
+        value: perfect.length.toLocaleString(),
+        detail:
+          perfect.length === 0 ?
+            "No students with a clean attendance record yet"
+          : `${perfect.length} student${perfect.length === 1 ? "" : "s"} with zero absences`,
+        severity: perfect.length > 0 ? "good" : "neutral",
+        icon: "bi-patch-check",
+      },
+      {
+        id: "events",
+        label: "Average Event Turnout",
+        value: avgPerEvent.toLocaleString(),
+        detail:
+          totalEvents === 0 ?
+            "No events recorded for the selected period"
+          : `Across ${totalEvents} event${totalEvents === 1 ? "" : "s"}`,
+        severity: "neutral",
+        icon: "bi-calendar-check",
+      },
+    ];
+
+    const validPrograms = programAttendanceData.filter(
+      (p) => !p.program?.toLowerCase().includes("osa"),
+    );
+    if (validPrograms.length > 0) {
+      const sorted = [...validPrograms].sort(
+        (a, b) => (b.percentage || 0) - (a.percentage || 0),
+      );
+      const top = sorted[0];
+      const lowest = sorted[sorted.length - 1];
+
+      list.push({
+        id: "top-program",
+        label: "Top Performing Program",
+        value: top.program,
+        detail: `${top.percentage ?? 0}% participation — ${top.present ?? 0} of ${top.total_students ?? 0} students`,
+        severity: "good",
+        icon: "bi-trophy",
+        compact: true,
+      });
+
+      if (lowest.program !== top.program) {
+        list.push({
+          id: "low-program",
+          label: "Needs Attention",
+          value: lowest.program,
+          detail: `${lowest.percentage ?? 0}% participation — ${lowest.present ?? 0} of ${lowest.total_students ?? 0} students`,
+          severity: (lowest.percentage || 0) < 50 ? "critical" : "warning",
+          icon: "bi-flag",
+          compact: true,
+        });
       }
-
-      try {
-        const apiKey = import.meta.env.VITE_GOOGLE_AI_API_KEY;
-        if (!apiKey) {
-          setError("Google AI API key not configured");
-          setLoading(false);
-          return;
-        }
-
-        // Prepare data summary for AI analysis
-        const totalStudents = allStudents.length;
-        const totalEvents = events.length;
-        const avgAttendance =
-          allStudents.reduce(
-            (sum, s) => sum + (s.present / s.total_events || 0),
-            0,
-          ) / totalStudents;
-        const atRiskStudents = allStudents.filter(
-          (s) => s.absences >= 3,
-        ).length;
-        const perfectAttendance = allStudents.filter(
-          (s) => s.absences === 0,
-        ).length;
-
-        const programStats = programAttendanceData
-          .map(
-            (p) =>
-              `${p.program}: ${p.percentage}% attendance (${p.present}/${p.total_students})`,
-          )
-          .join("\n");
-
-        const eventStats = eventAttendanceData
-          .slice(-5)
-          .map((e) => `${e.event}: ${e.students} students`)
-          .join("\n");
-
-        const prompt = `You are an AI assistant for a biometric attendance system. Analyze the following attendance data and provide actionable insights to improve event management and student participation.
-
-CURRENT DATA:
-- Total Students: ${totalStudents}
-- Total Events: ${totalEvents}
-- Average Attendance Rate: ${(avgAttendance * 100).toFixed(1)}%
-- At-Risk Students (3+ absences): ${atRiskStudents}
-- Perfect Attendance Students: ${perfectAttendance}
-
-PROGRAM ATTENDANCE:
-${programStats}
-
-RECENT EVENTS ATTENDANCE:
-${eventStats}
-
-Provide 4-5 specific, actionable insights in JSON format with this structure:
-{
-  "insights": [
-    {
-      "type": "success|warning|danger|info",
-      "title": "Brief title",
-      "description": "What the data shows",
-      "suggestion": "Specific action to improve"
     }
-  ]
-}
 
-Focus on:
-1. Programs with low attendance and how to improve them
-2. Event timing and scheduling suggestions
-3. Student engagement strategies
-4. At-risk student interventions
-5. Overall system improvements
-
-Keep every "suggestion" a management or administrative action — things a coordinator or program head can actually do (e.g. adjust event scheduling, coordinate with program advisers, set up reminders or follow-ups, reach out to specific programs/students, adjust policies). Do NOT suggest technical, engineering, or software changes (e.g. do not suggest building apps, adding notification systems, changing the biometric hardware, or other IT/development work).
-
-Return ONLY valid JSON, no markdown or extra text.`;
-
-        // Try multiple models in case of quota limits.
-        // NOTE: the 2.x Gemini line (2.0 Flash, 2.5 Flash, 2.5 Pro) has been
-        // progressively cut off for new API keys through 2026. Current GA
-        // models are the 3.x line. "gemini-flash-latest" is kept as a final
-        // fallback alias so this list self-updates on Google's next rename.
-        const models = [
-          "gemini-3.6-flash",
-          "gemini-3.5-flash-lite",
-          "gemini-flash-latest",
-        ];
-        let response: Response | null = null;
-        let lastError: string | null = null;
-
-        for (const model of models) {
-          try {
-            response = await fetch(
-              `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  contents: [
-                    {
-                      parts: [
-                        {
-                          text: prompt,
-                        },
-                      ],
-                    },
-                  ],
-                  generationConfig: {
-                    temperature: 0.7,
-                    maxOutputTokens: 2048,
-                    responseMimeType: "application/json",
-                  },
-                }),
-              },
-            );
-
-            if (response.ok) break;
-
-            const errorText = await response.text();
-            lastError = `Model ${model}: ${response.status} - ${errorText}`;
-            console.warn(lastError);
-          } catch (err) {
-            lastError = `Model ${model}: ${err instanceof Error ? err.message : "Network error"}`;
-            console.warn(lastError);
-          }
-        }
-
-        if (!response || !response.ok) {
-          throw new Error(
-            `All models failed. Last error: ${lastError}. You may have exceeded your free tier quota. Please check your Google Cloud Console billing or wait 24 hours for quota reset.`,
-          );
-        }
-
-        const result = await response.json();
-        const aiText = result.candidates?.[0]?.content?.parts?.[0]?.text;
-
-        if (aiText) {
-          // Extract JSON from the response
-          const jsonMatch = aiText.match(/\{[\s\S]*\}/);
-          if (jsonMatch) {
-            const parsed = JSON.parse(jsonMatch[0]);
-            setInsights(parsed.insights || []);
-          } else {
-            console.warn("Unparseable AI response:", aiText);
-            throw new Error("Invalid AI response format");
-          }
-        } else {
-          throw new Error("No response from AI");
-        }
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Failed to generate insights",
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    generateInsights();
-  }, [allStudents, events, programAttendanceData, eventAttendanceData]);
-
-  const getIcon = (type: string) => {
-    switch (type) {
-      case "success":
-        return "bi-check-circle-fill";
-      case "warning":
-        return "bi-exclamation-triangle-fill";
-      case "danger":
-        return "bi-x-circle-fill";
-      case "info":
-        return "bi-info-circle-fill";
-      default:
-        return "bi-lightbulb-fill";
-    }
-  };
-
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case "success":
-        return "#198754";
-      case "warning":
-        return "#ffc107";
-      case "danger":
-        return "#dc3545";
-      case "info":
-        return "#0dcaf0";
-      default:
-        return "#0d6efd";
-    }
-  };
-
-  const getTypeBg = (type: string) => {
-    switch (type) {
-      case "success":
-        return "#d1e7dd";
-      case "warning":
-        return "#fff3cd";
-      case "danger":
-        return "#f8d7da";
-      case "info":
-        return "#cff4fc";
-      default:
-        return "#cfe2ff";
-    }
-  };
+    setItems(list);
+    setLoading(false);
+  }, [allStudents, events, eventAttendanceData, programAttendanceData]);
 
   return (
     <div className="ai-reports-card lower-card fade-up delay-6">
-      <h4 className="card-title">
-        <i className="bi bi-robot text-primary me-2"></i>
-        AI-Powered Insights & Recommendations
-      </h4>
+      <div className="as-header">
+        <div className="as-header-icon">
+          <i className="bi bi-clipboard-data"></i>
+        </div>
+        <div className="as-header-text">
+          <h4>Attendance Summary</h4>
+          <p>Key metrics and observations</p>
+        </div>
+      </div>
 
-      {loading && (
-        <div className="text-center py-5">
+      {loading ?
+        <div className="as-loading">
           <div
             className="spinner-border spinner-border-sm text-primary"
             role="status"
           />
-          <p className="mt-3 text-muted small">
-            <i className="bi bi-cpu me-2"></i>
-            Analyzing attendance data with AI...
-          </p>
+          <span>Loading summary…</span>
         </div>
-      )}
-
-      {error && (
-        <div className="alert alert-danger small" role="alert">
-          <i className="bi bi-exclamation-triangle-fill me-2"></i>
-          {error}
-        </div>
-      )}
-
-      {!loading && !error && insights.length === 0 && (
-        <div className="text-center py-5 text-muted">
-          <i
-            className="bi bi-inbox"
-            style={{ fontSize: "2rem", opacity: 0.3 }}></i>
-          <p className="mt-2 small">No insights available yet</p>
-        </div>
-      )}
-
-      {!loading && !error && insights.length > 0 && (
-        <div className="ai-insights-list">
-          {insights.map((insight, idx) => (
+      : <div className="as-list">
+          {items.map((item) => (
             <div
-              key={idx}
-              className="ai-insight-item"
-              style={{
-                borderLeft: `4px solid ${getTypeColor(insight.type)}`,
-                backgroundColor: getTypeBg(insight.type),
-              }}>
-              <div className="ai-insight-header">
-                <i
-                  className={`bi ${getIcon(insight.type)} me-2`}
-                  style={{
-                    color: getTypeColor(insight.type),
-                    fontSize: "1.1rem",
-                  }}
-                />
-                <h6
-                  className="ai-insight-title"
-                  style={{ color: getTypeColor(insight.type), margin: 0 }}>
-                  {insight.title}
-                </h6>
+              key={item.id}
+              className={`as-item severity-${item.severity} ${
+                item.compact ? "compact" : ""
+              }`}>
+              <div className="as-item-icon">
+                <i className={`bi ${item.icon}`}></i>
               </div>
-              <p className="ai-insight-description small mb-2">
-                {insight.description}
-              </p>
-              {insight.suggestion && (
-                <div className="ai-insight-suggestion">
-                  <strong>
-                    <i className="bi bi-lightbulb me-1"></i>
-                    Recommendation:
-                  </strong>{" "}
-                  {insight.suggestion}
-                </div>
-              )}
+              <div className="as-item-body">
+                <div className="as-item-label">{item.label}</div>
+                <div className="as-item-value">{item.value}</div>
+                <div className="as-item-detail">{item.detail}</div>
+              </div>
             </div>
           ))}
         </div>
-      )}
-
-      <div className="ai-footer mt-3">
-        <small className="text-muted">
-          <i className="bi bi-cpu me-1"></i>
-          Powered by Google AI • Insights based on real-time attendance data
-        </small>
-      </div>
+      }
     </div>
   );
 }
