@@ -28,6 +28,9 @@ interface SummaryItem {
   compact?: boolean;
 }
 
+// Programs below this % are flagged as "needs attention"
+const ATTENTION_THRESHOLD = 75;
+
 export default function AIReportsSummary({
   allStudents,
   events,
@@ -38,7 +41,6 @@ export default function AIReportsSummary({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Recompute whenever any input changes
     const totalPresent = allStudents.reduce((s, x) => s + (x.present || 0), 0);
     const totalPossible = allStudents.reduce(
       (s, x) => s + (x.total_events || 0),
@@ -114,13 +116,14 @@ export default function AIReportsSummary({
     const validPrograms = programAttendanceData.filter(
       (p) => !p.program?.toLowerCase().includes("osa"),
     );
+
     if (validPrograms.length > 0) {
       const sorted = [...validPrograms].sort(
         (a, b) => (b.percentage || 0) - (a.percentage || 0),
       );
       const top = sorted[0];
-      const lowest = sorted[sorted.length - 1];
 
+      // Top performer
       list.push({
         id: "top-program",
         label: "Top Performing Program",
@@ -131,15 +134,51 @@ export default function AIReportsSummary({
         compact: true,
       });
 
-      if (lowest.program !== top.program) {
+      // ── ALL programs needing attention (below threshold), lowest first ──
+      const needsAttention = sorted
+        .filter((p) => (p.percentage || 0) < ATTENTION_THRESHOLD)
+        .sort((a, b) => (a.percentage || 0) - (b.percentage || 0));
+
+      if (needsAttention.length === 0) {
         list.push({
-          id: "low-program",
-          label: "Needs Attention",
-          value: lowest.program,
-          detail: `${lowest.percentage ?? 0}% participation — ${lowest.present ?? 0} of ${lowest.total_students ?? 0} students`,
-          severity: (lowest.percentage || 0) < 50 ? "critical" : "warning",
+          id: "attention-none",
+          label: "Programs Needing Attention",
+          value: "None",
+          detail: `All programs are at or above ${ATTENTION_THRESHOLD}% participation`,
+          severity: "good",
           icon: "bi-flag",
           compact: true,
+        });
+      } else if (needsAttention.length === 1) {
+        const p = needsAttention[0];
+        list.push({
+          id: "attention-single",
+          label: "Program Needing Attention",
+          value: p.program,
+          detail: `${p.percentage ?? 0}% participation — ${p.present ?? 0} of ${p.total_students ?? 0} students`,
+          severity: (p.percentage || 0) < 50 ? "critical" : "warning",
+          icon: "bi-flag",
+          compact: true,
+        });
+      } else {
+        // Multiple — one grouped card listing them all
+        list.push({
+          id: "attention-multi",
+          label: `Programs Needing Attention (${needsAttention.length})`,
+          value: needsAttention
+            .map((p) => p.program)
+            .join(", "),
+          detail: needsAttention
+            .map(
+              (p) =>
+                `${p.program}: ${p.percentage ?? 0}% (${p.present ?? 0}/${p.total_students ?? 0})`,
+            )
+            .join(" • "),
+          severity:
+            needsAttention.some((p) => (p.percentage || 0) < 50) ?
+              "critical"
+            : "warning",
+          icon: "bi-flag",
         });
       }
     }
@@ -162,10 +201,7 @@ export default function AIReportsSummary({
 
       {loading ?
         <div className="as-loading">
-          <div
-            className="spinner-border spinner-border-sm text-primary"
-            role="status"
-          />
+          <div className="spinner-border spinner-border-sm text-primary" role="status" />
           <span>Loading summary…</span>
         </div>
       : <div className="as-list">
