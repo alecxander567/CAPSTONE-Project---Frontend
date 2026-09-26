@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { computeEventStatus } from "../utils/eventStatus";
 import axios from "axios";
 
 export type EventStatus = "upcoming" | "ongoing" | "done";
@@ -47,12 +46,11 @@ export const useEvents = (): UseEventsResult => {
       const response = await axios.get<AppEvent[]>(
         `${import.meta.env.VITE_API_URL}/events/`,
       );
-      const eventsWithStatus = response.data.map((event) => ({
-        ...event,
-        status: computeEventStatus(event),
-      }));
-      setEvents(eventsWithStatus);
-      setTotalEvents(eventsWithStatus.length);
+      // Trust the backend's status computation — it uses Asia/Manila,
+      // which matches the server-side `Event.status` property. Recomputing
+      // here with UTC-based Date methods was overwriting it incorrectly.
+      setEvents(response.data);
+      setTotalEvents(response.data.length);
       setError(null);
     } catch (err) {
       console.error(err);
@@ -76,10 +74,7 @@ export const useEvents = (): UseEventsResult => {
       { headers: { Authorization: `Bearer ${token}` } },
     );
 
-    setEvents((prev) => [
-      ...prev,
-      { ...response.data, status: computeEventStatus(response.data) },
-    ]);
+    setEvents((prev) => [...prev, response.data]);
     setTotalEvents((prev) => prev + 1);
   };
 
@@ -94,11 +89,7 @@ export const useEvents = (): UseEventsResult => {
     );
 
     setEvents((prev) =>
-      prev.map((evt) =>
-        evt.id === id ?
-          { ...response.data, status: computeEventStatus(response.data) }
-        : evt,
-      ),
+      prev.map((evt) => (evt.id === id ? response.data : evt)),
     );
   };
 
@@ -128,7 +119,7 @@ export const useEvents = (): UseEventsResult => {
         const response = await axios.get<AppEvent>(
           `${import.meta.env.VITE_API_URL}/events/${id}`,
         );
-        return { ...response.data, status: computeEventStatus(response.data) };
+        return response.data;
       } catch (err) {
         console.error(err);
         throw new Error("Failed to fetch event details.");

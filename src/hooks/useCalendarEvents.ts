@@ -1,6 +1,5 @@
 import { useState, useCallback } from "react";
 import axios from "axios";
-import { computeEventStatus } from "../utils/eventStatus";
 
 export type EventStatus = "upcoming" | "ongoing" | "done";
 
@@ -34,12 +33,7 @@ export const useCalendarEvents = () => {
           { params: { year, month } },
         );
 
-        const eventsWithStatus = (response.data.events || []).map((event) => ({
-          ...event,
-          status: computeEventStatus(event),
-        }));
-
-        setEvents(eventsWithStatus);
+        setEvents(response.data.events || []);
       } catch (err) {
         console.error(err);
         setError("Failed to fetch events for this month.");

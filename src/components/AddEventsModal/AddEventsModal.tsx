@@ -39,12 +39,8 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
   const [visible, setVisible] = useState(false);
   const [active, setActive] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
-  // These initializers only run once per mount. Because the parent now
-  // passes a `key` tied to initialData (see usage note below), React
-  // remounts this component fresh whenever you switch between "add" and
-  // "edit <specific event>", so these always start with the right values
-  // without needing an effect to reset them.
   const [title, setTitle] = useState(initialData?.title || "");
   const [description, setDescription] = useState(
     initialData?.description || "",
@@ -58,16 +54,30 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
   );
   const [programs, setPrograms] = useState<Program[]>([]);
 
+  // Compute today's date in LOCAL time as YYYY-MM-DD. We use local
+  // components instead of toISOString() because the latter returns UTC.
+  const [minDate] = useState(() => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  });
+
+  // In edit mode, if the existing event_date is already in the past,
+  // don't raise `min` above it — otherwise the existing value becomes
+  // invalid and the user can't save unrelated edits to that record.
+  const effectiveMinDate =
+    initialData?.event_date && initialData.event_date < minDate ?
+      initialData.event_date
+    : minDate;
+
   React.useEffect(() => {
     axios
       .get<Program[]>(`${import.meta.env.VITE_API_URL}/programs/`)
       .then((res) => setPrograms(res.data))
       .catch(console.error);
   }, []);
-
-  // NOTE: the old "reset form fields from initialData" effect has been
-  // removed. That responsibility now lives in the `key` prop the parent
-  // passes to this component (see usage note at the bottom of this file).
 
   React.useEffect(() => {
     let showTimeout: number;
@@ -93,7 +103,20 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (submitting) return; // guard against double submit / double click
+    if (submitting) return;
+    setFormError(null);
+
+    // Client-side past-date guard.
+    if (eventDate && eventDate < minDate) {
+      setFormError("Event date cannot be in the past.");
+      return;
+    }
+
+    // Client-side time-order guard.
+    if (startTime && endTime && endTime <= startTime) {
+      setFormError("End time must be after start time.");
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -107,6 +130,8 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
         program_id: programId,
       });
     } catch (err) {
+      // The parent (Events.tsx) already shows an ErrorAlert for us,
+      // so we just log here.
       console.error("Failed to save event:", err);
     } finally {
       setSubmitting(false);
@@ -123,7 +148,6 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
         className="modal-dialog modal-dialog-centered"
         onClick={(e) => e.stopPropagation()}>
         <div className="modal-content modal-content-enhanced">
-          {/* Header */}
           <div className="modal-header modal-header-enhanced">
             <div className="modal-header-content">
               <div className="modal-icon">
@@ -150,10 +174,15 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
             />
           </div>
 
-          {/* Form */}
           <form className="modal-form" onSubmit={handleSubmit}>
             <div className="modal-body modal-body-enhanced">
-              {/* Row 1: Title + Date */}
+              {formError && (
+                <div className="alert alert-danger py-2 mb-3" role="alert">
+                  <i className="bi bi-exclamation-triangle me-2" />
+                  {formError}
+                </div>
+              )}
+
               <div className="form-row-2col">
                 <div className="form-group-enhanced">
                   <label className="form-label-enhanced">
@@ -179,12 +208,12 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                     value={eventDate}
                     onChange={(e) => setEventDate(e.target.value)}
                     disabled={submitting}
+                    min={effectiveMinDate}
                     required
                   />
                 </div>
               </div>
 
-              {/* Row 2: Start Time + End Time */}
               <div className="form-row-2col">
                 <div className="form-group-enhanced">
                   <label className="form-label-enhanced">
@@ -214,7 +243,6 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                 </div>
               </div>
 
-              {/* Row 3: Location + Program */}
               <div className="form-row-2col">
                 <div className="form-group-enhanced">
                   <label className="form-label-enhanced">
@@ -253,7 +281,6 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                 </div>
               </div>
 
-              {/* Row 4: Description — full width */}
               <div className="form-group-enhanced mb-0">
                 <label className="form-label-enhanced">
                   <i className="bi bi-text-paragraph" /> Description
@@ -270,7 +297,6 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
               </div>
             </div>
 
-            {/* Footer */}
             <div className="modal-footer modal-footer-enhanced">
               <button
                 type="button"
@@ -310,34 +336,3 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
 };
 
 export default AddEventModal;
-
-/*
-USAGE NOTE — required change in the parent component:
-
-Give the modal a `key` derived from which record it's editing (or "new"
-when adding). This tells React to treat "editing event 5" and "editing
-event 8" (or "adding a new event") as different component instances, so
-it unmounts/remounts and re-runs the useState initializers with fresh
-values — replacing the old effect-based reset:
-
-  <AddEventModal
-    key={initialData?.id ?? "new"}
-    show={show}
-    onClose={onClose}
-    onSave={onSave}
-    initialData={initialData}
-  />
-
-ALSO REQUIRED: onSave must return a Promise that resolves once the
-save request actually completes, or the spinner won't know when to
-turn off:
-
-  const handleSaveEvent = async (data: EventData) => {
-    await axios.post(`${import.meta.env.VITE_API_URL}/events/`, data);
-    // refresh list, close modal, etc.
-  };
-
-Without this key, switching between editing different events (or from
-edit back to add) will keep showing stale field values, since there's no
-longer an effect syncing state from props.
-*/
