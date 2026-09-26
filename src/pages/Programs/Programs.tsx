@@ -319,6 +319,7 @@ const Programs = () => {
 
         {/* Add / Edit Modal */}
         <AddProgramModal
+          key={editTarget?.id ?? "new"}
           show={showAddModal}
           handleClose={() => {
             setShowAddModal(false);
