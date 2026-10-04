@@ -17,8 +17,9 @@ interface Student {
   student_id_no: string;
   first_name: string;
   last_name: string;
+  middle_initial: string | null; // ← NEW
   program: string;
-  email: string; // ← NEW
+  email: string;
   year_level: string | null;
   fingerprint_status: "not_enrolled" | "pending" | "enrolled" | "failed";
   finger_id: number | null;
@@ -601,7 +602,11 @@ const ProgramStudents = () => {
 
                       <div className="students-pg-info">
                         <h3 className="students-pg-student-name">
-                          {student.first_name} {student.last_name}
+                          {student.first_name}{" "}
+                          {student.middle_initial ?
+                            `${student.middle_initial}. `
+                          : ""}
+                          {student.last_name}
                         </h3>
                         <FingerprintStatusBadge
                           status={student.fingerprint_status}

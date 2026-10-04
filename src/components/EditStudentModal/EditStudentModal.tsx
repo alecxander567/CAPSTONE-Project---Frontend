@@ -54,7 +54,7 @@ const EditStudentModal = ({
       student_id_no: student.student_id_no || "",
       first_name: student.first_name || "",
       last_name: student.last_name || "",
-      middle_initial: "",
+      middle_initial: student.middle_initial || "", // ← FIXED
       email: student.email || "",
       year_level: normalizeYear(student.year_level),
     });
