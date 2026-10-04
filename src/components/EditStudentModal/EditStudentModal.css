@@ -1,0 +1,151 @@
+.edit-student-modal .modal-content {
+  border: none;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(15, 82, 186, 0.25);
+}
+
+.edit-student-modal-header {
+  background: linear-gradient(135deg, #0a1aff 0%, #0f52ba 60%, #00b4d8 100%);
+  color: #fff;
+  border-bottom: none;
+  padding: 1.25rem 1.5rem;
+  align-items: center;
+}
+
+.edit-student-modal-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.edit-student-modal-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.edit-student-modal-header .modal-title {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+.edit-student-modal-subtitle {
+  margin: 0.15rem 0 0;
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
+
+.edit-student-modal-body {
+  padding: 1.5rem;
+}
+
+.edit-student-warning {
+  display: flex;
+  gap: 0.6rem;
+  background: #eef4ff;
+  color: #1e3a8a;
+  padding: 0.75rem 0.9rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  margin-bottom: 1.25rem;
+  border: 1px solid #dbe7ff;
+}
+
+.edit-student-warning i {
+  color: #0f52ba;
+  font-size: 1.05rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.edit-student-field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+  flex: 1;
+}
+
+.edit-student-field label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 0.35rem;
+}
+
+.edit-student-field input,
+.edit-student-field select {
+  padding: 0.6rem 0.8rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  outline: none;
+  transition: all 0.2s ease;
+  background: #fff;
+}
+
+.edit-student-field input:focus,
+.edit-student-field select:focus {
+  border-color: #0f52ba;
+  box-shadow: 0 0 0 3px rgba(15, 82, 186, 0.12);
+}
+
+.edit-student-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.edit-student-modal-footer {
+  border-top: 1px solid #eef2f7;
+  padding: 1rem 1.5rem;
+  gap: 0.5rem;
+}
+
+.edit-student-btn-cancel,
+.edit-student-btn-save {
+  border: none;
+  border-radius: 50px;
+  padding: 0.6rem 1.25rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+}
+
+.edit-student-btn-cancel {
+  background: #eef2f7;
+  color: #475569;
+}
+.edit-student-btn-cancel:hover:not(:disabled) {
+  background: #e2e8f0;
+}
+
+.edit-student-btn-save {
+  background: linear-gradient(135deg, #0a1aff 0%, #0f52ba 100%);
+  color: #fff;
+}
+.edit-student-btn-save:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(15, 82, 186, 0.35);
+}
+
+.edit-student-btn-cancel:disabled,
+.edit-student-btn-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .edit-student-row {
+    flex-direction: column;
+    gap: 0;
+  }
+}

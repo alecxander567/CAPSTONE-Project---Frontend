@@ -102,7 +102,13 @@ function Events() {
         const status = err.response?.status;
         const validationErrors = err.response?.data?.detail;
 
-        if (status === 422) {
+        if (status === 409) {
+          // Duplicate event title (backend enforcement)
+          message =
+            typeof validationErrors === "string" ? validationErrors : (
+              "An event with that title already exists."
+            );
+        } else if (status === 422) {
           if (Array.isArray(validationErrors) && validationErrors.length > 0) {
             const firstError = validationErrors[0];
             if (
@@ -194,6 +200,9 @@ function Events() {
         }}
         onSave={handleSaveEvent}
         initialData={editingEvent}
+        existingTitles={events
+          .filter((e) => e.id !== editingEvent?.id)
+          .map((e) => e.title)}
       />
 
       <DeleteEventModal

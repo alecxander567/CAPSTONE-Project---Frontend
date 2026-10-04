@@ -28,6 +28,7 @@ interface AddEventModalProps {
   onClose: () => void;
   onSave: (data: EventData) => void | Promise<void>;
   initialData?: EventData | null;
+  existingTitles?: string[];
 }
 
 const AddEventModal: React.FC<AddEventModalProps> = ({
@@ -35,6 +36,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
   onClose,
   onSave,
   initialData = null,
+  existingTitles = [],
 }) => {
   const [visible, setVisible] = useState(false);
   const [active, setActive] = useState(false);
@@ -115,6 +117,17 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
     // Client-side time-order guard.
     if (startTime && endTime && endTime <= startTime) {
       setFormError("End time must be after start time.");
+      return;
+    }
+
+    // Client-side duplicate-title guard. The backend enforces this too,
+    // but catching it here gives instant feedback without a round-trip.
+    const normalizedInput = title.trim().replace(/\s+/g, " ").toLowerCase();
+    const isDuplicate = existingTitles.some(
+      (t) => t.trim().replace(/\s+/g, " ").toLowerCase() === normalizedInput,
+    );
+    if (isDuplicate) {
+      setFormError(`An event titled "${title.trim()}" already exists.`);
       return;
     }
 

@@ -7,6 +7,7 @@ import DeleteFingerprintModal from "../../components/DeleteFingerprintModal/Dele
 import RecognitionModal from "../../components/RecognitionModal/RecognitionModal";
 import SuccessAlert from "../../components/SuccessAlert/SuccessAlert";
 import ErrorAlert from "../../components/SuccessAlert/ErrorAlert";
+import EditStudentModal from "../../components/EditStudentModal/EditStudentModal";
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import axios from "axios";
 import "./Students.css";
@@ -17,6 +18,7 @@ interface Student {
   first_name: string;
   last_name: string;
   program: string;
+  email: string; // ← NEW
   year_level: string | null;
   fingerprint_status: "not_enrolled" | "pending" | "enrolled" | "failed";
   finger_id: number | null;
@@ -79,6 +81,10 @@ const ProgramStudents = () => {
   const [alertMessage, setAlertMessage] = useState("");
   const [recognitionModalOpen, setRecognitionModalOpen] = useState(false);
   const [currentStudent, setCurrentStudent] = useState<Student | null>(null);
+  const [editStudentTarget, setEditStudentTarget] = useState<Student | null>(
+    null,
+  );
+  const [showEditModal, setShowEditModal] = useState(false);
   const [unenrollingStudentId, setUnenrollingStudentId] = useState<
     number | null
   >(null);
@@ -464,6 +470,22 @@ const ProgramStudents = () => {
         onConfirm={confirmUnenroll}
         studentName={selectedStudentName}
       />
+
+      <EditStudentModal
+        show={showEditModal}
+        student={editStudentTarget}
+        onClose={() => {
+          setShowEditModal(false);
+          setEditStudentTarget(null);
+        }}
+        onUpdated={(updated) => {
+          setStudents((prev) =>
+            prev.map((s) => (s.id === updated.id ? { ...s, ...updated } : s)),
+          );
+          showAlert("Student updated successfully!", true);
+        }}
+      />
+
       <SuccessAlert
         show={showSuccessAlert}
         message={alertMessage}
@@ -592,6 +614,12 @@ const ProgramStudents = () => {
                             </span>
                           </span>
                           <span className="students-pg-detail-item">
+                            <i className="bi bi-envelope"></i>
+                            <span className="students-pg-detail-text">
+                              {student.email || "—"}
+                            </span>
+                          </span>
+                          <span className="students-pg-detail-item">
                             <i className="bi bi-calendar3"></i>
                             <span className="students-pg-detail-text">
                               {student.year_level ?? "No year level"}
@@ -601,6 +629,16 @@ const ProgramStudents = () => {
                       </div>
 
                       <div className="students-pg-actions">
+                        <button
+                          className="students-pg-action-btn students-pg-btn-edit-info"
+                          onClick={() => {
+                            setEditStudentTarget(student);
+                            setShowEditModal(true);
+                          }}
+                          title="Edit student information">
+                          <i className="bi bi-pencil-square"></i>
+                          Edit Info
+                        </button>
                         {student.fingerprint_status === "enrolled" ?
                           <>
                             <button

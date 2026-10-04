@@ -707,3 +707,14 @@
     width: 100%;
   }
 }
+/* Admin: Edit Info button */
+.students-pg-btn-edit-info {
+  background: #eef4ff;
+  color: #0f52ba;
+}
+.students-pg-btn-edit-info:hover:not(:disabled) {
+  background: #0f52ba;
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(15, 82, 186, 0.3);
+}
