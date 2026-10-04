@@ -54,7 +54,7 @@ const EditStudentModal = ({
       student_id_no: student.student_id_no || "",
       first_name: student.first_name || "",
       last_name: student.last_name || "",
-      middle_initial: student.middle_initial || "", // ← FIXED
+      middle_initial: student.middle_initial || "",
       email: student.email || "",
       year_level: normalizeYear(student.year_level),
     });
@@ -74,7 +74,6 @@ const EditStudentModal = ({
     e.preventDefault();
     setError(null);
 
-    // quick client-side guard
     if (!form.student_id_no.trim()) {
       setError("Student ID cannot be empty");
       return;
@@ -99,6 +98,7 @@ const EditStudentModal = ({
         student_id_no: updated.student_id_no ?? form.student_id_no,
         first_name: updated.first_name ?? form.first_name,
         last_name: updated.last_name ?? form.last_name,
+        middle_initial: updated.middle_initial ?? form.middle_initial,
         email: updated.email ?? form.email,
         year_level: updated.year_level ?? student.year_level,
       });
@@ -111,24 +111,23 @@ const EditStudentModal = ({
   return (
     <>
       <div
-        className="modal fade show edit-student-modal"
-        tabIndex={-1}
+        className="edit-student-modal-overlay"
+        onClick={onClose}
         role="dialog"
-        style={{ display: "block" }}
-        onClick={onClose}>
+        aria-modal="true">
         <div
-          className="modal-dialog modal-dialog-centered"
-          role="document"
+          className="edit-student-modal-dialog"
           onClick={(e) => e.stopPropagation()}>
-          <div className="modal-content">
-            <form onSubmit={handleSubmit}>
-              <div className="modal-header edit-student-modal-header">
+          <div className="edit-student-modal-content">
+            <form onSubmit={handleSubmit} className="edit-student-modal-form">
+              {/* ── HEADER (fixed, never shrinks) ── */}
+              <div className="edit-student-modal-header">
                 <div className="edit-student-modal-title-wrap">
                   <div className="edit-student-modal-icon">
                     <i className="bi bi-pencil-square"></i>
                   </div>
                   <div>
-                    <h5 className="modal-title">Edit Student</h5>
+                    <h5 className="edit-student-modal-title">Edit Student</h5>
                     <p className="edit-student-modal-subtitle">
                       Update ID, email, or name
                     </p>
@@ -136,21 +135,23 @@ const EditStudentModal = ({
                 </div>
                 <button
                   type="button"
-                  className="btn-close btn-close-white"
+                  className="edit-student-modal-close"
                   onClick={onClose}
-                  aria-label="Close"
-                />
+                  aria-label="Close">
+                  <i className="bi bi-x-lg"></i>
+                </button>
               </div>
 
-              <div className="modal-body edit-student-modal-body">
+              {/* ── BODY (only scrollable section) ── */}
+              <div className="edit-student-modal-body">
                 {error && (
-                  <div className="alert alert-danger py-2 mb-3 small">
-                    <i className="bi bi-exclamation-triangle-fill me-2"></i>
-                    {error}
+                  <div className="edit-student-modal-error">
+                    <i className="bi bi-exclamation-triangle-fill"></i>
+                    <span>{error}</span>
                   </div>
                 )}
 
-                <div className="edit-student-warning">
+                <div className="edit-student-modal-warning">
                   <i className="bi bi-info-circle-fill"></i>
                   <span>
                     Changing the <strong>Student ID</strong> changes what this
@@ -159,7 +160,7 @@ const EditStudentModal = ({
                   </span>
                 </div>
 
-                <div className="edit-student-field">
+                <div className="edit-student-modal-field">
                   <label htmlFor="student_id_no">Student ID</label>
                   <input
                     id="student_id_no"
@@ -171,7 +172,7 @@ const EditStudentModal = ({
                   />
                 </div>
 
-                <div className="edit-student-field">
+                <div className="edit-student-modal-field">
                   <label htmlFor="email">Email</label>
                   <input
                     id="email"
@@ -183,8 +184,8 @@ const EditStudentModal = ({
                   />
                 </div>
 
-                <div className="edit-student-row">
-                  <div className="edit-student-field">
+                <div className="edit-student-modal-row">
+                  <div className="edit-student-modal-field">
                     <label htmlFor="first_name">First Name</label>
                     <input
                       id="first_name"
@@ -195,7 +196,7 @@ const EditStudentModal = ({
                       required
                     />
                   </div>
-                  <div className="edit-student-field">
+                  <div className="edit-student-modal-field">
                     <label htmlFor="last_name">Last Name</label>
                     <input
                       id="last_name"
@@ -208,8 +209,8 @@ const EditStudentModal = ({
                   </div>
                 </div>
 
-                <div className="edit-student-row">
-                  <div className="edit-student-field">
+                <div className="edit-student-modal-row">
+                  <div className="edit-student-modal-field">
                     <label htmlFor="middle_initial">Middle Initial</label>
                     <input
                       id="middle_initial"
@@ -220,7 +221,7 @@ const EditStudentModal = ({
                       onChange={handleChange}
                     />
                   </div>
-                  <div className="edit-student-field">
+                  <div className="edit-student-modal-field">
                     <label htmlFor="year_level">Year Level</label>
                     <select
                       id="year_level"
@@ -246,28 +247,29 @@ const EditStudentModal = ({
                 </div>
               </div>
 
-              <div className="modal-footer edit-student-modal-footer">
+              {/* ── FOOTER (fixed, never shrinks) ── */}
+              <div className="edit-student-modal-footer">
                 <button
                   type="button"
-                  className="edit-student-btn-cancel"
+                  className="edit-student-modal-btn edit-student-modal-btn-cancel"
                   onClick={onClose}
                   disabled={updating}>
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="edit-student-btn-save"
+                  className="edit-student-modal-btn edit-student-modal-btn-save"
                   disabled={updating}>
                   {updating ?
                     <>
                       <span
-                        className="spinner-border spinner-border-sm me-2"
+                        className="edit-student-modal-spinner"
                         role="status"
                       />
                       Saving...
                     </>
                   : <>
-                      <i className="bi bi-check-lg me-1"></i>Save Changes
+                      <i className="bi bi-check-lg"></i>Save Changes
                     </>
                   }
                 </button>
@@ -276,7 +278,7 @@ const EditStudentModal = ({
           </div>
         </div>
       </div>
-      <div className="modal-backdrop fade show" onClick={onClose} />
+      <div className="edit-student-modal-backdrop" onClick={onClose} />
     </>
   );
 };
