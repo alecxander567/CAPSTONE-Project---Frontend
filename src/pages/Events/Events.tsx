@@ -75,7 +75,13 @@ function Events() {
     }
   }, [location, refetch, navigate]);
 
-  const handleOpenModal = () => setShowModal(true);
+  // FIX: explicitly clear editingEvent when opening in create mode,
+  // so the modal never inherits stale data from a previous edit session.
+  const handleOpenModal = () => {
+    setEditingEvent(null);
+    setShowModal(true);
+  };
+
   const handleCloseModal = () => {
     setShowModal(false);
     setEditingEvent(null);
@@ -191,13 +197,22 @@ function Events() {
   // full viewport correctly on every screen size.
   const modals = ReactDOM.createPortal(
     <>
+      {/*
+        FIX: key on mode + id so a brand-new instance is mounted whenever
+        we switch between create and edit, or between different events.
+        This guarantees AddEventModal's useState initializers (which only
+        run on mount) always pick up the correct initialData.
+      */}
       <AddEventModal
-        key={editingEvent?.id ?? "new"}
+        key={
+          showModal ?
+            editingEvent ?
+              `edit-${editingEvent.id}`
+            : "create"
+          : "closed"
+        }
         show={showModal}
-        onClose={() => {
-          handleCloseModal();
-          setEditingEvent(null);
-        }}
+        onClose={handleCloseModal}
         onSave={handleSaveEvent}
         initialData={editingEvent}
         existingTitles={events
