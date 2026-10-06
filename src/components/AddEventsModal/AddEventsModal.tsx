@@ -1,9 +1,178 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import type { FormEvent } from "react";
 import "./AddEventsModal.css";
 import { useEventTitles } from "../../hooks/useEventTitles";
 import { useLocations } from "../../hooks/useLocations";
-import SearchableSelect from "../SearchableSelect/SearchableSelect";
+
+// ─────────────────────────────────────────────────────────────
+// Inline SearchableSelect (uses sx- classes defined in AddEventsModal.css)
+// ─────────────────────────────────────────────────────────────
+interface Option {
+  id: number;
+  name: string;
+}
+
+interface SearchableSelectProps {
+  label?: string;
+  icon?: string;
+  options: Option[];
+  value: number | null;
+  onChange: (id: number | null) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  required?: boolean;
+  onAddNew?: (name: string) => Promise<Option | null>;
+  addNewLabel?: string;
+}
+
+const SearchableSelect: React.FC<SearchableSelectProps> = ({
+  label,
+  icon,
+  options,
+  value,
+  onChange,
+  placeholder = "Select...",
+  disabled = false,
+  required = false,
+  onAddNew,
+  addNewLabel = "Add new",
+}) => {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [adding, setAdding] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  const selected = useMemo(
+    () => options.find((o) => o.id === value) || null,
+    [options, value],
+  );
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return options;
+    return options.filter((o) => o.name.toLowerCase().includes(q));
+  }, [options, query]);
+
+  useEffect(() => {
+    const onDoc = (e: MouseEvent) => {
+      if (!wrapperRef.current) return;
+      if (!wrapperRef.current.contains(e.target as Node)) {
+        setOpen(false);
+        setQuery("");
+      }
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, []);
+
+  const handleSelect = (id: number) => {
+    onChange(id);
+    setOpen(false);
+    setQuery("");
+  };
+
+  const handleAddNew = async () => {
+    if (!onAddNew) return;
+    const name = query.trim();
+    if (!name) return;
+    setAdding(true);
+    try {
+      const created = await onAddNew(name);
+      if (created) {
+        onChange(created.id);
+        setOpen(false);
+        setQuery("");
+      }
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  const trimmed = query.trim();
+  const showAddNew =
+    !!onAddNew &&
+    trimmed.length > 0 &&
+    !filtered.some((o) => o.name.toLowerCase() === trimmed.toLowerCase());
+
+  return (
+    <div className="sx-wrapper" ref={wrapperRef}>
+      {label && (
+        <label className="sx-label">
+          {icon && <i className={`bi ${icon}`} />}
+          <span className="sx-label-text">{label}</span>
+          {required && <span className="sx-required">*</span>}
+        </label>
+      )}
+
+      <button
+        type="button"
+        className={`sx-trigger ${open ? "sx-open" : ""}`}
+        onClick={() => !disabled && setOpen((v) => !v)}
+        disabled={disabled}>
+        <span className={selected ? "sx-value" : "sx-placeholder"}>
+          {selected ? selected.name : placeholder}
+        </span>
+        <i className={`bi bi-chevron-${open ? "up" : "down"} sx-caret`} />
+      </button>
+
+      {open && (
+        <div className="sx-dropdown">
+          <div className="sx-search-box">
+            <i className="bi bi-search" />
+            <input
+              autoFocus
+              type="text"
+              className="sx-search"
+              placeholder="Search or type to create..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
+
+          <div className="sx-options">
+            {/* "Other..." appears at the top when the typed value doesn't match */}
+            {showAddNew && (
+              <button
+                type="button"
+                className="sx-option sx-add-new"
+                onClick={handleAddNew}
+                disabled={adding}>
+                {adding ?
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2" />
+                    Creating...
+                  </>
+                : <>
+                    <i className="bi bi-plus-circle me-2" />
+                    <span className="sx-option-text">
+                      <strong>Other</strong> — {addNewLabel} &ldquo;{trimmed}
+                      &rdquo;
+                    </span>
+                  </>
+                }
+              </button>
+            )}
+
+            {filtered.length === 0 && !showAddNew && (
+              <div className="sx-empty">No matches</div>
+            )}
+
+            {filtered.map((o) => (
+              <button
+                key={o.id}
+                type="button"
+                className={`sx-option ${o.id === value ? "sx-option-selected" : ""}`}
+                onClick={() => handleSelect(o.id)}>
+                <span className="sx-option-text">{o.name}</span>
+                {o.id === value && <i className="bi bi-check2 sx-check" />}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 // ─────────────────────────────────────────────────────────────
 // Types
@@ -204,7 +373,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
     setFormError(null);
 
     if (!titleId) {
-      setFormError("Please select an event title.");
+      setFormError("Please select or create an event title.");
       return;
     }
     if (!locationId) {
@@ -315,19 +484,21 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                     options={titleOptions}
                     value={titleId}
                     onChange={setTitleId}
-                    placeholder={titlesLoading ? "Loading..." : "Select title"}
+                    placeholder={
+                      titlesLoading ? "Loading..." : "Select or type to create"
+                    }
                     disabled={submitting || titlesLoading}
                     required
+                    addNewLabel="Create"
                     onAddNew={async (name) => {
                       try {
                         return await createTitle(name);
                       } catch (err) {
                         console.error(err);
-                        setFormError("Failed to add new title.");
+                        setFormError("Failed to create new title.");
                         return null;
                       }
                     }}
-                    addNewLabel="Add title"
                   />
                 </div>
 
@@ -339,20 +510,22 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                     value={locationId}
                     onChange={setLocationId}
                     placeholder={
-                      locationsLoading ? "Loading..." : "Select location"
+                      locationsLoading ? "Loading..." : (
+                        "Select or type to create"
+                      )
                     }
                     disabled={submitting || locationsLoading}
                     required
+                    addNewLabel="Create"
                     onAddNew={async (name) => {
                       try {
                         return await createLocation(name);
                       } catch (err) {
                         console.error(err);
-                        setFormError("Failed to add new location.");
+                        setFormError("Failed to create new location.");
                         return null;
                       }
                     }}
-                    addNewLabel="Add location"
                   />
                 </div>
               </div>
