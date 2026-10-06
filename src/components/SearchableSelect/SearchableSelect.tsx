@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./SearchableSelect.css";
 
 export interface Option {
@@ -90,59 +90,60 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
     !filtered.some((o) => o.name.toLowerCase() === query.trim().toLowerCase());
 
   return (
-    <div className="ss-wrapper" ref={wrapperRef}>
+    <div className="sx-wrapper" ref={wrapperRef}>
       {label && (
-        <label className="form-label-enhanced">
-          {icon && <i className={`bi ${icon}`} />} {label}
-          {required && <span className="ss-required">*</span>}
+        <label className="sx-label">
+          {icon && <i className={`bi ${icon}`} />}
+          <span className="sx-label-text">{label}</span>
+          {required && <span className="sx-required">*</span>}
         </label>
       )}
 
       <button
         type="button"
-        className={`ss-trigger ${open ? "ss-open" : ""}`}
+        className={`sx-trigger ${open ? "sx-open" : ""}`}
         onClick={() => !disabled && setOpen((v) => !v)}
         disabled={disabled}>
-        <span className={selected ? "ss-value" : "ss-placeholder"}>
+        <span className={selected ? "sx-value" : "sx-placeholder"}>
           {selected ? selected.name : placeholder}
         </span>
-        <i className={`bi bi-chevron-${open ? "up" : "down"} ss-caret`} />
+        <i className={`bi bi-chevron-${open ? "up" : "down"} sx-caret`} />
       </button>
 
       {open && (
-        <div className="ss-dropdown">
-          <div className="ss-search-box">
+        <div className="sx-dropdown">
+          <div className="sx-search-box">
             <i className="bi bi-search" />
             <input
               autoFocus
               type="text"
-              className="ss-search"
+              className="sx-search"
               placeholder="Search..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
           </div>
 
-          <div className="ss-options">
+          <div className="sx-options">
             {filtered.length === 0 && !showAddNew && (
-              <div className="ss-empty">No matches</div>
+              <div className="sx-empty">No matches</div>
             )}
 
             {filtered.map((o) => (
               <button
                 key={o.id}
                 type="button"
-                className={`ss-option ${o.id === value ? "ss-option-selected" : ""}`}
+                className={`sx-option ${o.id === value ? "sx-option-selected" : ""}`}
                 onClick={() => handleSelect(o.id)}>
-                {o.name}
-                {o.id === value && <i className="bi bi-check2 ss-check" />}
+                <span className="sx-option-text">{o.name}</span>
+                {o.id === value && <i className="bi bi-check2 sx-check" />}
               </button>
             ))}
 
             {showAddNew && (
               <button
                 type="button"
-                className="ss-option ss-add-new"
+                className="sx-option sx-add-new"
                 onClick={handleAddNew}
                 disabled={adding}>
                 {adding ?

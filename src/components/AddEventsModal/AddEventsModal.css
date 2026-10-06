@@ -1,5 +1,8 @@
+/* All rules are scoped under .aem so nothing else in the app
+   (e.g. DeleteEventModal, which likely reuses generic names) can override them. */
+
 /* ── Backdrop ── */
-.custom-modal {
+.aem {
   position: fixed;
   inset: 0;
   z-index: 1050;
@@ -16,17 +19,18 @@
   box-sizing: border-box;
 }
 
-.custom-modal.active {
+.aem.active {
   opacity: 1;
   pointer-events: auto;
   background-color: rgba(10, 26, 255, 0.15);
 }
 
 /* ── Dialog ── */
-.custom-modal .modal-dialog {
+.aem .modal-dialog {
   width: 100%;
   max-width: 820px;
   max-height: calc(100dvh - 3rem);
+  min-height: 0;
   display: flex;
   flex-direction: column;
   margin: 0 auto;
@@ -35,16 +39,15 @@
   transition:
     transform 0.3s ease,
     opacity 0.3s ease;
-  min-height: 0;
 }
 
-.custom-modal.active .modal-dialog {
+.aem.active .modal-dialog {
   transform: scale(1);
   opacity: 1;
 }
 
 /* ── Card ── */
-.modal-content-enhanced {
+.aem .modal-content-enhanced {
   border-radius: 20px;
   border: none;
   box-shadow: 0 20px 60px rgba(10, 26, 255, 0.2);
@@ -59,7 +62,7 @@
 }
 
 /* ── Form ── */
-.modal-form {
+.aem .modal-form {
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
@@ -68,7 +71,7 @@
 }
 
 /* ── Header ── */
-.modal-header-enhanced {
+.aem .modal-header-enhanced {
   background: linear-gradient(135deg, #0a1aff 0%, #0f52ba 80%, #00b4d8 100%);
   color: white;
   padding: 1.75rem 2rem 1.5rem;
@@ -81,7 +84,7 @@
   border-bottom: none;
 }
 
-.modal-header-enhanced::before {
+.aem .modal-header-enhanced::before {
   content: "";
   position: absolute;
   width: 200%;
@@ -90,10 +93,10 @@
   border-radius: 45%;
   top: -100%;
   left: -50%;
-  animation: modalWave 15s linear infinite;
+  animation: aemWave 15s linear infinite;
 }
 
-@keyframes modalWave {
+@keyframes aemWave {
   from {
     transform: rotate(0deg);
   }
@@ -102,7 +105,7 @@
   }
 }
 
-.modal-header-content {
+.aem .modal-header-content {
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -110,7 +113,7 @@
   z-index: 1;
 }
 
-.modal-icon {
+.aem .modal-icon {
   width: 48px;
   height: 48px;
   background: rgba(255, 255, 255, 0.2);
@@ -123,20 +126,20 @@
   flex-shrink: 0;
 }
 
-.modal-title {
+.aem .modal-title {
   margin: 0;
   font-size: 1.35rem;
   font-weight: 700;
 }
 
-.modal-subtitle {
+.aem .modal-subtitle {
   margin-top: 0.2rem;
   margin-bottom: 0;
   font-size: 0.82rem;
   opacity: 0.88;
 }
 
-.btn-close-white {
+.aem .btn-close-white {
   filter: brightness(0) invert(1);
   opacity: 0.85;
   position: relative;
@@ -145,35 +148,47 @@
 }
 
 /* ── Body ── */
-.modal-body-enhanced {
+.aem .modal-body-enhanced {
+  display: block;
   padding: 1.25rem 1.75rem;
   background: linear-gradient(to bottom, #ffffff 0%, #f8f9ff 100%);
   overflow-y: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   flex: 1 1 auto;
   min-height: 0;
 }
 
-.form-group-enhanced {
-  margin-bottom: 0.9rem;
+.aem .form-group-enhanced {
+  display: block;
+  width: 100%;
   min-width: 0;
+  margin-bottom: 0.9rem;
 }
 
-.form-row-2col {
+/* 2-column rows: explicit equal columns, children always stretch to the
+   full column width and are top-aligned (no more squashed / right-pushed fields). */
+.aem .form-row-2col {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  justify-items: stretch;
   gap: 1rem;
   margin-bottom: 0.9rem;
 }
 
-.form-row-2col .form-group-enhanced {
-  margin-bottom: 0;
+.aem .form-row-2col > .form-group-enhanced {
+  width: 100%;
   min-width: 0;
+  margin-bottom: 0;
+  justify-self: stretch;
+  align-self: start;
 }
 
-.form-label-enhanced {
+.aem .form-label-enhanced {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 0.5rem;
   font-weight: 600;
   margin-bottom: 0.4rem;
@@ -181,11 +196,11 @@
   font-size: 0.88rem;
 }
 
-.form-label-enhanced i {
+.aem .form-label-enhanced i {
   color: #0f52ba;
 }
 
-.form-control-enhanced {
+.aem .form-control-enhanced {
   border: 2px solid #e3f2fd;
   border-radius: 10px;
   padding: 0.65rem 1rem;
@@ -197,19 +212,19 @@
   box-sizing: border-box;
 }
 
-.form-control-enhanced:focus {
+.aem .form-control-enhanced:focus {
   border-color: #0f52ba;
   box-shadow: 0 0 0 0.2rem rgba(15, 82, 186, 0.15);
   outline: none;
 }
 
-textarea.form-control-enhanced {
+.aem textarea.form-control-enhanced {
   min-height: 55px;
   resize: vertical;
 }
 
 /* ── Footer ── */
-.modal-footer-enhanced {
+.aem .modal-footer-enhanced {
   padding: 1.25rem 2rem;
   background: #f8faff;
   border-top: 2px solid #e3f2fd;
@@ -219,7 +234,7 @@ textarea.form-control-enhanced {
   flex-shrink: 0;
 }
 
-.btn-secondary-enhanced {
+.aem .btn-secondary-enhanced {
   background: #6c757d;
   color: white;
   border: none;
@@ -232,12 +247,12 @@ textarea.form-control-enhanced {
   cursor: pointer;
 }
 
-.btn-secondary-enhanced:hover {
+.aem .btn-secondary-enhanced:hover {
   background: #5a6268;
   transform: translateY(-2px);
 }
 
-.btn-primary-enhanced {
+.aem .btn-primary-enhanced {
   background: linear-gradient(135deg, #0a1aff, #0f52ba);
   color: white;
   border: none;
@@ -250,22 +265,22 @@ textarea.form-control-enhanced {
   cursor: pointer;
 }
 
-.btn-primary-enhanced:hover {
+.aem .btn-primary-enhanced:hover {
   background: linear-gradient(135deg, #0f52ba, #0a1aff);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(10, 26, 255, 0.3);
 }
 
-.btn-secondary-enhanced:disabled,
-.btn-primary-enhanced:disabled {
+.aem .btn-secondary-enhanced:disabled,
+.aem .btn-primary-enhanced:disabled {
   opacity: 0.65;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
 }
 
-.btn-secondary-enhanced:disabled:hover,
-.btn-primary-enhanced:disabled:hover {
+.aem .btn-secondary-enhanced:disabled:hover,
+.aem .btn-primary-enhanced:disabled:hover {
   transform: none;
   box-shadow: none;
 }
@@ -273,7 +288,7 @@ textarea.form-control-enhanced {
 /* ─────────────────────────────────────────────
    Days editor
    ───────────────────────────────────────────── */
-.days-editor {
+.aem .days-editor {
   margin: 0.9rem 0;
   padding: 0.9rem 1rem;
   background: #f8fbff;
@@ -281,7 +296,7 @@ textarea.form-control-enhanced {
   border-radius: 12px;
 }
 
-.days-editor-header {
+.aem .days-editor-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -290,7 +305,7 @@ textarea.form-control-enhanced {
   margin-bottom: 0.75rem;
 }
 
-.days-count {
+.aem .days-count {
   display: inline-block;
   margin-left: 0.5rem;
   padding: 0.1rem 0.5rem;
@@ -302,12 +317,12 @@ textarea.form-control-enhanced {
   vertical-align: middle;
 }
 
-.days-quick-apply {
+.aem .days-quick-apply {
   display: flex;
   gap: 0.4rem;
 }
 
-.btn-quick {
+.aem .btn-quick {
   background: white;
   border: 1px solid #cfe2ff;
   color: #0f52ba;
@@ -319,17 +334,17 @@ textarea.form-control-enhanced {
   transition: all 0.15s ease;
 }
 
-.btn-quick:hover:not(:disabled) {
+.aem .btn-quick:hover:not(:disabled) {
   background: #e7f1ff;
   border-color: #0f52ba;
 }
 
-.btn-quick:disabled {
+.aem .btn-quick:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.days-list {
+.aem .days-list {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -338,7 +353,7 @@ textarea.form-control-enhanced {
   padding-right: 4px;
 }
 
-.day-row {
+.aem .day-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -349,7 +364,7 @@ textarea.form-control-enhanced {
   padding: 0.5rem 0.75rem;
 }
 
-.day-label {
+.aem .day-label {
   font-size: 0.82rem;
   font-weight: 600;
   color: #2c3e50;
@@ -357,314 +372,143 @@ textarea.form-control-enhanced {
   flex-shrink: 0;
 }
 
-.day-time-inputs {
+.aem .day-time-inputs {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.day-time {
+.aem .day-time {
   width: 120px !important;
   padding: 0.4rem 0.6rem !important;
   font-size: 0.82rem !important;
 }
 
-.day-time-sep {
+.aem .day-time-sep {
   font-size: 0.78rem;
   color: #6c757d;
   font-weight: 500;
 }
 
-/* ─────────────────────────────────────────────
-   SearchableSelect (inlined)
-   ───────────────────────────────────────────── */
-.ss-wrapper {
-  position: relative;
-  width: 100%;
-  min-width: 0;
-}
-
-.ss-required {
-  color: #dc3545;
-  margin-left: 4px;
-}
-
-.ss-trigger {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  min-width: 0;
-  border: 2px solid #e3f2fd;
-  background: #fff;
-  border-radius: 10px;
-  padding: 0.65rem 1rem;
-  font-size: 0.92rem;
-  cursor: pointer;
-  transition:
-    border-color 0.2s,
-    box-shadow 0.2s;
-  text-align: left;
-}
-
-.ss-trigger:hover:not(:disabled) {
-  border-color: #b8d8f5;
-}
-
-.ss-trigger.ss-open,
-.ss-trigger:focus {
-  border-color: #0f52ba;
-  box-shadow: 0 0 0 0.2rem rgba(15, 82, 186, 0.15);
-  outline: none;
-}
-
-.ss-trigger:disabled {
-  background: #f5f5f5;
-  cursor: not-allowed;
-  opacity: 0.7;
-}
-
-.ss-value,
-.ss-placeholder {
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.ss-value {
-  color: #2c3e50;
-  font-weight: 500;
-}
-
-.ss-placeholder {
-  color: #9aa5b1;
-}
-
-.ss-caret {
-  color: #0f52ba;
-  font-size: 0.75rem;
-  flex-shrink: 0;
-}
-
-.ss-dropdown {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
-  background: #fff;
-  border: 1px solid #e3f2fd;
-  border-radius: 10px;
-  box-shadow: 0 10px 30px rgba(10, 26, 255, 0.15);
-  z-index: 1100;
-  max-height: 280px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.ss-search-box {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-bottom: 1px solid #eef3fa;
-  flex-shrink: 0;
-}
-
-.ss-search-box i {
-  color: #0f52ba;
-}
-
-.ss-search {
-  flex: 1;
-  min-width: 0;
-  border: none;
-  outline: none;
-  font-size: 0.9rem;
-  padding: 4px 0;
-  background: transparent;
-}
-
-.ss-options {
-  overflow-y: auto;
-  max-height: 220px;
-}
-
-.ss-option {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 9px 14px;
-  background: none;
-  border: none;
-  text-align: left;
-  font-size: 0.9rem;
-  color: #2c3e50;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.ss-option:hover {
-  background: #f0f6ff;
-}
-
-.ss-option-selected {
-  background: #e7f1ff;
-  color: #0f52ba;
-  font-weight: 600;
-}
-
-.ss-check {
-  color: #0f52ba;
-}
-
-.ss-empty {
-  padding: 12px 14px;
-  color: #9aa5b1;
-  font-size: 0.88rem;
-  text-align: center;
-}
-
-.ss-add-new {
-  color: #0f52ba;
-  font-weight: 600;
-  border-top: 1px dashed #e3f2fd;
-  background: #f8fbff;
-}
-
-.ss-add-new:hover {
-  background: #eef6ff;
-}
-
-.ss-add-new:disabled {
-  opacity: 0.6;
-  cursor: wait;
-}
-
 /* ── Tablet ── */
 @media (max-width: 991px) {
-  .custom-modal {
+  .aem {
     padding: 1.25rem 0.75rem;
   }
 
-  .custom-modal .modal-dialog {
+  .aem .modal-dialog {
     max-height: calc(100dvh - 2.5rem);
   }
 
-  .modal-header-enhanced {
+  .aem .modal-header-enhanced {
     padding: 1.35rem 1.5rem 1.1rem;
   }
 
-  .modal-icon {
+  .aem .modal-icon {
     width: 42px;
     height: 42px;
     font-size: 1.2rem;
   }
 
-  .modal-title {
+  .aem .modal-title {
     font-size: 1.15rem;
   }
 
-  .modal-body-enhanced {
+  .aem .modal-body-enhanced {
     padding: 1.5rem;
   }
 
-  .form-row-2col {
-    grid-template-columns: 1fr 1fr;
+  .aem .form-row-2col {
     gap: 0.75rem;
   }
 
-  .modal-footer-enhanced {
+  .aem .modal-footer-enhanced {
     padding: 1.1rem 1.5rem;
   }
 }
 
-/* ── Stack 2-col rows earlier ── */
+/* ── Stack 2-col rows earlier (prevents squashed dropdowns) ── */
 @media (max-width: 768px) {
-  .form-row-2col {
-    grid-template-columns: 1fr;
+  .aem .form-row-2col {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
 /* ── Mobile ── */
 @media (max-width: 576px) {
-  .custom-modal {
+  .aem {
     padding: 0.75rem 0.5rem;
   }
 
-  .custom-modal .modal-dialog {
+  .aem .modal-dialog {
     max-height: calc(100dvh - 1.5rem);
   }
 
-  .modal-content-enhanced {
+  .aem .modal-content-enhanced {
     border-radius: 16px;
   }
 
-  .modal-header-enhanced {
+  .aem .modal-header-enhanced {
     padding: 1rem 1rem 0.85rem;
   }
 
-  .modal-header-content {
+  .aem .modal-header-content {
     gap: 0.65rem;
   }
 
-  .modal-icon {
+  .aem .modal-icon {
     width: 36px;
     height: 36px;
     font-size: 1rem;
     border-radius: 9px;
   }
 
-  .modal-title {
+  .aem .modal-title {
     font-size: 1rem;
     line-height: 1.3;
   }
 
-  .modal-subtitle {
+  .aem .modal-subtitle {
     font-size: 0.7rem;
   }
 
-  .modal-body-enhanced {
+  .aem .modal-body-enhanced {
     padding: 0.75rem 0.875rem;
   }
 
-  .form-group-enhanced {
+  .aem .form-group-enhanced {
     margin-bottom: 0.6rem;
   }
 
-  .form-row-2col {
+  .aem .form-row-2col {
     gap: 0.5rem;
     margin-bottom: 0.65rem;
   }
 
-  .form-label-enhanced {
+  .aem .form-label-enhanced {
     font-size: 0.8rem;
     margin-bottom: 0.3rem;
   }
 
-  .form-control-enhanced {
+  .aem .form-control-enhanced {
     padding: 0.5rem 0.7rem;
     font-size: 0.8rem;
     border-radius: 8px;
   }
 
-  textarea.form-control-enhanced {
+  .aem textarea.form-control-enhanced {
     min-height: 44px;
   }
 
-  .modal-footer-enhanced {
+  .aem .modal-footer-enhanced {
     padding: 0.85rem 0.875rem;
     flex-direction: column-reverse;
     gap: 0.5rem;
     border-top-width: 1.5px;
   }
 
-  .btn-secondary-enhanced,
-  .btn-primary-enhanced {
+  .aem .btn-secondary-enhanced,
+  .aem .btn-primary-enhanced {
     width: 100%;
     justify-content: center;
     padding: 0.65rem 1rem;
@@ -672,33 +516,34 @@ textarea.form-control-enhanced {
     border-radius: 8px;
   }
 
-  .day-row {
+  .aem .day-row {
     flex-direction: column;
     align-items: stretch;
     gap: 0.4rem;
   }
 
-  .day-label {
+  .aem .day-label {
     font-size: 0.78rem;
   }
 
-  .day-time-inputs {
+  .aem .day-time-inputs {
     justify-content: space-between;
   }
 
-  .day-time {
+  .aem .day-time {
     width: 45% !important;
     flex: 1;
   }
 
-  .days-editor-header {
+  .aem .days-editor-header {
     flex-direction: column;
     align-items: flex-start;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  * {
+  .aem,
+  .aem * {
     animation: none !important;
     transition: none !important;
   }
