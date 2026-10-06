@@ -1,20 +1,24 @@
 import { useState, useCallback } from "react";
 import axios from "axios";
-
-export type EventStatus = "upcoming" | "ongoing" | "done";
+import type { EventStatus } from "./useEvents";
 
 export interface CalendarEvent {
   id: number;
+  title_id: number;
+  location_id: number;
   title: string;
-  description?: string;
-  event_date: string;
-  start_time: string;
-  end_time: string;
   location: string;
+  description?: string | null;
+  start_date: string;
+  end_date: string;
+  program_id?: number | null;
   created_by: number;
   created_at: string;
   status: EventStatus;
-  program_id?: number | null;
+  // New per-day fields from backend expansion
+  calendar_date: string;
+  day_start_time: string | null;
+  day_end_time: string | null;
 }
 
 export const useCalendarEvents = () => {

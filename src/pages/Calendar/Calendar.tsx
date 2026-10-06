@@ -47,7 +47,6 @@ function Calendar() {
         </header>
 
         <div className="calendar-content-wrapper">
-          {/* Controls */}
           <div className="calendar-controls">
             <select
               className="calendar-select"
@@ -67,7 +66,6 @@ function Calendar() {
             />
           </div>
 
-          {/* Events */}
           <div className="calendar-events-list">
             {loading && (
               <div className="text-center py-5">
@@ -89,10 +87,16 @@ function Calendar() {
 
             {!loading &&
               events.map((event, i) => {
-                const date = new Date(event.event_date);
+                const date = new Date(event.calendar_date);
+                const timeLabel =
+                  event.day_start_time && event.day_end_time ?
+                    `${event.day_start_time.slice(0, 5)} – ${event.day_end_time.slice(0, 5)}`
+                  : "—";
+                const isMultiDay = event.start_date !== event.end_date;
+
                 return (
                   <div
-                    key={event.id}
+                    key={`${event.id}-${event.calendar_date}`}
                     className="calendar-event-card"
                     style={{ animationDelay: `${i * 0.06}s` }}>
                     <div className="calendar-event-stripe" />
@@ -108,11 +112,14 @@ function Calendar() {
                       <h5 className="calendar-event-title">
                         <i className="bi bi-calendar-event-fill calendar-event-title-icon" />
                         {event.title}
+                        {isMultiDay && (
+                          <span className="badge bg-info ms-2">Multi-day</span>
+                        )}
                       </h5>
                       <div className="calendar-event-meta">
                         <span className="calendar-meta-item">
                           <i className="bi bi-clock" />
-                          {event.start_time} – {event.end_time}
+                          {timeLabel}
                         </span>
                         <span className="calendar-meta-item">
                           <i className="bi bi-geo-alt" />

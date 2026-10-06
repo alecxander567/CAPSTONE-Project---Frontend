@@ -3,29 +3,45 @@ import { useNavigate, useLocation } from "react-router-dom";
 import ReactDOM from "react-dom";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import { useEvents } from "../../hooks/useEvents";
-import type { AppEvent } from "../../hooks/useEvents";
+import type { AppEvent, EventInput } from "../../hooks/useEvents";
 import AddEventModal from "../../components/AddEventsModal/AddEventsModal";
-import type { EventData } from "../../components/AddEventsModal/AddEventsModal";
+import type {
+  EventData,
+  StoredEvent,
+} from "../../components/AddEventsModal/AddEventsModal";
 import DeleteEventModal from "../../components/DeleteEventModal/deleteEventModal";
 import SuccessAlert from "../../components/SuccessAlert/SuccessAlert";
 import ErrorAlert from "../../components/SuccessAlert/ErrorAlert";
 import "./Events.css";
 
-interface StoredEvent extends EventData {
-  id: number;
-}
-
 interface AxiosError {
   response?: {
     status?: number;
-    data?: {
-      detail?: unknown;
-    };
+    data?: { detail?: unknown };
   };
 }
 
 function isAxiosError(error: unknown): error is AxiosError {
   return typeof error === "object" && error !== null && "response" in error;
+}
+
+function formatDateRange(start: string, end: string): string {
+  const s = new Date(start);
+  const e = new Date(end);
+  const sameDay = start === end;
+  const opts: Intl.DateTimeFormatOptions = {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  };
+  if (sameDay) return s.toLocaleDateString("en-US", opts);
+  return `${s.toLocaleDateString("en-US", opts)} – ${e.toLocaleDateString("en-US", opts)}`;
+}
+
+function dayCount(start: string, end: string): number {
+  const s = new Date(start);
+  const e = new Date(end);
+  return Math.round((e.getTime() - s.getTime()) / 86400000) + 1;
 }
 
 function Events() {
@@ -41,6 +57,7 @@ function Events() {
     deleteEvent,
     refetch,
   } = useEvents();
+
   const [showModal, setShowModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState<StoredEvent | null>(null);
 
@@ -49,7 +66,6 @@ function Events() {
 
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
-
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -75,8 +91,6 @@ function Events() {
     }
   }, [location, refetch, navigate]);
 
-  // FIX: explicitly clear editingEvent when opening in create mode,
-  // so the modal never inherits stale data from a previous edit session.
   const handleOpenModal = () => {
     setEditingEvent(null);
     setShowModal(true);
@@ -89,53 +103,55 @@ function Events() {
 
   const handleSaveEvent = async (data: EventData) => {
     try {
+      const payload: EventInput = {
+        title_id: data.title_id,
+        location_id: data.location_id,
+        description: data.description,
+        start_date: data.start_date,
+        end_date: data.end_date,
+        program_id: data.program_id,
+        days: data.days,
+      };
+
       if (editingEvent) {
-        await editEvent(editingEvent.id, data);
+        await editEvent(editingEvent.id, payload);
         setSuccessMessage("Event updated successfully!");
       } else {
-        await addEvent(data);
+        await addEvent(payload);
         setSuccessMessage("Event created successfully!");
       }
-
       setShowSuccess(true);
       handleCloseModal();
     } catch (err: unknown) {
       console.error(err);
-
       let message = "Failed to save event. Please try again.";
 
       if (isAxiosError(err)) {
         const status = err.response?.status;
-        const validationErrors = err.response?.data?.detail;
+        const detail = err.response?.data?.detail;
 
         if (status === 409) {
-          // Duplicate event title (backend enforcement)
           message =
-            typeof validationErrors === "string" ? validationErrors : (
-              "An event with that title already exists."
+            typeof detail === "string" ? detail : (
+              "An event with the same title, location, and start date already exists."
             );
         } else if (status === 422) {
-          if (Array.isArray(validationErrors) && validationErrors.length > 0) {
-            const firstError = validationErrors[0];
-            if (
-              typeof firstError === "object" &&
-              firstError !== null &&
-              "msg" in firstError
-            ) {
-              message = String(firstError.msg) || "Invalid input.";
-            } else {
-              message = "Invalid input.";
+          if (Array.isArray(detail) && detail.length > 0) {
+            const first = detail[0];
+            if (typeof first === "object" && first !== null && "msg" in first) {
+              message = String(first.msg) || "Invalid input.";
             }
-          } else if (typeof validationErrors === "string") {
-            message = validationErrors;
+          } else if (typeof detail === "string") {
+            message = detail;
           } else {
             message = "Invalid input. Please check your data.";
           }
         } else if (status === 403) {
           message = "You don't have permission to perform this action.";
+        } else if (typeof detail === "string") {
+          message = detail;
         }
       }
-
       setErrorMessage(message);
       setShowError(true);
     }
@@ -144,41 +160,41 @@ function Events() {
   const handleEditEvent = (event: AppEvent) => {
     setEditingEvent({
       id: event.id,
-      title: event.title,
+      title_id: event.title_id,
+      location_id: event.location_id,
       description: event.description || "",
-      event_date: event.event_date,
-      start_time: event.start_time || "",
-      end_time: event.end_time || "",
-      location: event.location || "",
+      start_date: event.start_date,
+      end_date: event.end_date,
       program_id: event.program_id ?? null,
+      days: event.days.map((d) => ({
+        day_date: d.day_date,
+        start_time: d.start_time.slice(0, 5),
+        end_time: d.end_time.slice(0, 5),
+      })),
     });
     setShowModal(true);
   };
 
-  const handleDeleteEvent = async (event: AppEvent) => {
+  const handleDeleteEvent = (event: AppEvent) => {
     setDeletingEvent(event);
     setShowDeleteModal(true);
   };
 
   const handleConfirmDelete = async () => {
     if (!deletingEvent) return;
-
     try {
       await deleteEvent(deletingEvent.id);
       setSuccessMessage("Event deleted successfully!");
       setShowSuccess(true);
       setDeletingEvent(null);
       setShowDeleteModal(false);
-    } catch (err: unknown) {
+    } catch (err) {
       console.error(err);
-
-      let message = "Failed to delete event. Please try again.";
-
-      if (isAxiosError(err) && err.response?.status === 403) {
-        message = "You don't have permission to delete this event.";
-      }
-
-      setErrorMessage(message);
+      const msg =
+        isAxiosError(err) && err.response?.status === 403 ?
+          "You don't have permission to delete this event."
+        : "Failed to delete event. Please try again.";
+      setErrorMessage(msg);
       setShowError(true);
       setShowDeleteModal(false);
     }
@@ -192,17 +208,8 @@ function Events() {
     event.title.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
-  // Portals ensure modals render directly on <body>, completely outside
-  // .content-area and its padding/overflow, so they always cover the
-  // full viewport correctly on every screen size.
   const modals = ReactDOM.createPortal(
     <>
-      {/*
-        FIX: key on mode + id so a brand-new instance is mounted whenever
-        we switch between create and edit, or between different events.
-        This guarantees AddEventModal's useState initializers (which only
-        run on mount) always pick up the correct initialData.
-      */}
       <AddEventModal
         key={
           showModal ?
@@ -215,9 +222,6 @@ function Events() {
         onClose={handleCloseModal}
         onSave={handleSaveEvent}
         initialData={editingEvent}
-        existingTitles={events
-          .filter((e) => e.id !== editingEvent?.id)
-          .map((e) => e.title)}
       />
 
       <DeleteEventModal
@@ -252,7 +256,6 @@ function Events() {
       <Sidebar />
 
       <div className="content-area">
-        {/* Header */}
         <header className="dashboard-header">
           <div className="wave"></div>
           <div className="dashboard-header-content fade-up">
@@ -330,85 +333,100 @@ function Events() {
 
           {filteredEvents.length > 0 && !loading && (
             <div className="events-grid fade-up delay-2">
-              {filteredEvents.map((event: AppEvent) => (
-                <div key={event.id} className="event-card">
-                  <div className="event-card-header">
-                    <div className="event-header-wave"></div>
-                    <div className="event-date-badge">
-                      <div className="event-date-month">
-                        {new Date(event.event_date).toLocaleDateString(
-                          "en-US",
-                          { month: "short" },
-                        )}
+              {filteredEvents.map((event: AppEvent) => {
+                const dayN = dayCount(event.start_date, event.end_date);
+                return (
+                  <div key={event.id} className="event-card">
+                    <div className="event-card-header">
+                      <div className="event-header-wave"></div>
+                      <div className="event-date-badge">
+                        <div className="event-date-month">
+                          {new Date(event.start_date).toLocaleDateString(
+                            "en-US",
+                            { month: "short" },
+                          )}
+                        </div>
+                        <div className="event-date-day">
+                          {new Date(event.start_date).getDate()}
+                        </div>
                       </div>
-                      <div className="event-date-day">
-                        {new Date(event.event_date).getDate()}
-                      </div>
+                      <div className="header-overlay"></div>
+                      <h5 className="event-card-title">{event.title}</h5>
                     </div>
-                    <div className="header-overlay"></div>
-                    <h5 className="event-card-title">{event.title}</h5>
-                  </div>
 
-                  <div className="event-card-body">
-                    <p className="event-description">
-                      {event.description || "No description provided."}
-                    </p>
-                    <div className="event-details-list">
-                      <div className="detail-row">
-                        <i className="bi bi-clock"></i>
-                        <span>
-                          {event.start_time} - {event.end_time}
-                        </span>
-                      </div>
-                      <div className="detail-row">
-                        <i className="bi bi-geo-alt"></i>
-                        <span>{event.location}</span>
-                      </div>
-                      {event.program_id && (
+                    <div className="event-card-body">
+                      <p className="event-description">
+                        {event.description || "No description provided."}
+                      </p>
+                      <div className="event-details-list">
                         <div className="detail-row">
-                          <i className="bi bi-diagram-3"></i>
-                          <span className="badge bg-primary bg-opacity-10 text-primary">
-                            Program-specific
+                          <i className="bi bi-calendar-range"></i>
+                          <span>
+                            {formatDateRange(event.start_date, event.end_date)}
+                            {dayN > 1 && (
+                              <span className="badge bg-info ms-2">
+                                {dayN} days
+                              </span>
+                            )}
                           </span>
                         </div>
-                      )}
-                      <div className="detail-row">
-                        <span
-                          className={`event-status-badge ${getStatusBadgeClass(event.status)}`}>
-                          {event.status.toUpperCase()}
-                        </span>
+                        <div className="detail-row">
+                          <i className="bi bi-clock"></i>
+                          <span>
+                            {event.days.length === 1 ?
+                              `${event.days[0].start_time.slice(0, 5)} – ${event.days[0].end_time.slice(0, 5)}`
+                            : "Varies per day"}
+                          </span>
+                        </div>
+                        <div className="detail-row">
+                          <i className="bi bi-geo-alt"></i>
+                          <span>{event.location}</span>
+                        </div>
+                        {event.program_id && (
+                          <div className="detail-row">
+                            <i className="bi bi-diagram-3"></i>
+                            <span className="badge bg-primary bg-opacity-10 text-primary">
+                              Program-specific
+                            </span>
+                          </div>
+                        )}
+                        <div className="detail-row">
+                          <span
+                            className={`event-status-badge ${getStatusBadgeClass(event.status)}`}>
+                            {event.status.toUpperCase()}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="event-card-footer">
-                    <button
-                      className="btn-action btn-view"
-                      onClick={() => handleViewAttendance(event.id)}
-                      title="View Attendance">
-                      <i className="bi bi-eye"></i> View
-                    </button>
-                    <button
-                      className="btn-action btn-edit"
-                      onClick={() => handleEditEvent(event)}
-                      title="Edit Event">
-                      <i className="bi bi-pencil"></i> Edit
-                    </button>
-                    <button
-                      className="btn-action btn-delete"
-                      onClick={() => handleDeleteEvent(event)}
-                      title="Delete Event">
-                      <i className="bi bi-trash3"></i> Delete
-                    </button>
+                    <div className="event-card-footer">
+                      <button
+                        className="btn-action btn-view"
+                        onClick={() => handleViewAttendance(event.id)}
+                        title="View Attendance">
+                        <i className="bi bi-eye"></i> View
+                      </button>
+                      <button
+                        className="btn-action btn-edit"
+                        onClick={() => handleEditEvent(event)}
+                        title="Edit Event">
+                        <i className="bi bi-pencil"></i> Edit
+                      </button>
+                      <button
+                        className="btn-action btn-delete"
+                        onClick={() => handleDeleteEvent(event)}
+                        title="Delete Event">
+                        <i className="bi bi-trash3"></i> Delete
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
       </div>
 
-      {/* Portalled modals — rendered on document.body, outside all layout containers */}
       {modals}
     </div>
   );

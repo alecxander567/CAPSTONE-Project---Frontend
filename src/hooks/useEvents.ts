@@ -3,24 +3,44 @@ import axios from "axios";
 
 export type EventStatus = "upcoming" | "ongoing" | "done";
 
+export interface EventDay {
+  id: number;
+  day_date: string; // "YYYY-MM-DD"
+  start_time: string; // "HH:MM:SS"
+  end_time: string; // "HH:MM:SS"
+}
+
 export interface AppEvent {
   id: number;
-  title: string;
+  title_id: number;
+  location_id: number;
+  title: string; // flattened from backend
+  location: string; // flattened from backend
   description?: string | null;
-  event_date: string;
-  start_time: string;
-  end_time: string;
-  location: string;
+  start_date: string; // "YYYY-MM-DD"
+  end_date: string; // "YYYY-MM-DD"
+  program_id?: number | null;
   created_by: number;
   created_at: string;
   status: EventStatus;
-  program_id?: number | null;
+  days: EventDay[];
 }
 
-export type EventInput = Omit<
-  AppEvent,
-  "id" | "created_by" | "created_at" | "status"
->;
+export interface EventDayInput {
+  day_date: string;
+  start_time: string;
+  end_time: string;
+}
+
+export interface EventInput {
+  title_id: number;
+  location_id: number;
+  description: string;
+  start_date: string;
+  end_date: string;
+  program_id: number | null;
+  days: EventDayInput[];
+}
 
 interface UseEventsResult {
   events: AppEvent[];
@@ -46,9 +66,6 @@ export const useEvents = (): UseEventsResult => {
       const response = await axios.get<AppEvent[]>(
         `${import.meta.env.VITE_API_URL}/events/`,
       );
-      // Trust the backend's status computation — it uses Asia/Manila,
-      // which matches the server-side `Event.status` property. Recomputing
-      // here with UTC-based Date methods was overwriting it incorrectly.
       setEvents(response.data);
       setTotalEvents(response.data.length);
       setError(null);
@@ -88,42 +105,30 @@ export const useEvents = (): UseEventsResult => {
       { headers: { Authorization: `Bearer ${token}` } },
     );
 
-    setEvents((prev) =>
-      prev.map((evt) => (evt.id === id ? response.data : evt)),
-    );
+    setEvents((prev) => prev.map((e) => (e.id === id ? response.data : e)));
   };
 
   const deleteEvent = async (id: number) => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("User not authenticated");
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("User not authenticated");
 
-      await axios.delete(`${import.meta.env.VITE_API_URL}/events/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+    await axios.delete(`${import.meta.env.VITE_API_URL}/events/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-      setEvents((prev) => prev.filter((event) => event.id !== id));
-      setTotalEvents((prev) => prev - 1);
-    } catch (err) {
-      console.error(err);
-      throw new Error("Failed to delete event.");
-    }
+    setEvents((prev) => prev.filter((e) => e.id !== id));
+    setTotalEvents((prev) => prev - 1);
   };
 
   const getEventById = useCallback(
     async (id: number): Promise<AppEvent> => {
-      try {
-        const existingEvent = events.find((e) => e.id === id);
-        if (existingEvent) return existingEvent;
+      const existing = events.find((e) => e.id === id);
+      if (existing) return existing;
 
-        const response = await axios.get<AppEvent>(
-          `${import.meta.env.VITE_API_URL}/events/${id}`,
-        );
-        return response.data;
-      } catch (err) {
-        console.error(err);
-        throw new Error("Failed to fetch event details.");
-      }
+      const res = await axios.get<AppEvent>(
+        `${import.meta.env.VITE_API_URL}/events/${id}`,
+      );
+      return res.data;
     },
     [events],
   );

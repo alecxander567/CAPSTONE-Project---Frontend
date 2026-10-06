@@ -87,11 +87,17 @@ function StudentCalendar() {
 
             {!loading &&
               events.map((event, i) => {
-                const date = new Date(event.event_date);
+                const date = new Date(event.calendar_date);
                 const statusClass = `sc-status-badge sc-status-${event.status}`;
+                const timeLabel =
+                  event.day_start_time && event.day_end_time ?
+                    `${event.day_start_time.slice(0, 5)} – ${event.day_end_time.slice(0, 5)}`
+                  : "—";
+                const isMultiDay = event.start_date !== event.end_date;
+
                 return (
                   <div
-                    key={event.id}
+                    key={`${event.id}-${event.calendar_date}`}
                     className="sc-event-card"
                     style={{ animationDelay: `${i * 0.06}s` }}>
                     <div className="sc-event-stripe" />
@@ -108,6 +114,11 @@ function StudentCalendar() {
                         <h5 className="sc-event-title">
                           <i className="bi bi-calendar-event-fill sc-event-title-icon" />
                           {event.title}
+                          {isMultiDay && (
+                            <span className="badge bg-info ms-2">
+                              Multi-day
+                            </span>
+                          )}
                         </h5>
                         <span className={statusClass}>
                           {event.status.toUpperCase()}
@@ -123,7 +134,7 @@ function StudentCalendar() {
                       <div className="sc-event-meta">
                         <span className="sc-meta-item">
                           <i className="bi bi-clock" />
-                          {event.start_time} – {event.end_time}
+                          {timeLabel}
                         </span>
                         <span className="sc-meta-item">
                           <i className="bi bi-geo-alt" />

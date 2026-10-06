@@ -4,6 +4,25 @@ import { useEvents } from "../../hooks/useEvents";
 import type { AppEvent } from "../../hooks/useEvents";
 import "./StudentEvents.css";
 
+function formatDateRange(start: string, end: string): string {
+  const s = new Date(start);
+  const e = new Date(end);
+  const sameDay = start === end;
+  const opts: Intl.DateTimeFormatOptions = {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  };
+  if (sameDay) return s.toLocaleDateString("en-US", opts);
+  return `${s.toLocaleDateString("en-US", opts)} – ${e.toLocaleDateString("en-US", opts)}`;
+}
+
+function dayCount(start: string, end: string): number {
+  const s = new Date(start);
+  const e = new Date(end);
+  return Math.round((e.getTime() - s.getTime()) / 86400000) + 1;
+}
+
 function StudentEvents() {
   const { events, totalEvents, loading, error } = useEvents();
   const [searchTerm, setSearchTerm] = useState("");
@@ -30,7 +49,6 @@ function StudentEvents() {
       <StudentSidebar />
 
       <div className="content-area">
-        {/* Header */}
         <header className="dashboard-header">
           <div className="wave"></div>
           <div className="dashboard-header-content fade-up">
@@ -57,7 +75,6 @@ function StudentEvents() {
               </p>
             </div>
 
-            {/* Search only — no Create button */}
             <div className="search-wrapper">
               <input
                 type="text"
@@ -100,58 +117,73 @@ function StudentEvents() {
 
           {filteredEvents.length > 0 && !loading && (
             <div className="events-grid fade-up delay-2">
-              {filteredEvents.map((event: AppEvent) => (
-                <div key={event.id} className="event-card">
-                  <div className="event-card-header">
-                    <div className="event-header-wave"></div>
-                    <div className="event-date-badge">
-                      <div className="event-date-month">
-                        {new Date(event.event_date).toLocaleDateString(
-                          "en-US",
-                          { month: "short" },
-                        )}
+              {filteredEvents.map((event: AppEvent) => {
+                const dayN = dayCount(event.start_date, event.end_date);
+                return (
+                  <div key={event.id} className="event-card">
+                    <div className="event-card-header">
+                      <div className="event-header-wave"></div>
+                      <div className="event-date-badge">
+                        <div className="event-date-month">
+                          {new Date(event.start_date).toLocaleDateString(
+                            "en-US",
+                            { month: "short" },
+                          )}
+                        </div>
+                        <div className="event-date-day">
+                          {new Date(event.start_date).getDate()}
+                        </div>
                       </div>
-                      <div className="event-date-day">
-                        {new Date(event.event_date).getDate()}
-                      </div>
+                      <h5 className="event-card-title">{event.title}</h5>
                     </div>
-                    <h5 className="event-card-title">{event.title}</h5>
-                  </div>
 
-                  <div className="event-card-body">
-                    <p className="event-description">
-                      {event.description || "No description provided."}
-                    </p>
-                    <div className="event-details-list">
-                      <div className="detail-row">
-                        <i className="bi bi-clock"></i>
-                        <span>
-                          {event.start_time} - {event.end_time}
-                        </span>
-                      </div>
-                      <div className="detail-row">
-                        <i className="bi bi-geo-alt"></i>
-                        <span>{event.location}</span>
-                      </div>
-                      {event.program_id && (
+                    <div className="event-card-body">
+                      <p className="event-description">
+                        {event.description || "No description provided."}
+                      </p>
+                      <div className="event-details-list">
                         <div className="detail-row">
-                          <i className="bi bi-diagram-3"></i>
-                          <span className="badge bg-primary bg-opacity-10 text-primary">
-                            Program-specific
+                          <i className="bi bi-calendar-range"></i>
+                          <span>
+                            {formatDateRange(event.start_date, event.end_date)}
+                            {dayN > 1 && (
+                              <span className="badge bg-info ms-2">
+                                {dayN} days
+                              </span>
+                            )}
                           </span>
                         </div>
-                      )}
-                      <div className="detail-row">
-                        <span
-                          className={`event-status-badge ${getStatusBadgeClass(event.status)}`}>
-                          {event.status.toUpperCase()}
-                        </span>
+                        <div className="detail-row">
+                          <i className="bi bi-clock"></i>
+                          <span>
+                            {event.days.length === 1 ?
+                              `${event.days[0].start_time.slice(0, 5)} – ${event.days[0].end_time.slice(0, 5)}`
+                            : "Varies per day"}
+                          </span>
+                        </div>
+                        <div className="detail-row">
+                          <i className="bi bi-geo-alt"></i>
+                          <span>{event.location}</span>
+                        </div>
+                        {event.program_id && (
+                          <div className="detail-row">
+                            <i className="bi bi-diagram-3"></i>
+                            <span className="badge bg-primary bg-opacity-10 text-primary">
+                              Program-specific
+                            </span>
+                          </div>
+                        )}
+                        <div className="detail-row">
+                          <span
+                            className={`event-status-badge ${getStatusBadgeClass(event.status)}`}>
+                            {event.status.toUpperCase()}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                  {/* No footer / action buttons for students */}
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

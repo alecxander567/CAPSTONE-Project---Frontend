@@ -397,3 +397,135 @@ textarea.form-control-enhanced {
   transform: none;
   box-shadow: none;
 }
+
+/* ─────────────────────────────────────────────
+   Days editor (per-day time windows)
+   ───────────────────────────────────────────── */
+.days-editor {
+  margin: 0.9rem 0;
+  padding: 0.9rem 1rem;
+  background: #f8fbff;
+  border: 2px solid #e3f2fd;
+  border-radius: 12px;
+}
+
+.days-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.days-count {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: #0f52ba;
+  color: white;
+  border-radius: 20px;
+  vertical-align: middle;
+}
+
+.days-quick-apply {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.btn-quick {
+  background: white;
+  border: 1px solid #cfe2ff;
+  color: #0f52ba;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-quick:hover:not(:disabled) {
+  background: #e7f1ff;
+  border-color: #0f52ba;
+}
+
+.btn-quick:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.days-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 240px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.day-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  background: white;
+  border: 1px solid #e3f2fd;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+}
+
+.day-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #2c3e50;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.day-time-inputs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.day-time {
+  width: 120px !important;
+  padding: 0.4rem 0.6rem !important;
+  font-size: 0.82rem !important;
+}
+
+.day-time-sep {
+  font-size: 0.78rem;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+/* Mobile tweaks */
+@media (max-width: 576px) {
+  .day-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.4rem;
+  }
+
+  .day-label {
+    font-size: 0.78rem;
+  }
+
+  .day-time-inputs {
+    justify-content: space-between;
+  }
+
+  .day-time {
+    width: 45% !important;
+    flex: 1;
+  }
+
+  .days-editor-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
