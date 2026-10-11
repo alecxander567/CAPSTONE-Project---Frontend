@@ -65,7 +65,6 @@ function Settings() {
     last_name: profile?.last_name || "",
     middle_initial: profile?.middle_initial || "",
     email: profile?.email || "",
-    // For admin, these will be undefined/empty
     program:
       isAdmin ? ""
       : typeof profile?.program === "object" ? profile?.program?.code
@@ -81,8 +80,6 @@ function Settings() {
   useEffect(() => {
     if (!profile) return;
 
-    // Deferred so we're not calling setState synchronously in the effect
-    // body — runs on the next tick instead.
     const id = window.setTimeout(() => {
       const isAdminUser = profile.role?.toUpperCase() === "ADMIN";
       setFormData({
@@ -91,7 +88,6 @@ function Settings() {
         last_name: profile.last_name || "",
         middle_initial: profile.middle_initial || "",
         email: profile.email || "",
-        // For admin, these fields are intentionally empty
         program:
           isAdminUser ? ""
           : typeof profile.program === "object" ? profile.program?.code
@@ -130,12 +126,38 @@ function Settings() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Sanitized handlers
+  const handleMiddleInitialChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const cleaned = e.target.value.replace(/[^A-Za-z]/g, "").slice(0, 1);
+    setFormData((prev) => ({
+      ...prev,
+      middle_initial: cleaned.toUpperCase(),
+    }));
+  };
+
+  const handleStudentIdChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const cleaned = e.target.value.replace(/\D/g, "");
+    setFormData((prev) => ({ ...prev, student_id_no: cleaned }));
+  };
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setEditError(null);
 
+    // Client-side checks
+    if (
+      formData.middle_initial &&
+      !/^[A-Za-z]$/.test(formData.middle_initial)
+    ) {
+      setEditError("Middle initial must be a single letter (A–Z)");
+      return;
+    }
+    if (formData.student_id_no && !/^\d+$/.test(formData.student_id_no)) {
+      setEditError("Student ID must contain numbers only");
+      return;
+    }
+
     try {
-      // Prepare data correctly for backend
       const updateData: ProfileUpdatePayload = {
         student_id_no: formData.student_id_no,
         first_name: formData.first_name,
@@ -143,22 +165,17 @@ function Settings() {
         email: formData.email,
       };
 
-      // Only include middle_initial if it has value
       if (formData.middle_initial && formData.middle_initial.trim() !== "") {
         updateData.middle_initial = formData.middle_initial;
       }
 
-      // ✅ IMPORTANT: For ADMIN users - DO NOT send program or year_level at all
       const isAdminUser = profile?.role?.toUpperCase() === "ADMIN";
 
       if (!isAdminUser) {
-        // Only include program if it exists (for students only)
         if (formData.program && formData.program.trim() !== "") {
           updateData.program = formData.program;
         }
 
-        // Send year_level straight through — the backend's YEAR_LEVEL_MAP
-        // already normalizes both "1"-"4" and word forms like "1st year"
         if (formData.year_level && formData.year_level !== "") {
           updateData.year_level = formData.year_level.toString();
         }
@@ -171,7 +188,6 @@ function Settings() {
       setIsEditing(false);
       setShowSuccess(true);
 
-      // Refresh the page after 1.5 seconds to show updated data
       setTimeout(() => {
         window.location.reload();
       }, 1500);
@@ -303,7 +319,6 @@ function Settings() {
     });
   };
 
-  // Determine if user is admin - used throughout component
   const isAdminUser = profile?.role?.toUpperCase() === "ADMIN";
 
   return (
@@ -608,7 +623,7 @@ function Settings() {
                 )}
 
                 <div className="settings-pg-profile-grid">
-                  {/* Account No. (Student ID) - Always shown and editable for all users */}
+                  {/* Account No. (Student ID) */}
                   <div className="settings-pg-profile-field">
                     <label
                       className="settings-pg-field-label"
@@ -619,10 +634,12 @@ function Settings() {
                       <input
                         className="settings-pg-form-input"
                         type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         id="student_id_no"
                         name="student_id_no"
                         value={formData.student_id_no}
-                        onChange={handleInputChange}
+                        onChange={handleStudentIdChange}
                         required
                         placeholder={`Enter ${isAdminUser ? "admin" : "student"} ID`}
                       />
@@ -633,7 +650,7 @@ function Settings() {
                     }
                   </div>
 
-                  {/* First Name - Always shown */}
+                  {/* First Name */}
                   <div className="settings-pg-profile-field">
                     <label
                       className="settings-pg-field-label"
@@ -657,7 +674,7 @@ function Settings() {
                     }
                   </div>
 
-                  {/* Last Name - Always shown */}
+                  {/* Last Name */}
                   <div className="settings-pg-profile-field">
                     <label
                       className="settings-pg-field-label"
@@ -681,7 +698,7 @@ function Settings() {
                     }
                   </div>
 
-                  {/* Year Level - ONLY shown for students, COMPLETELY EXCLUDED for admin */}
+                  {/* Year Level (students only) */}
                   {!isAdminUser && (
                     <div className="settings-pg-profile-field">
                       <label
@@ -711,7 +728,7 @@ function Settings() {
                     </div>
                   )}
 
-                  {/* Middle Initial - Always shown */}
+                  {/* Middle Initial */}
                   <div className="settings-pg-profile-field">
                     <label
                       className="settings-pg-field-label"
@@ -724,9 +741,9 @@ function Settings() {
                         type="text"
                         id="middle_initial"
                         name="middle_initial"
+                        maxLength={1}
                         value={formData.middle_initial}
-                        onChange={handleInputChange}
-                        maxLength={5}
+                        onChange={handleMiddleInitialChange}
                       />
                     : <div className="settings-pg-field-value">
                         <i className="bi bi-person settings-pg-field-icon"></i>
@@ -735,7 +752,7 @@ function Settings() {
                     }
                   </div>
 
-                  {/* Email - Always shown */}
+                  {/* Email */}
                   <div className="settings-pg-profile-field">
                     <label className="settings-pg-field-label" htmlFor="email">
                       Email Address
@@ -758,7 +775,7 @@ function Settings() {
                     }
                   </div>
 
-                  {/* Program - ONLY shown for students, COMPLETELY EXCLUDED for admin */}
+                  {/* Program (students only) */}
                   {!isAdminUser && (
                     <div className="settings-pg-profile-field">
                       <label
@@ -793,7 +810,7 @@ function Settings() {
                     </div>
                   )}
 
-                  {/* Account Created - Always shown */}
+                  {/* Account Created */}
                   <div className="settings-pg-profile-field">
                     <label className="settings-pg-field-label">
                       Account Created
@@ -804,7 +821,7 @@ function Settings() {
                     </div>
                   </div>
 
-                  {/* Last Updated - Always shown */}
+                  {/* Last Updated */}
                   <div className="settings-pg-profile-field">
                     <label className="settings-pg-field-label">
                       Last Updated

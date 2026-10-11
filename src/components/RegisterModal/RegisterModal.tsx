@@ -22,7 +22,9 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
   const [role, setRole] = useState<"ADMIN" | "STUDENT">("STUDENT");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [yearLevel, setYearLevel] = useState<string>("");
   const [localError, setLocalError] = useState("");
@@ -45,9 +47,23 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
     setRole("STUDENT");
     setEmail("");
     setPassword("");
+    setConfirmPassword("");
     setShowPassword(false);
+    setShowConfirmPassword(false);
     setYearLevel("");
     setLocalError("");
+  };
+
+  const handleMiddleInitialChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const cleaned = e.target.value.replace(/[^A-Za-z]/g, "").slice(0, 1);
+    setMiddleInitial(cleaned.toUpperCase());
+  };
+
+  const handleStudentIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const cleaned = e.target.value.replace(/\D/g, "");
+    setStudentId(cleaned);
   };
 
   const handleRegister = async () => {
@@ -56,10 +72,27 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
     if (!firstName.trim()) return setLocalError("First name is required");
     if (!lastName.trim()) return setLocalError("Last name is required");
     if (!email.trim()) return setLocalError("Email is required");
+
+    if (middleInitial && !/^[A-Za-z]$/.test(middleInitial)) {
+      return setLocalError("Middle initial must be a single letter (A–Z)");
+    }
+
     if (!password.trim()) return setLocalError("Password is required");
+    if (password.length < 8) {
+      return setLocalError("Password must be at least 8 characters long");
+    }
+    if (!confirmPassword) {
+      return setLocalError("Please confirm your password");
+    }
+    if (password !== confirmPassword) {
+      return setLocalError("Passwords do not match");
+    }
 
     if (role === "STUDENT") {
       if (!studentId.trim()) return setLocalError("Student ID is required");
+      if (!/^\d+$/.test(studentId.trim())) {
+        return setLocalError("Student ID must contain numbers only");
+      }
       if (!programId) return setLocalError("Program is required");
       if (!yearLevel) return setLocalError("Year level is required");
     }
@@ -72,7 +105,8 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
       program_id: role === "STUDENT" ? (programId as number) : undefined,
       year_level: role === "STUDENT" ? yearLevel : undefined,
       email: email.trim(),
-      password: password.trim(),
+      password: password,
+      confirm_password: confirmPassword,
       role: role.toLowerCase() as "admin" | "student",
     };
 
@@ -97,7 +131,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
   return (
     <>
       <style>{`
-        /* ── Desktop: modal fits the viewport without internal scrolling ── */
         .register-modal .modal-dialog {
           margin: 1rem auto;
         }
@@ -127,7 +160,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
           background: #fff;
         }
 
-        /* compact form spacing on desktop */
         .register-modal .mb-3 {
           margin-bottom: 0.65rem !important;
         }
@@ -138,7 +170,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
           padding-bottom: 0.4rem !important;
         }
 
-        /* ── Mobile: full-screen ── */
         @media (max-width: 576px) {
           .register-modal .modal-dialog {
             margin: 0;
@@ -167,7 +198,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
             padding: 0.75rem 1.25rem;
           }
 
-          /* restore normal spacing on mobile since it scrolls */
           .register-modal .mb-3 {
             margin-bottom: 0.85rem !important;
           }
@@ -188,7 +218,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
         backdrop="static"
         className="register-modal"
         scrollable>
-        {/* ── Compact header ── */}
         <Modal.Header closeButton>
           <Modal.Title className="w-100">
             <div className="d-flex align-items-center gap-3">
@@ -209,7 +238,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
 
         <Modal.Body>
           <Form>
-            {/* Row 1: Student ID + Role side by side */}
             <Row className="g-2 mb-3">
               <Col md={7} xs={12}>
                 <Form.Group>
@@ -219,13 +247,20 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
                   </Form.Label>
                   <Form.Control
                     type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     placeholder="Enter your student ID number"
                     value={studentId}
-                    onChange={(e) => setStudentId(e.target.value)}
+                    onChange={handleStudentIdChange}
                     className="border-2"
                     style={{ fontSize: "0.9rem" }}
                     required={role === "STUDENT"}
                   />
+                  <Form.Text
+                    className="text-muted"
+                    style={{ fontSize: "0.78rem" }}>
+                    Numbers only
+                  </Form.Text>
                 </Form.Group>
               </Col>
               <Col md={5} xs={12}>
@@ -248,7 +283,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
               </Col>
             </Row>
 
-            {/* Row 2: First Name + M.I. + Last Name */}
             <Row className="g-2 mb-3">
               <Col md={5} xs={12}>
                 <Form.Group>
@@ -276,9 +310,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
                     placeholder="M"
                     maxLength={1}
                     value={middleInitial}
-                    onChange={(e) =>
-                      setMiddleInitial(e.target.value.toUpperCase())
-                    }
+                    onChange={handleMiddleInitialChange}
                     className="border-2 text-center"
                     style={{ fontSize: "0.9rem" }}
                   />
@@ -302,7 +334,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
               </Col>
             </Row>
 
-            {/* Row 3: Program + Year Level (students only) */}
             {role === "STUDENT" && (
               <Row className="g-2 mb-3">
                 <Col md={7} xs={12}>
@@ -357,9 +388,8 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
               </Row>
             )}
 
-            {/* Row 4: Email + Password side by side */}
             <Row className="g-2 mb-3">
-              <Col md={6} xs={12}>
+              <Col xs={12}>
                 <Form.Group>
                   <Form.Label className="fw-semibold small text-secondary mb-1">
                     <i className="bi bi-envelope me-1"></i>Email Address *
@@ -380,6 +410,9 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
                   </Form.Text>
                 </Form.Group>
               </Col>
+            </Row>
+
+            <Row className="g-2 mb-3">
               <Col md={6} xs={12}>
                 <Form.Group>
                   <Form.Label className="fw-semibold small text-secondary mb-1">
@@ -396,7 +429,9 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
                       required
                     />
                     <i
-                      className={`bi ${showPassword ? "bi-eye-slash-fill" : "bi-eye-fill"} position-absolute top-50 end-0 translate-middle-y me-3 text-secondary`}
+                      className={`bi ${
+                        showPassword ? "bi-eye-slash-fill" : "bi-eye-fill"
+                      } position-absolute top-50 end-0 translate-middle-y me-3 text-secondary`}
                       style={{ cursor: "pointer", fontSize: "1rem" }}
                       onClick={() => setShowPassword(!showPassword)}
                       role="button"
@@ -408,6 +443,70 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
                     style={{ fontSize: "0.78rem" }}>
                     At least 8 characters
                   </Form.Text>
+                </Form.Group>
+              </Col>
+
+              <Col md={6} xs={12}>
+                <Form.Group>
+                  <Form.Label className="fw-semibold small text-secondary mb-1">
+                    <i className="bi bi-lock-fill me-1"></i>Confirm Password *
+                  </Form.Label>
+                  <div className="position-relative">
+                    <Form.Control
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="Re-enter your password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className={`border-2 pe-5 ${
+                        (
+                          confirmPassword &&
+                          password &&
+                          confirmPassword !== password
+                        ) ?
+                          "is-invalid"
+                        : (
+                          confirmPassword &&
+                          password &&
+                          confirmPassword === password
+                        ) ?
+                          "is-valid"
+                        : ""
+                      }`}
+                      style={{ fontSize: "0.9rem" }}
+                      required
+                    />
+                    <i
+                      className={`bi ${
+                        showConfirmPassword ? "bi-eye-slash-fill" : (
+                          "bi-eye-fill"
+                        )
+                      } position-absolute top-50 end-0 translate-middle-y me-3 text-secondary`}
+                      style={{ cursor: "pointer", fontSize: "1rem" }}
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
+                      role="button"
+                      tabIndex={0}
+                    />
+                  </div>
+                  {confirmPassword &&
+                    password &&
+                    confirmPassword !== password && (
+                      <div
+                        className="text-danger"
+                        style={{ fontSize: "0.78rem", marginTop: "0.25rem" }}>
+                        Passwords do not match
+                      </div>
+                    )}
+                  {confirmPassword &&
+                    password &&
+                    confirmPassword === password && (
+                      <div
+                        className="text-success"
+                        style={{ fontSize: "0.78rem", marginTop: "0.25rem" }}>
+                        Passwords match
+                      </div>
+                    )}
                 </Form.Group>
               </Col>
             </Row>

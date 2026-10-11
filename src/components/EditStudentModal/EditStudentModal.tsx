@@ -70,6 +70,19 @@ const EditStudentModal = ({
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Sanitized handlers
+  const handleMiddleInitialChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const cleaned = e.target.value.replace(/[^A-Za-z]/g, "").slice(0, 1);
+    setForm((prev) => ({ ...prev, middle_initial: cleaned.toUpperCase() }));
+  };
+
+  const handleStudentIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const cleaned = e.target.value.replace(/\D/g, "");
+    setForm((prev) => ({ ...prev, student_id_no: cleaned }));
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -78,8 +91,16 @@ const EditStudentModal = ({
       setError("Student ID cannot be empty");
       return;
     }
+    if (!/^\d+$/.test(form.student_id_no.trim())) {
+      setError("Student ID must contain numbers only");
+      return;
+    }
     if (!form.email.trim()) {
       setError("Email cannot be empty");
+      return;
+    }
+    if (form.middle_initial && !/^[A-Za-z]$/.test(form.middle_initial)) {
+      setError("Middle initial must be a single letter (A–Z)");
       return;
     }
 
@@ -166,8 +187,10 @@ const EditStudentModal = ({
                     id="student_id_no"
                     name="student_id_no"
                     type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     value={form.student_id_no}
-                    onChange={handleChange}
+                    onChange={handleStudentIdChange}
                     required
                   />
                 </div>
@@ -216,9 +239,9 @@ const EditStudentModal = ({
                       id="middle_initial"
                       name="middle_initial"
                       type="text"
-                      maxLength={5}
+                      maxLength={1}
                       value={form.middle_initial}
-                      onChange={handleChange}
+                      onChange={handleMiddleInitialChange}
                     />
                   </div>
                   <div className="edit-student-modal-field">

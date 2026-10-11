@@ -89,9 +89,27 @@ function StudentSettings() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Sanitized MI handler
+  const handleMiddleInitialChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const cleaned = e.target.value.replace(/[^A-Za-z]/g, "").slice(0, 1);
+    setFormData((prev) => ({
+      ...prev,
+      middle_initial: cleaned.toUpperCase(),
+    }));
+  };
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setEditError(null);
+
+    if (
+      formData.middle_initial &&
+      !/^[A-Za-z]$/.test(formData.middle_initial)
+    ) {
+      setEditError("Middle initial must be a single letter (A–Z)");
+      return;
+    }
+
     try {
       await updateProfile(formData);
       setIsEditing(false);
@@ -155,7 +173,6 @@ function StudentSettings() {
     }
   };
 
-  // Resolves both Cloudinary absolute URLs and legacy relative paths
   const resolveProfileImageUrl = (imagePath: string): string => {
     if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
       return imagePath;
@@ -241,7 +258,6 @@ function StudentSettings() {
         onClose={() => setShowError(false)}
       />
 
-      {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div
           className="modal fade show"
@@ -369,7 +385,6 @@ function StudentSettings() {
               <div className="ss-profile-card">
                 <div className="ss-profile-header">
                   <div className="ss-profile-header-left">
-                    {/* Avatar / profile picture */}
                     <div
                       style={{ position: "relative", display: "inline-block" }}>
                       {profile.profile_image ?
@@ -390,7 +405,6 @@ function StudentSettings() {
                         </div>
                       }
 
-                      {/* Camera upload button */}
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
@@ -605,8 +619,8 @@ function StudentSettings() {
                         id="middle_initial"
                         name="middle_initial"
                         value={formData.middle_initial}
-                        onChange={handleInputChange}
-                        maxLength={5}
+                        onChange={handleMiddleInitialChange}
+                        maxLength={1}
                       />
                     : <div className="ss-field-value">
                         <i className="bi bi-person ss-field-icon"></i>

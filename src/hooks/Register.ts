@@ -10,6 +10,7 @@ export interface RegisterPayload {
   year_level?: string;
   email: string;
   password: string;
+  confirm_password: string;
   role: "admin" | "student";
 }
 
@@ -45,8 +46,24 @@ export const useRegister = () => {
         const detail = err.response?.data?.detail;
 
         if (Array.isArray(detail)) {
+          const labelMap: Record<string, string> = {
+            confirm_password: "Confirm Password",
+            middle_initial: "Middle Initial",
+            student_id_no: "Student ID",
+            first_name: "First Name",
+            last_name: "Last Name",
+            email: "Email",
+            password: "Password",
+            role: "Role",
+            program_id: "Program",
+            year_level: "Year Level",
+          };
           message = detail
-            .map((e: ValidationError) => `${e.loc[e.loc.length - 1]}: ${e.msg}`)
+            .map((e: ValidationError) => {
+              const field = String(e.loc[e.loc.length - 1]);
+              const label = labelMap[field] ?? field;
+              return `${label}: ${e.msg}`;
+            })
             .join(", ");
         } else if (typeof detail === "string") {
           message = detail;
