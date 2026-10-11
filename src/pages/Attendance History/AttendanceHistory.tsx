@@ -16,25 +16,49 @@ interface AttendanceRecord {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+// Safe date parse — returns null for missing/invalid values
+function parseDate(value: string | null | undefined): Date | null {
+  if (!value) return null;
+  const d = new Date(value);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+// Sort events newest-first by their start_date
+function sortByStartDateDesc(a: Event, b: Event): number {
+  const at = parseDate(a.start_date)?.getTime() ?? 0;
+  const bt = parseDate(b.start_date)?.getTime() ?? 0;
+  return bt - at;
+}
+
+// Sort events oldest-first by their start_date
+function sortByStartDateAsc(a: Event, b: Event): number {
+  const at = parseDate(a.start_date)?.getTime() ?? 0;
+  const bt = parseDate(b.start_date)?.getTime() ?? 0;
+  return at - bt;
+}
+
+// Get the last day's end for sorting "done" events; fall back to start_date
+function getEventEndTime(e: Event): number {
+  if (e.days && e.days.length > 0) {
+    const lastDay = e.days[e.days.length - 1];
+    const dt = parseDate(`${lastDay.day_date}T${lastDay.end_time}`);
+    if (dt) return dt.getTime();
+  }
+  return parseDate(e.start_date)?.getTime() ?? 0;
+}
+
 const getRecentEvent = (events: Event[]) => {
   if (!events.length) return null;
   const ongoing = events.find((e) => e.status === "ongoing");
   if (ongoing) return ongoing;
   const done = events
     .filter((e) => e.status === "done")
-    .sort(
-      (a, b) =>
-        new Date(`${b.event_date}T${b.end_time}`).getTime() -
-        new Date(`${a.event_date}T${a.end_time}`).getTime(),
-    );
+    .sort((a, b) => getEventEndTime(b) - getEventEndTime(a));
   if (done.length) return done[0];
   const upcoming = events
     .filter((e) => e.status === "upcoming")
-    .sort(
-      (a, b) =>
-        new Date(`${a.event_date}T${a.start_time}`).getTime() -
-        new Date(`${b.event_date}T${b.start_time}`).getTime(),
-    );
+    .sort(sortByStartDateAsc);
   return upcoming[0] ?? null;
 };
 
@@ -59,8 +83,6 @@ function AttendanceHistory() {
     const recent = getRecentEvent(events);
     if (!recent) return;
 
-    // Deferred so we're not calling setState synchronously in the effect
-    // body — runs on the next tick instead.
     const id = window.setTimeout(() => {
       setSelectedEventId(recent.id);
     }, 0);
@@ -102,12 +124,17 @@ function AttendanceHistory() {
 
   const selectedEvent = events.find((e) => e.id === selectedEventId) ?? null;
 
+  // CHANGED: use start_date
   const uniqueYears = Array.from(
-    new Set(events.map((e) => new Date(e.event_date).getFullYear())),
+    new Set(
+      events
+        .map((e) => parseDate(e.start_date)?.getFullYear())
+        .filter((y): y is number => typeof y === "number"),
+    ),
   ).sort((a, b) => b - a);
 
   const yearFilteredEvents = events.filter(
-    (e) => new Date(e.event_date).getFullYear() === Number(selectedYear),
+    (e) => parseDate(e.start_date)?.getFullYear() === Number(selectedYear),
   );
 
   const presentIds = new Set(
@@ -143,6 +170,17 @@ function AttendanceHistory() {
     if (!tableEl) return;
     const printWindow = window.open("", "", "width=1200,height=800");
     if (!printWindow) return;
+
+    // CHANGED: use start_date for the printed header
+    const printedDate =
+      selectedEvent ?
+        (parseDate(selectedEvent.start_date)?.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        }) ?? "")
+      : "";
+
     printWindow.document.write(`
       <html>
         <head>
@@ -158,7 +196,7 @@ function AttendanceHistory() {
         </head>
         <body>
           <h2>${selectedEvent?.title || "Event"}</h2>
-          <h3>${programCode} – ${programName} &nbsp;|&nbsp; ${selectedEvent ? new Date(selectedEvent.event_date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : ""}</h3>
+          <h3>${programCode} – ${programName} &nbsp;|&nbsp; ${printedDate}</h3>
           ${tableEl.innerHTML}
         </body>
       </html>
@@ -186,6 +224,16 @@ function AttendanceHistory() {
       </div>
     );
   }
+
+  // CHANGED: subtitle date now reads start_date
+  const selectedEventDateLabel =
+    selectedEvent ?
+      (parseDate(selectedEvent.start_date)?.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }) ?? "—")
+    : "";
 
   return (
     <div className="ah-layout">
@@ -220,10 +268,7 @@ function AttendanceHistory() {
               <p className="ah-event-subtitle">
                 {selectedEvent ?
                   <>
-                    {new Date(selectedEvent.event_date).toLocaleDateString(
-                      "en-US",
-                      { year: "numeric", month: "long", day: "numeric" },
-                    )}
+                    {selectedEventDateLabel}
                     {" · "}
                     <span style={{ textTransform: "capitalize" }}>
                       {selectedEvent.status}
@@ -256,20 +301,22 @@ function AttendanceHistory() {
                   className="ah-select">
                   <option value="">Select an event</option>
                   {[...yearFilteredEvents]
-                    .sort(
-                      (a, b) =>
-                        new Date(`${b.event_date}T${b.start_time}`).getTime() -
-                        new Date(`${a.event_date}T${a.start_time}`).getTime(),
-                    )
-                    .map((e) => (
-                      <option key={e.id} value={e.id}>
-                        {e.title} —{" "}
-                        {new Date(e.event_date).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </option>
-                    ))}
+                    .sort(sortByStartDateDesc)
+                    .map((e) => {
+                      const d = parseDate(e.start_date);
+                      const label =
+                        d ?
+                          d.toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                          })
+                        : "No date";
+                      return (
+                        <option key={e.id} value={e.id}>
+                          {e.title} — {label}
+                        </option>
+                      );
+                    })}
                 </select>
                 <i className="bi bi-chevron-down ah-select-chevron" />
               </div>
