@@ -7,21 +7,42 @@ import { useUserProfile } from "../../hooks/useUserProfile";
 import { requestDeviceToken, listenMessages } from "../../firebase";
 import { useEffect } from "react";
 
+// Safe date parser
+function parseDate(value: string | null | undefined): Date | null {
+  if (!value) return null;
+  const d = new Date(value);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+// Get "HH:MM – HH:MM" from the event's days array (matches the API shape)
+function formatEventTime(event: AppEvent): string {
+  if (!event.days || event.days.length === 0) return "—";
+  const first = event.days[0];
+  if (!first.start_time || !first.end_time) return "—";
+  if (event.days.length === 1) {
+    return `${first.start_time.slice(0, 5)} – ${first.end_time.slice(0, 5)}`;
+  }
+  return "Varies per day";
+}
+
+// CHANGED: use start_date instead of event_date
 function getUpcomingEvent(events: AppEvent[]) {
   const now = new Date();
   return (
     events
       .filter((e) => {
-        const eventDate = new Date(e.event_date);
-        return eventDate >= new Date(now.toDateString());
+        const eventDate = parseDate(e.start_date);
+        return eventDate !== null && eventDate >= new Date(now.toDateString());
       })
-      .sort(
-        (a, b) =>
-          new Date(a.event_date).getTime() - new Date(b.event_date).getTime(),
-      )[0] || null
+      .sort((a, b) => {
+        const at = parseDate(a.start_date)?.getTime() ?? 0;
+        const bt = parseDate(b.start_date)?.getTime() ?? 0;
+        return at - bt;
+      })[0] || null
   );
 }
 
+// CHANGED: use start_date for calendar highlighting
 function generateCalendar(events: AppEvent[]) {
   const now = new Date();
   const year = now.getFullYear();
@@ -50,7 +71,7 @@ function generateCalendar(events: AppEvent[]) {
       day: d,
       isCurrentMonth: true,
       isToday: d === now.getDate(),
-      hasEvent: events.some((e) => e.event_date?.startsWith(ds)),
+      hasEvent: events.some((e) => e.start_date?.startsWith(ds)),
     });
   }
 
@@ -110,7 +131,8 @@ function StudentDashboard() {
   const upcomingEvent = getUpcomingEvent(events);
   const calendarDays = generateCalendar(events);
 
-  const eventDate = upcomingEvent ? new Date(upcomingEvent.event_date) : null;
+  // CHANGED: use start_date
+  const eventDate = upcomingEvent ? parseDate(upcomingEvent.start_date) : null;
   const eventMonth = eventDate?.toLocaleDateString("en-US", { month: "short" });
   const eventDay = eventDate?.getDate();
   const eventWeekday = eventDate?.toLocaleDateString("en-US", {
@@ -167,7 +189,6 @@ function StudentDashboard() {
       <StudentSidebar />
 
       <main className="sd-main">
-        {/* ── Header ── */}
         <header className="sd-header">
           <div className="sd-wave" />
           <div className="sd-header-inner sd-fade-up">
@@ -186,12 +207,9 @@ function StudentDashboard() {
           </div>
         </header>
 
-        {/* ── Content ── */}
         <div className="sd-content">
           <div className="sd-grid">
-            {/* Left column */}
             <div className="sd-left-col">
-              {/* Upcoming Event */}
               <div className="sd-card sd-fade-up sd-delay-1">
                 <h4 className="sd-card-title">
                   <i className="bi bi-calendar-event-fill text-primary me-2" />
@@ -252,8 +270,8 @@ function StudentDashboard() {
                         <div className="sd-meta-text">
                           <span className="sd-meta-label">Time</span>
                           <span className="sd-meta-value">
-                            {upcomingEvent.start_time} –{" "}
-                            {upcomingEvent.end_time}
+                            {/* CHANGED: use formatEventTime */}
+                            {formatEventTime(upcomingEvent)}
                           </span>
                         </div>
                       </div>
@@ -264,7 +282,7 @@ function StudentDashboard() {
                         <div className="sd-meta-text">
                           <span className="sd-meta-label">Location</span>
                           <span className="sd-meta-value">
-                            {upcomingEvent.location}
+                            {upcomingEvent.location || "—"}
                           </span>
                         </div>
                       </div>
@@ -286,7 +304,6 @@ function StudentDashboard() {
                 }
               </div>
 
-              {/* Calendar */}
               <div className="sd-card sd-fade-up sd-delay-2">
                 <h4 className="sd-card-title">
                   <i className="bi bi-calendar3 text-primary me-2" />
@@ -331,7 +348,6 @@ function StudentDashboard() {
               </div>
             </div>
 
-            {/* Right column: Program Participation */}
             <div className="sd-card sd-fade-up sd-delay-2">
               <h4 className="sd-card-title">
                 <i className="bi bi-pie-chart-fill text-primary me-2" />

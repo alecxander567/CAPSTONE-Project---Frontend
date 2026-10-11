@@ -13,6 +13,24 @@ interface MyAttendance {
 
 type FilterType = "all" | "present" | "absent";
 
+// Safely render "HH:MM – HH:MM" using event.days[0] (matches what the API actually returns)
+function formatEventTime(event: AppEvent): string {
+  if (!event.days || event.days.length === 0) return "—";
+  const first = event.days[0];
+  if (!first.start_time || !first.end_time) return "—";
+  if (event.days.length === 1) {
+    return `${first.start_time.slice(0, 5)} – ${first.end_time.slice(0, 5)}`;
+  }
+  return "Varies per day";
+}
+
+// Safe date parse — returns null if the value is missing/invalid
+function parseDate(value: string | null | undefined): Date | null {
+  if (!value) return null;
+  const d = new Date(value);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 function StudentAttendanceHistory() {
   const { events, loading: eventsLoading } = useEvents();
   const [myAttendance, setMyAttendance] = useState<MyAttendance[]>([]);
@@ -20,9 +38,6 @@ function StudentAttendanceHistory() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
 
-  // Declared with useCallback BEFORE the effects that use it, so it's
-  // available immediately (no "used before declaration" issue) and has
-  // a stable identity across renders.
   const fetchAllAttendance = useCallback(
     async (evts: AppEvent[], studentId: string, token: string) => {
       const results: MyAttendance[] = [];
@@ -78,7 +93,6 @@ function StudentAttendanceHistory() {
         fetchAllAttendance(events, studentId, token);
       })
       .finally(() => setLoadingAttendance(false));
-    // Intentionally run once on mount only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -91,7 +105,6 @@ function StudentAttendanceHistory() {
         fetchAllAttendance(events, studentId, token);
       }
     }
-    // Intentionally exclude myAttendance/fetchAllAttendance to avoid loops.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventsLoading, events]);
 
@@ -99,12 +112,14 @@ function StudentAttendanceHistory() {
     return myAttendance.find((a) => a.event_id === eventId) ?? null;
   };
 
+  // CHANGED: event_date → start_date, plus null-safe sort
   const pastAndOngoingEvents = events
     .filter((e) => e.status === "done" || e.status === "ongoing")
-    .sort(
-      (a, b) =>
-        new Date(b.event_date).getTime() - new Date(a.event_date).getTime(),
-    );
+    .sort((a, b) => {
+      const at = parseDate(a.start_date)?.getTime() ?? 0;
+      const bt = parseDate(b.start_date)?.getTime() ?? 0;
+      return bt - at;
+    });
 
   const searchedEvents = pastAndOngoingEvents.filter((e) =>
     e.title.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -205,6 +220,14 @@ function StudentAttendanceHistory() {
                 const rec = getStatusForEvent(event.id);
                 const isPresent = rec?.status === "present";
 
+                // CHANGED: build a safe Date once
+                const parsed = parseDate(event.start_date);
+                const monthLabel =
+                  parsed ?
+                    parsed.toLocaleDateString("en-US", { month: "short" })
+                  : "—";
+                const dayLabel = parsed ? parsed.getDate() : "?";
+
                 return (
                   <div
                     key={event.id}
@@ -212,15 +235,8 @@ function StudentAttendanceHistory() {
                     <div className="att-card-header">
                       <div className="event-header-wave"></div>
                       <div className="att-date-badge">
-                        <div className="att-date-month">
-                          {new Date(event.event_date).toLocaleDateString(
-                            "en-US",
-                            { month: "short" },
-                          )}
-                        </div>
-                        <div className="att-date-day">
-                          {new Date(event.event_date).getDate()}
-                        </div>
+                        <div className="att-date-month">{monthLabel}</div>
+                        <div className="att-date-day">{dayLabel}</div>
                       </div>
                       <h5 className="att-card-title">{event.title}</h5>
                     </div>
@@ -232,13 +248,12 @@ function StudentAttendanceHistory() {
                       <div className="att-card-meta">
                         <div className="att-meta-row">
                           <i className="bi bi-clock"></i>
-                          <span>
-                            {event.start_time} – {event.end_time}
-                          </span>
+                          {/* CHANGED: use formatEventTime(event) */}
+                          <span>{formatEventTime(event)}</span>
                         </div>
                         <div className="att-meta-row">
                           <i className="bi bi-geo-alt"></i>
-                          <span>{event.location}</span>
+                          <span>{event.location || "—"}</span>
                         </div>
                         {rec?.attendance_time && (
                           <div className="att-meta-row">
